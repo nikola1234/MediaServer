@@ -1,0 +1,6 @@
+<config>
+		<Server>
+			 <IP>192.168.1.125</IP>
+			 <POSITION>10001</POSITION>
+		</Server>
+</config>

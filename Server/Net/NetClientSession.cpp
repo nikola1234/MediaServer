@@ -45,6 +45,11 @@ void NetClientSession::incomingAcceptHandler()
 
 }
 
+int ReciveData_GetParam(char* buffer int size)
+{
+
+}
+
 void NetClientSession::HandleRecvReponse(const boost::system::error_code& error, int recvsizes)
 {
   if(stop_)return;
@@ -64,6 +69,7 @@ void NetClientSession::HandleRecvReponse(const boost::system::error_code& error,
         memcpy(fAcceptBuffer+BUFFER_SIZE_MIN*PKGNUM,fBuffer,recvsizes);
         std::cout<<fAcceptBuffer<<std::endl;
         std::cout<<totalRecive<<std::endl;
+        ReciveData_GetParam(fAcceptBuffer,totalRecive);
         memset(fBuffer, 0 ,BUFFER_SIZE_MIN);
         PKGNUM = 0;
         totalRecive = 0;

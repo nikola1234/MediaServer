@@ -15,14 +15,13 @@ OBJDUMP		= $(CROSS_COMPILE)objdump
 export AS LD CC CXX  CPP AR NM
 export STRIP OBJCOPY OBJDUMP
 
-
 CXXFLAGS := -Wall  -O2 -g
-CXXFLAGS += -I $(shell pwd)/include
+CXXFLAGS += -I $(shell pwd)/include -I ../Analysis
 CXXFLAGS += $(shell pkg-config --cflags OpenCVPC) -lavformat -lavcodec -lavfilter -lavutil -lswresample -lswscale -lz -D__STDC_CONSTANT_MACROS
 
-LDLIBS   := $(shell pkg-config --libs  OpenCVPC)-lboost_system -lboost_date_time -lboost_filesystem -lboost_thread -lboost_atomic -lpthread -lm
+LDLIBS   := $(shell pkg-config --libs  OpenCVPC)-lboost_system -lboost_date_time -lboost_filesystem -lboost_thread -lboost_atomic -lpthread -lm -ltinyxml
 
-dynamicLIBS     :=  ../RTSPServer/lib/libRTSPServerSO.so  ../RTSPClient/lib/libRTSPClientSO.so
+dynamicLIBS     :=  ../RTSPServer/lib/libRTSPServerSO.so  ../RTSPClient/lib/libRTSPClientSO.so  ../Analysis/lib/libAnalysisSO.so
 
 export CXXFLAGS LDLIBS
 
@@ -32,6 +31,7 @@ export SUBDIR
 TARGET := demo
 
 obj-y += main.o
+obj-y += xmlparser/
 obj-y += Log/
 obj-y += Net/
 obj-y += Camera/

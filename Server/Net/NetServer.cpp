@@ -19,7 +19,7 @@ int NetServer::InitNetServer()
 
 	boost::filesystem::create_directory("log");
 
-	m_log.InitLog("./log/NS-");
+	m_log.InitLog("./log/Net-");
   m_log.Add("NetServer Start !");
 	return 0;
 }

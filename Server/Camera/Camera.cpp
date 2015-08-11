@@ -155,7 +155,7 @@ int CamThread::Encode(Mat &frame)
 		}
 		/* Write the compressed frame to the media file. */
 		if( AnalyzeCamera.m_capture_callback != NULL )
-				AnalyzeCamera.m_capture_callback(0, pkt.size, pkt.data, 600300001);
+				AnalyzeCamera.m_capture_callback(0, pkt.size, pkt.data, 600300088);
 	}
 	else {
 		iRet = 0;

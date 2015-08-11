@@ -7,6 +7,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/system/error_code.hpp>
 #include "NetServer.h"
+#include "CmdDefine.h"
 
 #define  BUFFER_SIZE  (10*1024)
 #define  BUFFER_SIZE_MIN  (512)
