@@ -1,8 +1,5 @@
 #include "human.h"
-#include "interface.h"
-#include "Analyze.h"
 
-extern T_SINGLE_CAMERA t_camera[CAM_MAX_LEN] ;
 
 double caldis(int x1,int x2,int y1,int y2)
 {
@@ -20,15 +17,53 @@ CHuman::CHuman(uint8 index)
 	total = 0;
 
 	alarm = 0;
+	MaxNum = 0;
+	Flag = 0;
 
 	color = CV_RGB( 255, 0, 255 );
 	color_rect = CV_RGB( 0, 255, 255);
 	memset(&humanstatis, 0, sizeof(humanstatis));
 	memset(&blobdata, 0 ,sizeof(blobdata));
+	DirectionLines.clear();
+	MonitorZoneRects.clear();
 }
 
 CHuman:: ~CHuman()
 {
+	DirectionLines.clear();
+	MonitorZoneRects.clear();
+}
+
+
+int CHuman::SetRectangle_Line_Flag_MaxNum(vector< Rect > & rectangle ,vector< Line > & line, uint8 flag, uint16 maxnum)
+{
+	uint16 i = 0;
+
+	DirectionLines.clear();
+	MonitorZoneRects.clear();
+
+	if(0 == rectangle.size()&& 0 == line.size())
+	{
+  	cout<<"camera "<<m_index<<" CHuman::SetRectangle_Line_Flag_MaxNum size is 0"<<endl;
+		return -1;
+	}
+
+	for(i = 0; i < rectangle.size();i++)
+	{
+		Rect  tmp1;
+		tmp1 = rectangle[i];
+		MonitorZoneRects.push_back(tmp1);
+	}
+
+	for(i = 0; i < line.size();i++)
+	{
+		Line  tmp2;
+		tmp2 = line[i];
+		DirectionLines.push_back(tmp2);
+	}
+ 	Flag 	= flag;
+ 	MaxNum =	maxnum;
+	return 0;
 }
 
 void  CHuman::doorwaydetect(int lineNum )
@@ -168,7 +203,7 @@ void  CHuman::blobdeal(Mat &displayframe)
 	if(humanlist.empty())
 	{
 		//printf("no objects\n");
-		for(int lineNum =0;lineNum < t_camera[m_index].t_Camvarparam.t_CamHumAlarm.DirectionLines.size();lineNum++)
+		for(int lineNum =0;lineNum < DirectionLines.size();lineNum++)
 		{
 	//		humanstatis.jishu[lineNum] ++;
 			for( i=0; i  < humanstatis.maxsize[lineNum];i++)
@@ -312,7 +347,7 @@ void  CHuman::blobdeal(Mat &displayframe)
 
 		}
 
-		for(int lineNum =0;lineNum < t_camera[m_index].t_Camvarparam.t_CamHumAlarm.DirectionLines.size();lineNum++)//if(1)//if(Frame.human.humanlist.size()>0)
+		for(int lineNum =0;lineNum < DirectionLines.size();lineNum++)
 		{
 			for( i=0;i<humanstatis.maxsize[lineNum];i++)//Frame.human.humanlistpre.size()
 			{
@@ -330,13 +365,13 @@ void  CHuman::blobdeal(Mat &displayframe)
 		}
 	}
 
-	for(int lineNum =0;lineNum	<	t_camera[m_index].t_Camvarparam.t_CamHumAlarm.DirectionLines.size();lineNum++)
+	for(int lineNum =0;lineNum	<	DirectionLines.size();lineNum++)
 	{
 		for( i = 0;i<humanlistpro.size();i++)
 		{
 			id = humanlistpro[i].id;
 
-			humanlistpro[i].pos[lineNum] = pointToline(t_camera[m_index].t_Camvarparam.t_CamHumAlarm.DirectionLines[lineNum],Point2i(humanlistpro[i].x,humanlistpro[i].y));
+			humanlistpro[i].pos[lineNum] = pointToline(DirectionLines[lineNum],Point2i(humanlistpro[i].x,humanlistpro[i].y));
 			for(int j=0;j<DOORFILTERLEVEAL-1;j++)
 				humanstatis.doorfilter[lineNum][id][j] = humanstatis.doorfilter[lineNum][id][j+1];
 			humanstatis.doorfilter[lineNum][id][DOORFILTERLEVEAL-1] = humanlistpro[i].pos[lineNum];
@@ -354,7 +389,7 @@ void  CHuman::blobdeal(Mat &displayframe)
 
 	humanlistpre = humanlistpro;
 
-	for(int lineNum =0;lineNum<t_camera[m_index].t_Camvarparam.t_CamHumAlarm.DirectionLines.size();lineNum++)
+	for(int lineNum =0;lineNum < DirectionLines.size();lineNum++)
 	{
 		if(humanstatis.maxsize[lineNum]<humanstatis.doorin[lineNum] - humanstatis.doorout[lineNum])
 				humanstatis.maxsize[lineNum] = humanstatis.doorin[lineNum] - humanstatis.doorout[lineNum];
@@ -408,12 +443,12 @@ void CHuman::human_detect(Mat &morph,Mat &displayframe)
 			blobdata.h = rt.height;
 			blobdata.id = label;
 
-			for(unsigned int k=0;k < t_camera[m_index].t_Camvarparam.t_CamHumAlarm.MonitorZoneRects.size() ;k++)
+			for(unsigned int k=0;k < MonitorZoneRects.size() ;k++)
 			{
-				if((centroidX > t_camera[m_index].t_Camvarparam.t_CamHumAlarm.MonitorZoneRects[k].x)\
-					&&(centroidX < t_camera[m_index].t_Camvarparam.t_CamHumAlarm.MonitorZoneRects[k].x + t_camera[m_index].t_Camvarparam.t_CamHumAlarm.MonitorZoneRects[k].width)\
-					&&(centroidY > t_camera[m_index].t_Camvarparam.t_CamHumAlarm.MonitorZoneRects[k].y)\
-					&&(centroidY < t_camera[m_index].t_Camvarparam.t_CamHumAlarm.MonitorZoneRects[k].y + t_camera[m_index].t_Camvarparam.t_CamHumAlarm.MonitorZoneRects[k].height))
+				if((centroidX > MonitorZoneRects[k].x)\
+					&&(centroidX < MonitorZoneRects[k].x + MonitorZoneRects[k].width)\
+					&&(centroidY > MonitorZoneRects[k].y)\
+					&&(centroidY < MonitorZoneRects[k].y + MonitorZoneRects[k].height))
 				{
 					label++;
 					object.push_back(cv::Point(centroidX,centroidY));
@@ -510,14 +545,27 @@ void CHuman::census(Mat &displayframe)
 
 }
 
-int CHuman::HumanAlarmRun(Mat &displayframe)
+T_HUMANNUM & CHuman::GetAlarmHumanNum()
 {
-	int time_use=0;
-	struct timeval start;
-	struct timeval end;
+	T_HUMANNUM t_HumanNum;
+	memset(&t_HumanNum,0,sizeof(T_HUMANNUM));
+	t_HumanNum.humanALL  	= humanstatis.numAll;
+	t_HumanNum.humanIN		= MAX(humanstatis.doorin[0],humanstatis.doorin[1]);//human->humanstatis.inAll;
+	t_HumanNum.humanOUT	  = MAX(humanstatis.doorout[0],humanstatis.doorout[1]);//human->humanstatis.outAll;
+	for(int i=0; i<LINENUM;i++){
+		t_HumanNum.doorIN[i]		= humanstatis.doorin[i];
+		t_HumanNum.doorOUT[i]	  = humanstatis.doorout[i];
+	}
+	return t_HumanNum;
+}
 
-  gettimeofday(&start,NULL);
+int CHuman::HumanDetectRun(Mat &displayframe)
+{
+	//int time_use=0;
+	//struct timeval start;
+ //struct timeval end;
 
+  //gettimeofday(&start,NULL);
 
 	Mat tmpframe;
 	Mat blobdealFrame;
@@ -567,30 +615,30 @@ int CHuman::HumanAlarmRun(Mat &displayframe)
 		}
 	}
 
-	if((t_camera[m_index].t_Camvarparam.t_CamHumAlarm.Flag & 0x02)  == 0x02){
-		for(int i=0;i<t_camera[m_index].t_Camvarparam.t_CamHumAlarm.DirectionLines.size();i++)
+	if((Flag & 0x02)  == 0x02){
+		for(int i=0;i<DirectionLines.size();i++)
 		{
-			line(displayframe,t_camera[m_index].t_Camvarparam.t_CamHumAlarm.DirectionLines[i].Start,t_camera[m_index].t_Camvarparam.t_CamHumAlarm.DirectionLines[i].End,Scalar(255));
+			line(displayframe,DirectionLines[i].Start,DirectionLines[i].End,Scalar(255));
 		}
 
 	}
 
 
-	if((t_camera[m_index].t_Camvarparam.t_CamHumAlarm.Flag & 0x01)  == 1){
+	if((Flag & 0x01)  == 1){
 
-		for(int ii=0;ii<t_camera[m_index].t_Camvarparam.t_CamHumAlarm.MonitorZoneRects.size();ii++)
+		for(int ii=0;ii<MonitorZoneRects.size();ii++)
 		{
-			rectangle(displayframe, t_camera[m_index].t_Camvarparam.t_CamHumAlarm.MonitorZoneRects[ii], Scalar( 255, 0, 0 ), 2, 8, 0);//��
+			rectangle(displayframe, MonitorZoneRects[ii], Scalar( 255, 0, 0 ), 2, 8, 0);//��
 		}
 	}
 
 	human_detect(morph,displayframe);
 
-	if((t_camera[m_index].t_Camvarparam.t_CamHumAlarm.Flag & 0x01)  == 1){
+	if((Flag & 0x01)  == 1){
 		census(displayframe);// for human statistics
 	}
 
-	if((t_camera[m_index].t_Camvarparam.t_CamHumAlarm.Flag & 0x02)  == 0x02){
+	if((Flag & 0x02)  == 0x02){
 		blobdeal(displayframe);
 	}
 
@@ -599,9 +647,8 @@ int CHuman::HumanAlarmRun(Mat &displayframe)
 
 	 //dbgprint("door1:in=%d,out=%d  door2:in=%d,out=%d\n",humanstatis.doorin[0],humanstatis.doorout[0],humanstatis.doorin[1],humanstatis.doorout[1]);
 
-	if(humanstatis.numAll >= t_camera[m_index].t_Camvarparam.t_CamHumAlarm.MaxNum){
+	if(humanstatis.numAll >= MaxNum){
 				//printf("humanstatis.numAll is %d\n",humanstatis.numAll);
-				//printf("t_Camera.t_SinCam[m_index].t_Camvarparam.t_CamHumAlarm.MaxNum is %d\n",t_Camera.t_SinCam[m_index].t_Camvarparam.t_CamHumAlarm.MaxNum);
 				alarm =1;
 	}
 
@@ -622,8 +669,8 @@ int CHuman::HumanAlarmRun(Mat &displayframe)
 	vector<Point>().swap(object); //vector<Point>
 	vector<blobnode>().swap(humanlist);
 
-	gettimeofday(&end,NULL);
-	time_use=(end.tv_sec-start.tv_sec)*1000+(end.tv_usec-start.tv_usec)/1000;//΢��
+	//gettimeofday(&end,NULL);
+	//time_use=(end.tv_sec-start.tv_sec)*1000+(end.tv_usec-start.tv_usec)/1000;//΢��
 	//printf("time_use is %d\n",time_use);
 
 	return 0;

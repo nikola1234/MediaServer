@@ -9,10 +9,9 @@
 #ifndef __FlameDetection__VideoHandler__
 #define __FlameDetection__VideoHandler__
 
-#include "Common.h"
 #include "utils.h"
 #include "FlameDetector.h"
-
+#include "Common.h"
 
 class VideoHandler {
 private:
@@ -28,10 +27,10 @@ private:
     double mVideoFPS;
     string mSaveVideoFile;
     VideoWriter mWriter;
-    
+
     bool saveFrame();
     bool saveVideo();
-    
+
 public:
     static const int STATUS_FLAME_DETECTED = 0;
     static const int STATUS_OPEN_CAP_FAILED = 1;
@@ -40,7 +39,7 @@ public:
     VideoHandler(int device, bool saveKeyFrame = false, bool saveVideo = false);
     VideoHandler(const string& file, bool saveKeyFrame = false);
      VideoHandler();
-	 
+
      FlameDetector& getDetector()  { return mDetector; }
     double getVideoFPS() const { return mVideoFPS; }
     int handle(Mat &displayFrame , Rect ROI,void* videoHandler);

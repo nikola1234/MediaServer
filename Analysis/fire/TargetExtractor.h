@@ -26,7 +26,7 @@ class Rectangle : public Rect {
 public:
     Rectangle();
     Rectangle(const Rect& r);
-    
+
     bool near(const Rectangle& r);
     void merge(const Rectangle& r);
 };
@@ -36,7 +36,7 @@ class Region {
 public:
     vector<ContourInfo*> contours;
     Rectangle rect;
-    
+
     Region();
     Region(ContourInfo* contour, const Rectangle& rect);
     Region(const vector<ContourInfo*>& contours, const Rectangle& rect);
@@ -54,7 +54,7 @@ private:
     queue<Mat> mMaskQueue;
     Mat mMaskSum;
     vector<ContourInfo> mContours;
-    
+
     Mat mBackground;
     BackgroundSubtractorMOG2 mMOG;
 
@@ -63,7 +63,7 @@ private:
     void colorDetect2(int threshold = 20);
     void regionGrow2(int areaThreshold, int diffThreshold);
 #endif
-    
+
     void movementDetect(double learningRate = -1);
     void colorDetect(int redThreshold = 150, double saturationThreshold = 0.4);
     void denoise(int ksize = 7, int threshold = 6);
@@ -72,7 +72,7 @@ private:
     void smallAreaFilter(int threshold = 10, int keep = 5);
     void accumulate(int threshold = 5);
     void blobTrack(map<int, Target>& targets);
-    
+
 public:
     TargetExtractor();
     const Mat& getMask() const { return mMask; }

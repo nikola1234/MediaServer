@@ -1,29 +1,46 @@
 #include "fire.h"
-#include "Analyze.h"
-
-extern T_SINGLE_CAMERA t_camera[CAM_MAX_LEN] ;
 
 CFire::CFire(uint8 index,VideoHandler** videoHandler)
 {
 	m_index =index;
 	handler = new VideoHandler();
 	*videoHandler  =  handler;
+	Rects.clear();
 }
-
 
 CFire::~CFire()
 {
 	delete handler;
 	handler =NULL;
+	Rects.clear();
 }
 
-int CFire::FireAlarmRun(Mat& displayFrame,void* videoHandler)
+int CFire::SetRectangle(vector< Rect > & rectangle)
+{
+	uint16 i = 0;
+	Rects.clear();
+	if(0 == rectangle.size())
+	{
+  	cout<<"camera "<<m_index<<" CFire::SetRectangle size is 0"<<endl;
+		return -1;
+	}
+
+	for(i = 0; i < rectangle.size();i++)
+	{
+		Rect  tmp;
+		tmp = rectangle[i];
+		Rects.push_back(tmp);
+	}
+	return 0;
+}
+
+int CFire::FireDetectRun(Mat& displayFrame,void* videoHandler)
 {
   int  iRet = -1;
 	alarm = 0;
 	FlameRect.clear();
-	for(unsigned int i = 0;i< t_camera[m_index].t_Camvarparam.t_CamFireAlarm.Rects.size();i++){
-		Rect rt = t_camera[m_index].t_Camvarparam.t_CamFireAlarm.Rects[i];
+	for(unsigned int i = 0;i< Rects.size();i++){
+		Rect rt = Rects[i];
 		iRet =  (int)handler->handle(displayFrame ,rt, videoHandler);
 		if(iRet  == 0)
 		{

@@ -9,6 +9,7 @@
 #ifndef __FlameDetection__FlameDecider__
 #define __FlameDetection__FlameDecider__
 
+
 #include "Common.h"
 
 struct Target;
@@ -18,16 +19,16 @@ class Feature;
 class FlameDecider {
 private:
     static const string SVM_DATA_FILE;
-    
+
 #ifdef TRAIN_MODE
     static const string SAMPLE_FILE;
     static const int MIN_SAMPLE_COUNT = 30;
     static const int FRAME_GAP = 5;
 #endif
-    
+
     Mat mFrame;
     CvSVM mSVM;
-    
+
 #ifdef TRAIN_MODE
     bool mSampleEnough;
     int mFlameCount;
@@ -36,7 +37,7 @@ private:
     vector<bool> mResultVec;
     int mFrameCount;
 #endif
-    
+
 #ifdef TRAIN_MODE
     void userInput(const map<int, Target>& targets);
     void svmStudy();
@@ -45,7 +46,7 @@ private:
     bool svmPredict(const Feature& feature);
     bool judge(map<int, Target>& targets);
 #endif
-    
+
 public:
 	cv::vector<cv::Rect> alarmRect;
 

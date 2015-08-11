@@ -1,10 +1,3 @@
-//
-//  FeatureAnalyzer.cpp
-//  FlameDetection
-//
-//  Created by liberize on 14-4-14.
-//  Copyright (c) 2014年 liberize. All rights reserved.
-//
 
 #include "FeatureAnalyzer.h"
 #include "FlameDetector.h"
@@ -16,16 +9,16 @@
 void Feature::calcColorFeature()
 {
     // TODO: optimize this part, reduce extra work
-    
+
     Mat hsv;
     cvtColor(mROI, hsv, CV_BGR2HSV_FULL);
-    
+
     Mat temp(mROI.size(), CV_8UC3), mixed;
     Mat src[] = { mROI, mGray, hsv };
     int fromTo[] = { 2,0, 3,1, 5,2 };
     mixChannels(src, 3, &temp, 1, fromTo, 3);
     temp.convertTo(mixed, CV_64F);
-    
+
     Scalar avg, stdDev;
     meanStdDev(mixed, avg, stdDev, mMask);
     Scalar var = stdDev.mul(stdDev);
@@ -33,7 +26,7 @@ void Feature::calcColorFeature()
     Mat temp2 = temp1.mul(temp1);
     Scalar sk = mean(temp1.mul(temp2), mMask) / (var.mul(stdDev));
     Scalar ku = mean(temp2.mul(temp2), mMask) / (var.mul(var));
-    
+
     Scalar stat[] = { avg, stdDev, sk, ku };
     for (int i = 0; i < 4; i++) {
         red[i] = stat[i][0];
@@ -48,13 +41,13 @@ void Feature::calcGeometryFeature(const Region& region)
     squareness = 0;
     aspectRatio = 0;
     roughness = 0;
-    double mysq = 0;   
+    double mysq = 0;
     double len = 0;
     const vector<ContourInfo*>& contours = region.contours;
     for (vector<ContourInfo*>::const_iterator it = contours.begin(); it != contours.end(); it++) {
         const vector<Point>& contour = (*it)->contour;
         double area = (*it)->area;
-        
+
         double perimeter = arcLength(contour, true);
         RotatedRect minRect = minAreaRect(Mat(contour));
 	Rect myrect = boundingRect(Mat(contour));
@@ -62,7 +55,7 @@ void Feature::calcGeometryFeature(const Region& region)
         convexHull(contour, hull);
         double perimeterHull = arcLength(hull, true);
         double width = minRect.size.width, height = minRect.size.height;
-        
+
         circularity += area * (4 * M_PI * area / (perimeter * perimeter));
         squareness  += area * (area / (width * height));
 	mysq += area * (area / (myrect.width * myrect.height));
@@ -70,7 +63,7 @@ void Feature::calcGeometryFeature(const Region& region)
 	aspectRatio += area * (1.0 * min(width, height) / max(width, height));
         roughness   += area * (perimeterHull / perimeter);
     }
-    
+
     circularity /= mArea;
     squareness  /= mArea;
     mysq /= mArea;
@@ -90,10 +83,10 @@ void Feature::calcTexture(int levels, int dx, int dy)
 {
     assert(levels >= 2 && levels <= 256 && (levels & (levels - 1)) == 0);
     assert(dx >= 0 && dy >= 0 && dx + dy > 0);
-    
+
     Mat temp;
     mGray.copyTo(temp);
-    
+
     //TODO: implement my own version of 'equalizeHist' which accepts mask as an argument
     double minVal;
     minMaxLoc(temp, &minVal, NULL, NULL, NULL, mMask);
@@ -111,7 +104,7 @@ void Feature::calcTexture(int levels, int dx, int dy)
     imshow("hist", temp);
     imshow("gray", mGray);
 #endif
-    
+
     for (int i = 0; i < temp.rows; i++) {
         for (int j = 0; j < temp.cols; j++) {
             if (mMask.at<uchar>(i, j) == 255) {
@@ -119,7 +112,7 @@ void Feature::calcTexture(int levels, int dx, int dy)
             }
         }
     }
-    
+
     Mat glcm = Mat::zeros(Size(levels, levels), CV_64FC1);
     for (int i = 0; i < temp.rows; i++) {
         for (int j = 0; j < temp.cols; j++) {
@@ -138,15 +131,15 @@ void Feature::calcTexture(int levels, int dx, int dy)
             }
         }
     }
-    
+
     double sum = cv::sum(glcm)[0];
     if (sum == 0) {
         memset(texture, 0, sizeof(texture));
         return;
     }
-    
+
     glcm *= 1.0 / sum;
-    
+
     // in fact, the third one is not contrast...
     double entropy = 0, energy = 0, contrast = 0, homogenity = 0;
     for (int i = 0; i < levels; i++) {
@@ -160,7 +153,7 @@ void Feature::calcTexture(int levels, int dx, int dy)
             homogenity += 1.0 / (1 + (i - j) * (i - j)) * gij;
         }
     }
-    
+
     texture[0] = entropy;
     texture[1] = energy;
     texture[2] = contrast;
@@ -170,33 +163,33 @@ void Feature::calcTexture(int levels, int dx, int dy)
 void Feature::calcFrequency()
 {
     // TODO: optimize this part
-    
+
     if (mAreaVec.size() < MAX_AREA_VEC_SIZE) {
         frequency = -1;
         return;
     }
-    
+
     // limit n to integer power of 2 for simplicity
     // in fact, you can use function 'getOptimalDFTSize' to pad the input array
     assert((MAX_AREA_VEC_SIZE & (MAX_AREA_VEC_SIZE - 1)) == 0);
-   
+
     /*domon:::::debug
 	vector<double>::size_type size = mAreaVec.size();
-    
+
     for (int i = 0; i < size - 1; i++) {
         mAreaVec[i] = 600;
     }
     for (int i = size - 1; i < size; i++) {
         mAreaVec[i] = 600 + 10;
     }*/
- 
+
     vector<double> spec(MAX_AREA_VEC_SIZE);
     dft(mAreaVec, spec);
-    /*domon:::::debug   
- 
+    /*domon:::::debug
+
     printAreaVec();
     vector<double>::size_type dft_size = spec.size();
-    
+
     for (int i = 0; i < dft_size; i++) {
         cout << spec[i];
         if (i != dft_size - 1) {
@@ -217,7 +210,7 @@ void Feature::calcFrequency()
             idx = (i + 1) / 2;
         }
     }
- /*   
+ /*
     double fps = videoHandler->getVideoFPS();
     frequency = fps / MAX_AREA_VEC_SIZE * maxAmpl;  //idx;
 */
@@ -229,12 +222,12 @@ void Feature::calcFrequency()
 void Feature::calcAreaVar()
 {
     // TODO: optimize this part
-    
+
     if (mAreaVec.size() < MAX_AREA_VEC_SIZE) {
         areaVar = -1;
         return;
     }
-    
+
     Scalar m, s;
     meanStdDev(mAreaVec, m, s);
     areaVar = s[0] / m[0];
@@ -251,21 +244,21 @@ void Feature::calc(const Region& region, const Mat& frame,void* videoHandler)
     const Mat& mask = ((VideoHandler *)videoHandler)->getDetector().getExtractor().getMask();
     mMask = mask(region.rect);
     mArea = 0;
-    
+
     const vector<ContourInfo*>& contours = region.contours;
     for (vector<ContourInfo*>::const_iterator it = contours.begin(); it != contours.end(); it++) {
         mArea += (*it)->area;
     }
-    
+
     calcColorFeature();
     calcGeometryFeature(region);
     calcTexture();
-    
+
     if (mAreaVec.size() >= MAX_AREA_VEC_SIZE) {
         mAreaVec.erase(mAreaVec.begin());
     }
     mAreaVec.push_back(mArea);
-    
+
     calcFrequency();
     calcAreaVar();
 }
@@ -279,9 +272,9 @@ void Feature::merge(const vector<const Feature*>& src, Feature& feature)
             maxAreaVecSize = areaVecSize;
         }
     }
-    
+
     vector<double>(maxAreaVecSize, 0).swap(feature.mAreaVec);
-    
+
     for (vector<const Feature*>::const_iterator it1 = src.begin(); it1 != src.end(); it1++) {
         const vector<double>& areaVec = (*it1)->mAreaVec;
         vector<double>::reverse_iterator it2 = feature.mAreaVec.rbegin();
@@ -336,7 +329,7 @@ ofstream& operator<<(ofstream& ofs, const Feature& feature)
 void Feature::printAreaVec() const
 {
     vector<double>::size_type size = mAreaVec.size();
-    
+
     for (int i = 0; i < size; i++) {
         cout << mAreaVec[i];
         if (i != size - 1) {
@@ -365,7 +358,7 @@ void FeatureAnalyzer::targetUpdate(map<int, Target>& targets,void* videoHandler)
 {
     for (map<int, Target>::iterator it = targets.begin(); it != targets.end(); ) {
         Target& target = it->second;
-        
+
         if (target.type == Target::TARGET_LOST) {
             int maxTimes = min(target.times * 2, 10);
             if (target.lostTimes >= maxTimes) {
@@ -387,7 +380,7 @@ void FeatureAnalyzer::targetUpdate(map<int, Target>& targets,void* videoHandler)
         }
         it++;
     }
-    
+
     for (map<int, Target>::iterator it = targets.begin(); it != targets.end(); it++) {
         Target& target = it->second;
         if (target.type != Target::TARGET_LOST) {
@@ -399,9 +392,9 @@ void FeatureAnalyzer::targetUpdate(map<int, Target>& targets,void* videoHandler)
 void FeatureAnalyzer::analyze(const Mat& frame, Mat& mymask, map<int, Target>& targets,void* videoHandler)
 {
     mFrame = frame;
-    
+
     targetUpdate(targets,videoHandler);
-    
+
     Mat temp;
     mFrame.copyTo(temp);
     for (map<int, Target>::iterator it = targets.begin(); it != targets.end(); it++) {
@@ -410,7 +403,7 @@ void FeatureAnalyzer::analyze(const Mat& frame, Mat& mymask, map<int, Target>& t
 		rectangle(mymask, it->second.region.rect, Scalar(255));
 		}
     }
-    //writer << temp;	
+    //writer << temp;
     #ifdef DEBUG_OUTPUT
     imshow("mymask", mymask);
     namedWindow("frame");

@@ -2,62 +2,23 @@
 #define _HUMAN_H_
 
 #include "Common.h"
+#include "interface.h"
 
-typedef struct _LINE_{
-	Point2i Start;
-	Point2i End;
-}Line;
-
-#define LINENUM          2
-
-typedef enum {
-	normal,
-	meet,
-	separate,
-	newadd
-}en_state;
-
-typedef enum {
-	out=0,
-	in=1,
-	on
-}position;
-
-typedef struct _dismin_
-{
-	char id;
-	long dis;
-
-}dismin;
-
-typedef struct _blobnode_
-{
-	int x;
-	int y;
-	int w;
-	int h;
-	char id;
-	dismin dis;
-	en_state state;
-	position pos[LINENUM];
-	//unsigned int pos[LINENUM];
-	int obs_size;
-	int contact;
-
-} blobnode;
-
-//#define OLD_ALGO
-//#define TRAIN_MODE
-//#define DEBUG_OUTPUT
-
-#ifdef TRAIN_MODE
-extern bool trainComplete;
 #define NUM              20
 #define DOORFILTERLEVEAL 12
 #define DOORFILTERLEVEAL1 12000
 #define DOORFILTERNUM    20
 
+typedef struct _HUMAN_NUM
+{
+	int humanALL;
+	int humanIN;
+	int humanOUT;
 
+	int doorIN[LINENUM];
+	int doorOUT[LINENUM];
+
+}T_HUMANNUM;
 
 typedef struct _statistics_
 {
@@ -70,7 +31,7 @@ typedef struct _statistics_
 	int doorin[LINENUM];
 	int doorout[LINENUM];
 	int doorfilter[LINENUM][DOORFILTERNUM][DOORFILTERLEVEAL];
-//	int dispear[LINENUM][DOORFILTERNUM][DOORFILTERLEVEAL1];
+	//int dispear[LINENUM][DOORFILTERNUM][DOORFILTERLEVEAL1];
 	int objdispear[LINENUM][DOORFILTERNUM];
 	int maxsize[LINENUM];
 	int  jishu[LINENUM];
@@ -86,7 +47,7 @@ public:
 	CHuman(uint8 index);
 	~CHuman();
 
-	uint8    	alarm;
+
 	uint8 	m_index;
 	int     m_rowsZoomRate;
 	int	    m_colsZoomRate;
@@ -116,14 +77,23 @@ public:
 	blobnode blobdata;
 
 	Mat track;
-
 	statistics   humanstatis;
 	void  doorwaydetect(int lineNum);
 	void  blobdeal(Mat &displayframe);
 	void  human_detect(Mat &morph,Mat &displayframe);
-	void algorithmMorphology_Operations( Mat& src, Mat& dst);
-	void census(Mat &displayframe);
-	int HumanAlarmRun(Mat &displayframe);
+	void  algorithmMorphology_Operations( Mat& src, Mat& dst);
+	void  census(Mat &displayframe);
+
+public:
+	uint8    alarm;
+	uint8    Flag;
+	uint16   MaxNum;
+
+	vector< Rect >     MonitorZoneRects;
+	vector< Line >     DirectionLines;
+	T_HUMANNUM & GetAlarmHumanNum();
+	int SetRectangle_Line_Flag_MaxNum(vector< Rect > & rectangle ,vector< Line > & line, uint8 flag, uint16 maxnum);
+	int HumanDetectRun(Mat &displayframe);
 
 };
 

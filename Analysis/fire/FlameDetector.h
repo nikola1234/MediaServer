@@ -20,7 +20,7 @@ struct Target {
     static const int TARGET_NEW = 1;
     static const int TARGET_LOST = 2;
     static const int TARGET_MERGED = 3;
-    
+
     int type;
     int times;
     int lostTimes;
@@ -34,7 +34,7 @@ struct Target {
 class FlameDetector {
 private:
     static const int SKIP_FRAME_COUNT = 20;
-    
+
     Mat mFrame;
     TargetExtractor mExtractor;
     FeatureAnalyzer mAnalyzer;
@@ -43,10 +43,10 @@ private:
     int mFrameCount;
     int mFlameCount;
     bool mTrack;
-    
+
 public:
     FlameDetector();
-    
+
     const TargetExtractor& getExtractor() const { return mExtractor; }
     const FeatureAnalyzer& getAnalyzer() const { return mAnalyzer; }
     FlameDecider& getDecider()  { return mDecider; }

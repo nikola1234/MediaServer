@@ -1,8 +1,5 @@
 #include "smoke.h"
-#include "Analyze.h"
 #include "Wavelet.h"
-
-extern T_SINGLE_CAMERA t_camera[CAM_MAX_LEN] ;
 
 CSmoke::CSmoke(uint8 index)
 {
@@ -15,6 +12,27 @@ CSmoke::CSmoke(uint8 index)
 
 	alarm  = 0;
 }
+
+
+int CSmoke::SetRectangle(vector< Rect > & rectangle)
+{
+	uint16 i = 0;
+	Rects.clear();
+	if(0 == rectangle.size())
+	{
+  	cout<<"camera "<<m_index<<" CSmoke::SetRectangle size is 0"<<endl;
+		return -1;
+	}
+
+	for(i = 0; i < rectangle.size();i++)
+	{
+		Rect  tmp;
+		tmp = rectangle[i];
+		Rects.push_back(tmp);
+	}
+	return 0;
+}
+
 
 void CSmoke::initThreshold(int cols, int rows, float initValue)
 {
@@ -251,7 +269,7 @@ float CSmoke::getWeberContrast(Mat& inputFrame, Mat& background, vector<Point> b
 		float iframe = inputFrame.at<float>(blob[i].y, blob[i].x);
 		float bg = background.at<float>(blob[i].y, blob[i].x);
 
-		iframe = abs(iframe - bg)
+		iframe = abs(iframe - bg) / bg;
 		s += iframe;
 	}
 	return s / blob.size();
@@ -608,12 +626,6 @@ int CSmoke::SmokeAlarmDetectRun(Mat & displayframe)
 	alarm = 0;
 
 	resize(tmp, tmp, Size(960, 540));
-
-	if(t_Camera.t_SinCam[m_index].t_Camvarparam.t_CamSmkAlarm.DetectEn){
-		for(int j = 0; j<t_Camera.t_SinCam[m_index].t_Camvarparam.t_CamSmkAlarm.Rects.size();j++){
-			rectangle(displayframe, t_Camera.t_SinCam[m_index].t_Camvarparam.t_CamSmkAlarm.Rects[j], Scalar(0, 255, 255), 2, 8, 0);
-		}
-	}
 
 	vector<Rect> smokeRegion = detectSmoke(tmp);
 

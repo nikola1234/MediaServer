@@ -41,22 +41,22 @@ VideoHandler::VideoHandler()
 int VideoHandler::handle(Mat &displayFrame , Rect ROI,void* videoHandler)
 {
 
-        displayFrame.copyTo(mFrame);
+  displayFrame.copyTo(mFrame);
 
 	if( (0 <= ROI.x && 0 <= ROI.width && ROI.x + ROI.width <= mFrame.cols && 0 <= ROI.y && 0 <= ROI.height && ROI.y + ROI.height <= mFrame.rows) ){
 
 	        mFrame = mFrame(ROI);
-	       
+
 		if(mDetector.detect(mFrame,videoHandler))  {
 			return STATUS_FLAME_DETECTED;
 		}
 		return STATUS_NO_FLAME_DETECTED;
 	}else{
 		printf("ROI.x = %d ,ROI.y = %d ,ROI.width =%d ,ROI.height",ROI.x ,ROI.y,ROI.width ,ROI.height);
-		dbgprint("fire alarm wrong ROI !\n");
+		printf("fire alarm wrong ROI !\n");
 		return STATUS_NO_FLAME_DETECTED;
 	}
-	
+
 }
 
 bool VideoHandler::saveFrame()
@@ -75,7 +75,7 @@ bool VideoHandler::saveVideo()
         getCurTime(mSaveVideoFile);
         mSaveVideoFile += ".mov";
         cout << "Saving video to '" << mSaveVideoFile << "'." << endl;
-        
+
         // in Mac OS X, only 'mp4v' is supported
         int fourcc = CV_FOURCC('m', 'p', '4', 'v');
         Size size = Size((int)mCapture.get(CV_CAP_PROP_FRAME_WIDTH),

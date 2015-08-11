@@ -33,7 +33,12 @@ public:
 
 	Mat thres;
 	Mat	bgEMap;
+	
+	vector<Rect> Rects;
+	int SetRectangle(vector< Rect > & rectangle);
+	int SmokeAlarmDetectRun(Mat & displayframe);
 
+private:
 	void initThreshold(int cols, int rows, float initValue) ;
 	void updateBackground(Mat& frame1, Mat& frame2, Mat& frame3);
 	void SmokeDetectorMorphology_Operations( Mat& src, Mat& dst);
@@ -44,7 +49,7 @@ public:
 	float getWeberContrast(Mat& inputFrame, Mat& background, vector<Point> blob) ;
 	void smokeDetect(Mat& frame1, Mat& frame2, Mat& frame3) ;
 	vector<Rect>  detectSmoke(Mat& originFrame) ;
-	int SmokeAlarmDetectRun(Mat & displayframe);
+
 
 };
 

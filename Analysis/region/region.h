@@ -5,13 +5,20 @@
 
 class CRegion
 {
-	
+
 public:
 	CRegion(uint8 index);
+	~CRegion();
 
 	uint8 m_index;
-
 	uint8 alarm;
+
+	vector< Rect > Rects;
+
+	int SetRectangle(vector< Rect > & rectangle);
+	int RegionDetectRun(Mat &dispalyFrame);
+
+private:
 	Mat TmpFrame;
 
 	uint16 frameindex;
@@ -25,6 +32,7 @@ public:
 
 	float 	w_Rate;    /* width and height rate */
 	float		h_Rate;
+
 	Mat mask;
 
 	cv::BackgroundSubtractorMOG2 mog;
@@ -33,7 +41,6 @@ public:
 
 	void motiondetective(Mat &dispalyFrame,Mat &morph);
 	void algorithmMorphology_Operations( Mat& src, Mat& dst );
-	int alarmRegionDetectRun(Mat &dispalyFrame);
 };
 
 #endif

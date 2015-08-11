@@ -15,10 +15,13 @@ public:
   uint8 	m_index;
 	VideoHandler *handler ;
 
-	uint8 alarm;
-  
+public:
+
+  uint8 alarm;
+  vector<Rect > Rects;
   vector<Rect > FlameRect;
-  int FireAlarmRun(Mat& displayFrame,void* videoHandler);
+  int SetRectangle(vector< Rect > & rectangle);
+  int FireDetectRun(Mat& displayFrame,void* videoHandler);
 };
 
 #endif

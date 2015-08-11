@@ -1,5 +1,6 @@
 CFLAGS= -g -w -O3  -I ./inc
 
+
 CPP_SRC = $(wildcard *.cpp)
 CPP_OBJ = $(patsubst %cpp, %o, $(CPP_SRC))
 
