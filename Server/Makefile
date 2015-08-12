@@ -34,7 +34,7 @@ obj-y += main.o
 obj-y += File/
 obj-y += Log/
 obj-y += Net/
-obj-y += tmp/
+#obj-y += tmp/
 
 all :
 	make  -C ./ -f $(SUBDIR)/Makefile.build

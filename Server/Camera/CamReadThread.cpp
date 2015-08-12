@@ -1,18 +1,27 @@
-#include "CamTmp.h"
-#include "MyLog.h"
+#include "CamReadThread.h"
+#include "RtspCamera.h"
+extern CRtspCamera rtspCamera;
 
-CamTmpThread::CamTmpThread(string url,uint8 index)
-	:m_videoStream(url),m_index(index)
+CamReadThread::CamReadThread(string url,uint32 ID)
 {
-	m_CameraFlag = true;
+  CameraID = ID;
+  m_videoStream =url
+  m_CameraFlag = true;
 }
 
-CamTmpThread::~CamTmpThread()
+
+int CamReadThread::InitCamera()
 {
-	m_CameraFlag = false;
+  int iRet = -1;
+  iRet = GetCamParam();
+  if(iRet < 0) return -1;
+
+  iRet = EncodeInit();
+  if(iRet < 0) return -1;
+  return 0;
 }
 
-void CamTmpThread::releaseEncode()
+void CamReadThread::releaseEncode()
 {
 	avcodec_close(c);
 	av_free(c);
@@ -24,41 +33,9 @@ void CamTmpThread::releaseEncode()
 	pYUV_buffer =NULL;
 }
 
-int CamTmpThread::GetCamParam()
-{
-	Mat tmpframe;
-	uint32  num  = 0;
-	m_vcap.open(CV_CAP_FIREWARE);
-	if(!m_vcap.open(m_videoStream)) {
-
-		dbgprint("%s(%d),%d CAM opening video stream failed!\n",DEBUGARGS,m_index);
-		return -1;
-	}
-
-	m_cols    =	 m_vcap.get(CV_CAP_PROP_FRAME_WIDTH);
-	m_rows    =  m_vcap.get(CV_CAP_PROP_FRAME_HEIGHT);
-	m_fps     =  m_vcap.get(CV_CAP_PROP_FPS);
-
-	while(!(m_vcap.read(tmpframe))) {
-		num++;
-		if(num > 500){
-				dbgprint("%s(%d),%d CAM read video stream failed!\n",DEBUGARGS,m_index);
-				return -1;
-		}
-
-	}
-
-	ReadFrame.create(m_rows,m_cols,tmpframe.type());
-	EncodeInit();
-
-	StartRTSPServer(&AnalyzeCamera);
-	return 0;
-}
-
-int CamTmpThread::EncodeInit()
+int CamReadThread::EncodeInit()
 {
 	c= NULL;
-
 	int yuv420_bytes = 0;
 	m_pRGBFrame =  new AVFrame[1];  //RGB帧数据
 	m_pYUVFrame =  new AVFrame[1];  //YUV帧数据
@@ -71,37 +48,30 @@ int CamTmpThread::EncodeInit()
 
   codec = avcodec_find_encoder(AV_CODEC_ID_H264);
   if (!codec) {
-      fprintf(stderr, "Codec not found\n");
-      exit(1);
+      dbgprint("%s(%d),%d CAM Codec not found!\n",DEBUGARGS,CameraID);
+  		return -1;
   }
 
 	video_st = avformat_new_stream(fmtctx, codec);
-
 	c = video_st->codec;
-
 	avcodec_get_context_defaults3(c, codec);
-    if (!c) {
-        fprintf(stderr, "Could not allocate video codec context\n");
-        exit(1);
-    }
+  if (!c) {
+    dbgprint("%s(%d),%d CAM Could not allocate video codec context!\n",DEBUGARGS,CameraID);
+    return -1;
+  }
 	c->codec_id = AV_CODEC_ID_H264;
-
-	/* resolution must be a multiple of two */
 	c->width  = m_cols;
 	c->height = m_rows;
-	/* frames per second */
 	c->time_base = (AVRational){1,m_fps};
 	c->gop_size = 10;
 	c->max_b_frames = 1;
 	c->pix_fmt = AV_PIX_FMT_YUV420P;
 
-	 /* open it */
 	if (avcodec_open2(c, codec, NULL) < 0) {
-	    fprintf(stderr, "Could not open codec\n");
-	    exit(1);
+      dbgprint("%s(%d),%d CAM Could not open codec!\n",DEBUGARGS,CameraID);
+      return -1;
 	}
 
-	//yuv
 	m_pYUVFrame = av_frame_alloc();
 	yuv420_bytes = avpicture_get_size( AV_PIX_FMT_YUV420P, m_cols, m_rows);
 	pYUV_buffer = (uint8_t *)av_malloc(yuv420_bytes*sizeof(uint8_t));
@@ -109,21 +79,42 @@ int CamTmpThread::EncodeInit()
 	m_pYUVFrame->width  = c->width;
 	m_pYUVFrame->height = c->height;
 	avpicture_fill((AVPicture*)m_pYUVFrame, pYUV_buffer, AV_PIX_FMT_YUV420P, m_cols, m_rows);
-
 	scxt = sws_getContext(m_cols, m_rows,AV_PIX_FMT_RGB24, m_cols, m_rows,AV_PIX_FMT_YUV420P, 0, 0, 0, 0);
 	return 0;
 }
 
-int CamTmpThread::Encode(Mat &frame)
+int CamReadThread::GetCamParam()
+{
+	Mat tmpframe;
+	uint32  num  = 0;
+  m_vcap.open(CV_CAP_FIREWARE);
+  if(!m_vcap.open(m_videoStream)) {
+		dbgprint("%s(%d),%d CAM opening video stream failed!\n",DEBUGARGS,CameraID);
+		return -1;
+	}
+
+	m_cols    =	 m_vcap.get(CV_CAP_PROP_FRAME_WIDTH);
+	m_rows    =  m_vcap.get(CV_CAP_PROP_FRAME_HEIGHT);
+	m_fps     =  m_vcap.get(CV_CAP_PROP_FPS);
+
+	while(!(m_vcap.read(tmpframe))) {
+		num++;
+		if(num > 500){
+				dbgprint("%s(%d),%d CAM read video stream failed!\n",DEBUGARGS,CameraID);
+				return -1;
+		}
+	}
+	ReadFrame.create(m_rows,m_cols,tmpframe.type());
+	return 0;
+}
+
+int CamReadThread::Encode(Mat &frame)
 {
 	int iRet = -1;
 	int got_output = 0;
-	//将BGR 转为RGB
-	cvtColor( frame , rgb_frame, CV_BGR2RGB ) ;
-  //将RGBdata填充  (AVFrame*)m_pRGBFrame
-	avpicture_fill((AVPicture*)m_pRGBFrame,(uint8_t *)rgb_frame.data,AV_PIX_FMT_RGB24,m_cols,m_rows);
 
-  //将RGB转化为YUV
+	cvtColor( frame , rgb_frame, CV_BGR2RGB ) ;
+	avpicture_fill((AVPicture*)m_pRGBFrame,(uint8_t *)rgb_frame.data,AV_PIX_FMT_RGB24,m_cols,m_rows);
 	sws_scale(scxt,m_pRGBFrame->data,m_pRGBFrame->linesize,0,m_rows,m_pYUVFrame->data,m_pYUVFrame->linesize);
 
 	av_init_packet(&pkt);
@@ -131,16 +122,13 @@ int CamTmpThread::Encode(Mat &frame)
 	pkt.size = 0;
 	pkt.pts = AV_NOPTS_VALUE;
 	pkt.dts = AV_NOPTS_VALUE;
-
 	/* encode the image */
 	iRet = avcodec_encode_video2(c, &pkt, m_pYUVFrame, &got_output);
 	if (iRet < 0) {
 		fprintf(stderr, "Error encoding frame\n");
 		exit(1);
 	}
-
 	//If size is zero, it means the image was buffered.
-
 	if (got_output)
 	{
 		if (c->coded_frame->key_frame)pkt.flags |= AV_PKT_FLAG_KEY;
@@ -153,9 +141,9 @@ int CamTmpThread::Encode(Mat &frame)
 		{
 			pkt.dts = av_rescale_q(pkt.dts,video_st->codec->time_base, video_st->time_base);
 		}
-		/* Write the compressed frame to the media file. */
-		if( AnalyzeCamera.m_capture_callback != NULL )
-				AnalyzeCamera.m_capture_callback(0, pkt.size, pkt.data, 600300088);
+
+		if( rtspCamera.m_capture_callback != NULL )
+				rtspCamera.m_capture_callback(0, pkt.size, pkt.data, CameraID);
 	}
 	else {
 		iRet = 0;
@@ -164,14 +152,13 @@ int CamTmpThread::Encode(Mat &frame)
 	return 0;
 }
 
-void CamTmpThread::run()
+void CamReadThread::run()
 {
-	int iRet = -1;
 	while(m_CameraFlag)
 	{
 			if(!(m_vcap.read(ReadFrame)))
 			{
-					dbgprint("%s(%d),%d CAM no frame!\n",DEBUGARGS,m_index);
+					dbgprint("%s(%d),%d CAM no frame!\n",DEBUGARGS,CameraID);
 					waitKey(40);
 					continue;
 			}
@@ -181,26 +168,26 @@ void CamTmpThread::run()
 				waitKey(40);
 				continue;
 			}
-			ReadFrame.copyTo(frame1);
-			ReadFrame.copyTo(frame2);
-	    ReadFrame.copyTo(EncodeFrame);
-
+      ReadFrame.copyTo(frame1);
+      ReadFrame.copyTo(frame2);
+      ReadFrame.copyTo(EncodeFrame);
+      //TODO::EncodeFrame
       Encode(EncodeFrame);
 	}
-	releaseEncode();
-	dbgprint("%s(%d),%d CamThread exit!\n",DEBUGARGS,m_index);
+  releaseEncode();
+	dbgprint("%s(%d),%d CamThread exit!\n",DEBUGARGS,CameraID);
 	pthread_exit(NULL);
 }
 
-int CamTmpThread::CreateCamThread()
+int CamReadThread::CreateCamReadThread()
 {
 	int iRet = -1;
-	pthread_t CamThread;
-	iRet = pthread_create(&CamThread,NULL,RunCamThread,this);
+	pthread_t CamReadThread;
+	iRet = pthread_create(&CamReadThread,NULL,RunCamThread,this);
 	if(iRet != 0){
-		 dbgprint("%s(%d),create %d CamThread failed!\n",DEBUGARGS,m_index);
+		 dbgprint("%s(%d),create %d CamReadThread failed!\n",DEBUGARGS,CameraID);
 		 return -1;
 	}
-	pthread_detach(CamThread);
+	pthread_detach(CamReadThread);
 	return 0;
 }

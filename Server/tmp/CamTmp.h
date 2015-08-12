@@ -32,7 +32,9 @@ public:
 
 	Mat   ReadFrame;
   Mat   EncodeFrame;
-
+	Mat   frame1;
+  Mat   frame2;
+	
 	VideoCapture  	m_vcap;
 	string m_videoStream;
 	uint8  m_index;
