@@ -2,25 +2,25 @@
 #include "boost/filesystem.hpp"
 
 NetServer::NetServer()
-  :	m_acceptor_(m_io_service_),
-	  m_clientListenPort(9098),
-	  m_work_(m_io_service_)
+  :m_acceptor_(m_io_service_),
+
+   m_work_(m_io_service_)
 {
   m_Num =0;
   memset(log_file, 0 ,40);
 }
-NetServer::~NetServer(void)
+
+NetServer::~NetServer()
 {
 	m_ClientList.clear();
 }
 
-int NetServer::InitNetServer()
+int NetServer::InitNetServer(uint32 port)
 {
-
+	m_clientListenPort = port;
 	boost::filesystem::create_directory("log");
-
 	m_log.InitLog("./log/Net-");
-  m_log.Add("NetServer Start !");
+	m_log.Add("NetServer Start !");
 	return 0;
 }
 
@@ -51,10 +51,10 @@ int NetServer::StartAccpet()
 	int iret = -1;
 	try
 	{
-    NetClientPtr clientptr = CreateNetClientSession();
-		m_acceptor_.async_accept(clientptr->GetClientSocket(),
-			boost::bind(&NetServer::HandleAccept, this, clientptr,
-			boost::asio::placeholders::error));
+		NetClientPtr clientptr = CreateNetClientSession();
+			 m_acceptor_.async_accept(clientptr->GetClientSocket(),
+				boost::bind(&NetServer::HandleAccept, this, clientptr,
+				boost::asio::placeholders::error));
 	}
 	catch(std::exception& e)
 	{
@@ -65,8 +65,21 @@ int NetServer::StartAccpet()
 
 NetServer::NetClientPtr NetServer::CreateNetClientSession()
 {
-  m_Num++;
-  if(m_Num  >= 16777216) m_Num = 1;
+	int iRet = 0;
+	do{
+		srand((unsigned)time(NULL));
+		m_Num =(uint32 )((rand()%1000)+1);
+		writeLock writelock_(m_clientListMutex_);
+		std::list<NetClientPtr>::iterator it = m_ClientList.begin();
+		for ( ; it != m_ClientList.end() ; it++ )
+		{
+			if ((*it)->GetOurSessionID() == m_Num)
+			{
+				iRet = 1;
+			}
+		}
+
+	}while(iRet);
 
 	NetClientPtr clientptr = NetClientPtr(new NetClientSession(this,m_Num));
 
@@ -89,8 +102,7 @@ void NetServer::RemoveNetClientBySessionID(unsigned int sessionid)
 	}
 }
 
-void NetServer::HandleAccept(NetClientPtr clientptr,
-	const boost::system::error_code& error)
+void NetServer::HandleAccept(NetClientPtr clientptr,const boost::system::error_code& error)
 {
 	if (!error)
 	{

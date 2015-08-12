@@ -148,18 +148,18 @@ typedef struct _VIDEO_DRAW  // pkg means special parameter
 //ST_VDCS_VIDEO_PUSH_CAM (1)
 typedef struct  _VDCS_VIDEO_PUSH_CAM
 {
-		char        ip[IP_LEN_16];
-		char   	    CameUrL[SINGLE_URL_LEN_128];
+	char		ip[IP_LEN_16];
+	char		CameUrL[SINGLE_URL_LEN_128];
 
-		uint8       Enable;
-		uint8   		frameRate;
-		uint8   		CameraFunc;
-		uint8       AnalyzeNUM;
-		uint16      AnalyzeType; //最多两个分析或运算
+	uint8		Enable;
+	uint8		frameRate;
+	uint8		CameraFunc;
+	uint8		AnalyzeNUM;
+	uint16  AnalyzeType; //最多两个分析或运算
 
-		_VDCS_VIDEO_PUSH_CAM(){
-			memset(this, 0, sizeof(_VDCS_VIDEO_PUSH_CAM));
-		}
+	_VDCS_VIDEO_PUSH_CAM(){
+	memset(this, 0, sizeof(_VDCS_VIDEO_PUSH_CAM));
+	}
 }ST_VDCS_VIDEO_PUSH_CAM;
 
 //ST_VDCS_VIDEO_FUNC_PARAM (2)
@@ -170,7 +170,7 @@ typedef struct _VDCS_VIDEO_FUNC_PARAM
 
 	ST_VDCS_VIDEO_ALARM_TIME  AlarmTime[WEEK_DAY_LEN_7];
 	uint16      MaxHumanNum;    /* HumanDetect needs */
-	float       ChangRate;      /* RegionDetect needs */
+	float         ChangRate;          /* RegionDetect needs */
 	uint16      PkgNum;         /* structure refer to VIDEO_DRAW */
 
 	_VDCS_VIDEO_FUNC_PARAM(){

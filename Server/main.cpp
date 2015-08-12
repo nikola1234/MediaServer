@@ -1,7 +1,8 @@
 
 #include "NetClientSession.h"
 #include "NetServer.h"
-#include "Camera.h"
+
+#include "tmp/CamTmp.h"
 
 #include "FileOpr.h"
 
@@ -12,27 +13,25 @@ T_ServerParam SerParam;
 NetServer server;
 CFileOpr fileOpr;
 
-int main()
+int main(int argc ,char **argv)
 {
 
+  fileOpr.read_server_config(SerParam);
 
-/*
-  server.InitNetServer();
+  server.InitNetServer(SerParam.port);
   server.Start();
   server.Run();
-*/
 
 /*
-  CamThread cam(videoStreamAddress2,1);
+  CamTmpThread cam(videoStreamAddress2,1);
   cam.GetCamParam();
   cam.CreateCamThread();
 */
 
-  fileOpr.read_server_config(SerParam);
 
   while(1){
-	    sleep(5);
-	  }
+	    	sleep(2);
+  }
 
   return 0;
 }

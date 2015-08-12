@@ -9,9 +9,9 @@
 
 typedef struct  _SERVER_PARAM
 {
-  uint32 ServerID;
+	uint32 ServerID;
 	char   Serverip[16];
-
+	uint32 port;
 	_SERVER_PARAM(){
 		memset(this, 0, sizeof(_SERVER_PARAM));
 	}
@@ -25,8 +25,8 @@ public:
 	CFileOpr();
 	~CFileOpr();
 
-  int write_server_config(uint32 ServerID, string ServerIp);
-  int read_server_config(T_ServerParam &t_SerParam);
+	int write_server_config(uint32 ServerID,uint32 port, string ServerIp);
+	int read_server_config(T_ServerParam &t_SerParam);
 
 protected:
 
