@@ -17,7 +17,7 @@ class NetClientSession
 {
 public:
   	NetClientSession(NetServer * ourServer, unsigned int sessionId);
-  	~NetClientSession(void);
+  	~NetClientSession();
 
 public:
     boost::asio::ip::tcp::socket& GetClientSocket(){ return client_socket_; }
@@ -25,9 +25,12 @@ public:
     unsigned int GetOurSessionID(){ return fOurSessionId; }
 
 private:
-
-  	void HandleRecvReponse(const boost::system::error_code& error, int recvsizes);
   	void incomingAcceptHandler();
+
+    int client_register_ack();
+    int push_camera_data(char* buffer ,int size);
+    int ReciveData_GetParam(char* buffer ,int size);
+  	void HandleRecvReponse(const boost::system::error_code& error, int recvsizes);
 
     int SendMessage(char *buff,int size);
     void HandleSendResponse(const boost::system::error_code& error, int sendsizes);
@@ -35,8 +38,8 @@ private:
 private:
     	NetServer* fOurServer;
       unsigned int fOurSessionId;
-      unsigned char fAcceptBuffer[BUFFER_SIZE];
-      unsigned char fBuffer[BUFFER_SIZE_MIN];
+      char fAcceptBuffer[BUFFER_SIZE];
+      char fBuffer[BUFFER_SIZE_MIN];
       unsigned int PKGNUM;
       unsigned int totalRecive;
 

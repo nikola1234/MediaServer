@@ -19,9 +19,9 @@ CXXFLAGS := -Wall  -O2 -g
 CXXFLAGS += -I $(shell pwd)/include -I ../Analysis
 CXXFLAGS += $(shell pkg-config --cflags OpenCVPC) -lavformat -lavcodec -lavfilter -lavutil -lswresample -lswscale -lz -D__STDC_CONSTANT_MACROS
 
-LDLIBS   := $(shell pkg-config --libs  OpenCVPC)-lboost_system -lboost_date_time -lboost_filesystem -lboost_thread -lboost_atomic -lpthread -lm -ltinyxml
+LDLIBS   := $(shell pkg-config --libs  OpenCVPC)-lboost_system -lboost_date_time -lboost_filesystem -lboost_thread -lboost_atomic -lpthread -lm 
 
-dynamicLIBS     :=  ../RTSPServer/lib/libRTSPServerSO.so  ../RTSPClient/lib/libRTSPClientSO.so  ../Analysis/lib/libAnalysisSO.so
+dynamicLIBS     :=  ../RTSPServer/lib/libRTSPServerSO.so  ../RTSPClient/lib/libRTSPClientSO.so  ../Analysis/lib/libAnalysisSO.so  ./lib/libjson.so
 
 export CXXFLAGS LDLIBS
 
@@ -31,7 +31,7 @@ export SUBDIR
 TARGET := demo
 
 obj-y += main.o
-obj-y += xmlparser/
+obj-y += file/
 obj-y += Log/
 obj-y += Net/
 obj-y += Camera/
@@ -39,6 +39,7 @@ obj-y += Camera/
 all :
 	make  -C ./ -f $(SUBDIR)/Makefile.build
 	$(CXX)  -o $(TARGET) built-in.o  $(dynamicLIBS) $(LDLIBS) $(CXXFLAGS)
+	rm -f $(shell find -name "*.o")
 
 clean:
 	rm -f $(shell find -name "*.o")

@@ -13,6 +13,7 @@
 
 #define  CAM_MAX_LEN   20
 #define  SINGLE_URL_LEN_128  128
+#define  PACKET_HEAD_LEN  28
 
 typedef struct COMMON_PACKET_HEAD
 {
@@ -29,7 +30,6 @@ typedef struct COMMON_PACKET_HEAD
 	COMMON_PACKET_HEAD(){
 		memset(this, 0, sizeof(COMMON_PACKET_HEAD));
 	}
-
 } T_PacketHead,*PT_PacketHead;
 
 
@@ -78,21 +78,16 @@ enum AnalyzeType
 
 };
 
-typedef struct _SM_ANAY_VDCS_REGISTER
+typedef struct _ANAY_VDCS_REGISTER_ACK
 {
-	uint32 Position;
-	_SM_ANAY_VDCS_REGISTER(){
-		memset(this, 0, sizeof(_SM_ANAY_VDCS_REGISTER));
-	}
-} ST_SM_ANAY_VDCS_REGISTER;
+	uint32 ServerID;
+	char   Serverip[IP_LEN_16];
 
-typedef struct _SM_VDCS_ANAY_REGISTER_ACK
-{
-	uint8 	Ack;    // 0 sucess / 1 faild
-	_SM_VDCS_ANAY_REGISTER_ACK(){
-		memset(this, 0, sizeof(_SM_VDCS_ANAY_REGISTER_ACK));
+	_ANAY_VDCS_REGISTER_ACK(){
+		memset(this, 0, sizeof(_ANAY_VDCS_REGISTER_ACK));
 	}
-} ST_SM_VDCS_ANAY_REGISTER_ACK;
+} T_ANAY_VDCS_REGISTER_ACK;
+
 
 typedef struct _SM_ANAY_VDCS_DEVICE_STATUS
 {
@@ -151,12 +146,14 @@ typedef struct _VIDEO_DRAW  // pkg means special parameter
 }VIDEO_DRAW;
 
 //ST_VDCS_VIDEO_PUSH_CAM (1)
-typedef struct  _VDCS_VIDEO_PUSH_CAM{
-
+typedef struct  _VDCS_VIDEO_PUSH_CAM
+{
 		char        ip[IP_LEN_16];
 		char   	    CameUrL[SINGLE_URL_LEN_128];
 
 		uint8       Enable;
+		uint8   		frameRate;
+		uint8   		CameraFunc;
 		uint8       AnalyzeNUM;
 		uint16      AnalyzeType; //最多两个分析或运算
 
@@ -166,8 +163,8 @@ typedef struct  _VDCS_VIDEO_PUSH_CAM{
 }ST_VDCS_VIDEO_PUSH_CAM;
 
 //ST_VDCS_VIDEO_FUNC_PARAM (2)
-typedef struct _VDCS_VIDEO_FUNC_PARAM{
-
+typedef struct _VDCS_VIDEO_FUNC_PARAM
+{
 	char        ip[IP_LEN_16];
 	uint16    	AnalyzeType;   //单独分析类型
 
