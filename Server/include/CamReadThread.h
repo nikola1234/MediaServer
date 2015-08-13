@@ -24,18 +24,18 @@ public:
 	void quit(){m_CameraFlag = false;}
 
 private:
-  uint32 CameraID;
-  string m_videoStream;
-  bool  m_CameraFlag;
-  Mat ReadFrame;
-  Mat EncodeFrame;
+	uint32 CameraID;
+	string m_videoStream;
+	bool  m_CameraFlag;
+	Mat ReadFrame;
+	Mat EncodeFrame;
 
-  VideoCapture  	m_vcap;
-  int 	 	m_rows; 	 /* high */
+	VideoCapture  	m_vcap;
+	int 	 	m_rows; 	 /* high */
 	int 	 	m_cols; 	  /* width */
 	int	  	m_fps;
-  AVFormatContext *fmtctx;
-  AVCodec * codec;
+	AVFormatContext *fmtctx;
+	AVCodec * codec;
 	AVCodecContext *c;
 	AVStream *video_st;
 
@@ -48,10 +48,10 @@ private:
 
 	struct SwsContext *scxt;
 
-  void releaseEncode();
-  int EncodeInit();
-  int GetCamParam();
-  int Encode(Mat &frame);
+	void releaseEncode();
+	int EncodeInit();
+	int GetCamParam();
+	int Encode(Mat &frame);
 
 };
 

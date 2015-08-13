@@ -67,6 +67,11 @@ int NetClientSession::client_register_ack()
   	return 0;
 }
 
+void NetClientSession::report_add_cam_failure()
+{
+
+}
+
 int NetClientSession::push_camera_data(char* buffer ,int size)
 {
 	int iRet = -1;
@@ -79,10 +84,13 @@ int NetClientSession::push_camera_data(char* buffer ,int size)
 	    string url = t_add_camera.CameUrL;
 	    iRet = fOurServer->ManCam->try_to_open(url);
 	    if(iRet < 0){
-
+		fOurServer->m_log.Add("open %s failed!", url.c_str());
+		report_add_cam_failure();
+		return -1;
 	    }
 	}
 
+	
 
 	return 0;
 }

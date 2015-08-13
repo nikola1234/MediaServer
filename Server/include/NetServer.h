@@ -19,8 +19,9 @@ class NetServer
 {
 public:
   typedef boost::shared_ptr<NetClientSession> NetClientPtr;
+  typedef boost::shared_lock<boost::shared_mutex> readLock;
   typedef boost::unique_lock<boost::shared_mutex> writeLock;
-
+  
 public:
   	NetServer();
   	~NetServer();

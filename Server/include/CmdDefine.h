@@ -88,6 +88,10 @@ typedef struct _ANAY_VDCS_REGISTER_ACK
 	}
 } T_ANAY_VDCS_REGISTER_ACK;
 
+typedef struct _SM_ANAY_VDCS_DEVICE_STATUS
+{
+	
+}
 
 typedef struct _SM_ANAY_VDCS_DEVICE_STATUS
 {
@@ -155,7 +159,7 @@ typedef struct  _VDCS_VIDEO_PUSH_CAM
 	uint8		frameRate;
 	uint8		CameraFunc;
 	uint8		AnalyzeNUM;
-	uint16  AnalyzeType; //最多两个分析或运算
+	uint16      AnalyzeType; //最多两个分析或运算
 
 	_VDCS_VIDEO_PUSH_CAM(){
 	memset(this, 0, sizeof(_VDCS_VIDEO_PUSH_CAM));

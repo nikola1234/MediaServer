@@ -87,8 +87,8 @@ int CamReadThread::GetCamParam()
 {
 	Mat tmpframe;
 	uint32  num  = 0;
-  m_vcap.open(CV_CAP_FIREWARE);
-  if(!m_vcap.open(m_videoStream)) {
+	m_vcap.open(CV_CAP_FIREWARE);
+	if(!m_vcap.open(m_videoStream)) {
 		dbgprint("%s(%d),%d CAM opening video stream failed!\n",DEBUGARGS,CameraID);
 		return -1;
 	}
@@ -182,12 +182,12 @@ void CamReadThread::run()
 int CamReadThread::CreateCamReadThread()
 {
 	int iRet = -1;
-	pthread_t CamReadThread;
-	iRet = pthread_create(&CamReadThread,NULL,RunCamThread,this);
+	pthread_t ReadThread;
+	iRet = pthread_create(&ReadThread,NULL,RunCamThread,this);
 	if(iRet != 0){
 		 dbgprint("%s(%d),create %d CamReadThread failed!\n",DEBUGARGS,CameraID);
 		 return -1;
 	}
-	pthread_detach(CamReadThread);
+	pthread_detach(ReadThread);
 	return 0;
 }

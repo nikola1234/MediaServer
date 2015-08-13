@@ -13,10 +13,14 @@ ManageCamera::~ManageCamera()
 
 int ManageCamera::InitFromDB()
 {
-  return 0;
+  	return 0;
 }
 
 int ManageCamera::try_to_open(string stream)
 {
-return 0;
+	VideoCapture  vcap;
+	 if(!vcap.open(stream)) {
+	        return -1;
+	}
+	return 0;
 }

@@ -3,7 +3,6 @@
 
 NetServer::NetServer()
   :m_acceptor_(m_io_service_),
-
    m_work_(m_io_service_)
 {
   m_Num =0;
@@ -69,7 +68,7 @@ NetServer::NetClientPtr NetServer::CreateNetClientSession()
 	do{
 		srand((unsigned)time(NULL));
 		m_Num =(uint32 )((rand()%1000)+1);
-		writeLock writelock_(m_clientListMutex_);
+		readLock readlock_(m_clientListMutex_);
 		std::list<NetClientPtr>::iterator it = m_ClientList.begin();
 		for ( ; it != m_ClientList.end() ; it++ )
 		{
@@ -78,7 +77,7 @@ NetServer::NetClientPtr NetServer::CreateNetClientSession()
 				iRet = 1;
 			}
 		}
-
+    readlock_.unlock();
 	}while(iRet);
 
 	NetClientPtr clientptr = NetClientPtr(new NetClientSession(this,m_Num));
