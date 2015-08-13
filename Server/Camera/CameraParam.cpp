@@ -22,3 +22,5 @@ int CamParam::get_camera_rtspurl(string &rtspurl)
   rtspurl = rtsp;
   return  0;
 }
+
+

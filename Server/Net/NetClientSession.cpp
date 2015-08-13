@@ -50,7 +50,7 @@ void NetClientSession::incomingAcceptHandler()
 
 int NetClientSession::client_register_ack()
 {
-	T_PacketHead						     t_PackHeadRegAck;
+	T_PacketHead						 t_PackHeadRegAck;
 	T_ANAY_VDCS_REGISTER_ACK    		 t_RegAck;
 	char  RegAckBuff[28 + 20] ={0};
 	int 	iRet = -1;
@@ -58,8 +58,8 @@ int NetClientSession::client_register_ack()
 	t_PackHeadRegAck.magic			  =  T_PACKETHEAD_MAGIC;
 	t_PackHeadRegAck.cmd			  =  SM_VDCS_ANAY_REGISTER_ACK;
 	t_PackHeadRegAck.UnEncryptLen	 =  sizeof(T_ANAY_VDCS_REGISTER_ACK);
-
 	memcpy(RegAckBuff,&t_PackHeadRegAck,sizeof(T_PacketHead));
+	
 	t_RegAck.ServerID = SerParam.ServerID;
 	memcpy(t_RegAck.Serverip ,SerParam.Serverip,IP_LEN_16);
 	memcpy(RegAckBuff+sizeof(T_PacketHead),&t_RegAck,sizeof(T_ANAY_VDCS_REGISTER_ACK));
@@ -67,9 +67,42 @@ int NetClientSession::client_register_ack()
   	return 0;
 }
 
-void NetClientSession::report_add_cam_failure()
+void NetClientSession::push_camera_data_ack1(ST_VDCS_VIDEO_PUSH_CAM & AddCamera)
 {
+	T_PacketHead  t_PackHeadAddAck;
+	T_ANAY_VDCS_PUSH_CAM_ACK  t_CamAddAck;
+	char AddAckBuff[28 + 1 +16+128+128] ={0};
 
+	t_PackHeadAddAck.magic	    =  T_PACKETHEAD_MAGIC;
+	t_PackHeadAddAck.cmd			  =  SM_VDCS_ANAY_PUSH_CAMERA_ACK;
+	t_PackHeadAddAck.UnEncryptLen	 =  sizeof(T_ANAY_VDCS_PUSH_CAM_ACK);
+	memcpy(AddAckBuff,&t_PackHeadAddAck,sizeof(T_PacketHead));
+
+	t_CamAddAck.ack   = 0;
+	memcpy(t_CamAddAck.ip ,AddCamera.ip,IP_LEN_16);
+	memcpy(t_CamAddAck.CameUrL,AddCamera.CameUrL,SINGLE_URL_LEN_128);
+	memcpy(AddAckBuff+sizeof(T_PacketHead),&t_CamAddAck,sizeof(T_ANAY_VDCS_PUSH_CAM_ACK));
+	SendMessage(AddAckBuff,sizeof(AddAckBuff));
+}
+
+void NetClientSession::push_camera_data_ack2(ST_VDCS_VIDEO_PUSH_CAM & AddCamera,string &url)
+{
+	T_PacketHead  t_PackHeadAddAck;
+	T_ANAY_VDCS_PUSH_CAM_ACK  t_CamAddAck;
+	char AddAckBuff[28 + 1 +16+128+128] ={0};
+
+	t_PackHeadAddAck.magic	    =  T_PACKETHEAD_MAGIC;
+	t_PackHeadAddAck.cmd			  =  SM_VDCS_ANAY_PUSH_CAMERA_ACK;
+	t_PackHeadAddAck.UnEncryptLen	 =  sizeof(T_ANAY_VDCS_PUSH_CAM_ACK);
+	memcpy(AddAckBuff,&t_PackHeadAddAck,sizeof(T_PacketHead));
+
+	t_CamAddAck.ack   = 1;
+	memcpy(t_CamAddAck.ip ,AddCamera.ip,IP_LEN_16);
+	memcpy(t_CamAddAck.CameUrL,AddCamera.CameUrL,SINGLE_URL_LEN_128);
+	memcpy(t_CamAddAck.RtspUrL,url.c_str(),url.length());
+	memcpy(AddFailureBuff+sizeof(T_PacketHead),&t_CamAddAck,sizeof(T_ANAY_VDCS_PUSH_CAM_ACK));
+	SendMessage(AddAckBuff,sizeof(AddAckBuff));
+	
 }
 
 int NetClientSession::push_camera_data(char* buffer ,int size)
@@ -85,13 +118,13 @@ int NetClientSession::push_camera_data(char* buffer ,int size)
 	    iRet = fOurServer->ManCam->try_to_open(url);
 	    if(iRet < 0){
 		fOurServer->m_log.Add("open %s failed!", url.c_str());
-		report_add_cam_failure();
+		push_camera_data_ack1(t_add_camera);
 		return -1;
 	    }
 	}
-
-	
-
+	string url;
+	url = fOurServer->ManCam->Create_or_Renew_Camera(t_add_camera);
+	push_camera_data_ack2(t_add_camera,url);
 	return 0;
 }
 

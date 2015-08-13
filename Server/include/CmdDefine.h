@@ -46,8 +46,11 @@ enum ANAY_VDCS_CMD {  				/* city Server interaction CMD */
 	SM_VDCS_ANAY_WARN_INFO_ACK,
 
 	SM_VDCS_ANAY_PUSH_CAMERA,
+	SM_VDCS_ANAY_PUSH_CAMERA_ACK,
+	
 	SM_VDCS_ANAY_PUSH_CAMERA_TYPE,
 	SM_VDCS_ANAY_PUSH_CAMERA_PARAM,
+
 
 	SM_ANAY_HEATBEAT = 0X8003
 };
@@ -77,7 +80,7 @@ enum AnalyzeType
 	ResidueDetect =	0x0020,
 
 };
-
+/***************************************************send******************************************************/
 typedef struct _ANAY_VDCS_REGISTER_ACK
 {
 	uint32 ServerID;
@@ -88,10 +91,20 @@ typedef struct _ANAY_VDCS_REGISTER_ACK
 	}
 } T_ANAY_VDCS_REGISTER_ACK;
 
-typedef struct _SM_ANAY_VDCS_DEVICE_STATUS
+typedef struct _ANAY_VDCS_PUSH_CAM_ACK
 {
-	
-}
+	uint8        ack; // 1 success  0 failure
+	char		ip[IP_LEN_16];
+	char		CameUrL[SINGLE_URL_LEN_128];
+	char         RtspUrL[SINGLE_URL_LEN_128];
+
+	_ANAY_VDCS_PUSH_CAM_ACK(){
+		memset(this, 0, sizeof(_ANAY_VDCS_PUSH_CAM_ACK));
+	}
+}T_ANAY_VDCS_PUSH_CAM_ACK;
+
+
+/***************************************************receive******************************************************/
 
 typedef struct _SM_ANAY_VDCS_DEVICE_STATUS
 {

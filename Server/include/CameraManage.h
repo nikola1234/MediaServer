@@ -7,6 +7,7 @@
 #include "Common.h"
 #include "NetServer.h"
 #include "SingleCamera.h"
+#include "CmdDefine.h"
 
 class NetServer;
 class SingleCamera;
@@ -28,6 +29,7 @@ public:
   int InitFromDB();
 
   int try_to_open(string stream);
+  string &Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 
 private:
 	std::list<SingleCamPtr> m_SinCamList;
