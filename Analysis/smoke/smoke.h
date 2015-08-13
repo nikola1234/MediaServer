@@ -33,10 +33,10 @@ public:
 
 	Mat thres;
 	Mat	bgEMap;
-	
+
 	vector<Rect> Rects;
 	int SetRectangle(vector< Rect > & rectangle);
-	int SmokeAlarmDetectRun(Mat & displayframe);
+	int SmokeDetectRun(Mat & displayframe);
 
 private:
 	void initThreshold(int cols, int rows, float initValue) ;

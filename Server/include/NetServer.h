@@ -11,7 +11,9 @@
 #include "MyLog.h"
 #include "Common.h"
 #include "NetClientSession.h"
+#include "CameraManage.h"
 
+class ManageCamera;
 class NetClientSession;
 class NetServer
 {
@@ -22,7 +24,7 @@ public:
 public:
   	NetServer();
   	~NetServer();
-
+	  void AddManaCamera(ManageCamera *cam){ ManCam = cam;}
 public:
 
 	boost::asio::io_service& Get_io_service(){ return m_io_service_; }
@@ -34,7 +36,7 @@ public:
 
 	void HandleAccept(NetClientPtr clientptr,const boost::system::error_code& error);
 	void Run();
-	
+
 	unsigned int  GetClientListSize(){return m_ClientList.size() ;}
 private:
 
@@ -62,6 +64,7 @@ public:
 	unsigned int m_Num;
 	char log_file[40];
 	boost::posix_time::ptime  ptime_startup;
+	ManageCamera *ManCam;
 };
 
 #endif

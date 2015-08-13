@@ -138,7 +138,7 @@ typedef struct _VIDEO_DRAW  // pkg means special parameter
 	uint16 	StartY;				//StartY
 	uint16 	EndX;					//EndX    if draw is rectangle  means width
 	uint16 	EndY;					//EndY    if draw is rectangle  means height
-	uint16  Type;					//1 rectangle 2 line
+	uint16  Type;					// 1 rectangle 2 line
 
 	_VIDEO_DRAW(){
 		memset(this, 0, sizeof(_VIDEO_DRAW));

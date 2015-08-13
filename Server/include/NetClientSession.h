@@ -16,7 +16,7 @@ class NetClientSession
 : public boost::enable_shared_from_this<NetClientSession>
 {
 public:
-	
+
 	NetClientSession(NetServer * ourServer, unsigned int sessionId);
 	~NetClientSession();
 

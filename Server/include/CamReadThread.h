@@ -30,6 +30,24 @@ private:
   Mat ReadFrame;
   Mat EncodeFrame;
 
+  VideoCapture  	m_vcap;
+  int 	 	m_rows; 	 /* high */
+	int 	 	m_cols; 	  /* width */
+	int	  	m_fps;
+  AVFormatContext *fmtctx;
+  AVCodec * codec;
+	AVCodecContext *c;
+	AVStream *video_st;
+
+	AVPacket pkt;
+	Mat rgb_frame;
+
+	AVFrame *m_pRGBFrame ;  //RGB帧数据
+	AVFrame *m_pYUVFrame ;  //YUV帧数据
+	uint8   *pYUV_buffer;
+
+	struct SwsContext *scxt;
+
   void releaseEncode();
   int EncodeInit();
   int GetCamParam();

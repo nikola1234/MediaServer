@@ -1,11 +1,8 @@
 #include "CamAnaThread.h"
 
-CamAnaThread::CamAnaThread(CCamThread** camera,uint8 cam_index,uint8 alarm_index)
+CamAnaThread::CamAnaThread()
 {
-  m_AlarmCamera = *camera;
-  m_cam_index   = cam_index;
-  m_alarm_index = alarm_index;
-  m_AlarmFlag   = true;
+  m_AnaFlag   = true;
   m_Status      = false;
   WarnType      = 0;
   alarm         = 0;
@@ -17,21 +14,24 @@ CamAnaThread::CamAnaThread(CCamThread** camera,uint8 cam_index,uint8 alarm_index
   alarmStartframe   = 0;
   alarmStopframe    = 0;
 
-  mut   = PTHREAD_MUTEX_INITIALIZER;
-  cond  = PTHREAD_COND_INITIALIZER;
+  //mut   = PTHREAD_MUTEX_INITIALIZER;
+  //cond  = PTHREAD_COND_INITIALIZER;
+  pthread_mutex_init (&mut,NULL);
+  pthread_cond_init(&cond, NULL);
 
-  region = new CRegion(m_cam_index);
+
+  region = new CRegion(CameraID);
 
   videoHandler = NULL;
-  fire = new CFire(m_cam_index ,&videoHandler);
+  fire = new CFire(CameraID ,&videoHandler);
 
-  smoke = new CSmoke(m_cam_index);
+  smoke = new CSmoke(CameraID);
 
-  human = new CHuman(m_cam_index);
+  human = new CHuman(CameraID);
 
 }
 
-CamAnaThread::~CAlarmThread()
+CamAnaThread::~CamAnaThread()
 {
     pthread_mutex_destroy(&mut);
     pthread_cond_destroy(&cond);
@@ -96,14 +96,14 @@ int CamAnaThread::alarmStrategy()
   return 0;
 }
 
-int  CamAnaThread::human_detect(Mat &frame)
+int CamAnaThread::human_detect(Mat &frame)
 {
   int iRet = -1;
 
   if(!frame.empty())
   {
-      huamn->HumanAlarmRun(tmp);
-      alarm = huamn->alarm ;
+      human->HumanDetectRun(frame);
+      alarm = human->alarm ;
       usleep(20*1000);
       /*
       humanALL  	= human->humanstatis.numAll;
@@ -140,7 +140,7 @@ int  CamAnaThread::region_detect(Mat &frame)
 
   if(!frame.empty())
   {
-  		region->alarmRegionDetectRun(frame);
+  		region->RegionDetectRun(frame);
       alarm = region->alarm ;
   		usleep(20*1000);
   }
@@ -169,7 +169,7 @@ int  CamAnaThread::fire_detect(Mat &frame)
 
   if(!frame.empty())
   {
-      fire->frame(tmp,(void *)videoHandler);
+      fire->FireDetectRun(frame,(void *)videoHandler);
       alarm = fire->alarm ;
       usleep(20*1000);
   }
@@ -198,7 +198,7 @@ int  CamAnaThread::smoke_detect(Mat &frame)
 
   if(!frame.empty())
   {
-      smoke->SmokeAlarmDetectRun(tmp);
+      smoke->SmokeDetectRun(frame);
       alarm = smoke->alarm ;
       usleep(20*1000);
   }
@@ -235,20 +235,17 @@ int CamAnaThread::alarm_run(Mat &frame ,uint8 iType)
           region_detect(frame);
           break;
     case FixedObjDetect:
-          fixobj_detect(frame);
+          //fixobj_detect(frame);
           break;
     case FireDetect:
           fire_detect(frame);
           break;
     case ResidueDetect:
-          residue_detect(frame);
-          break;
-    case GenderDetect:
-          gender_detect(frame);
+          //residue_detect(frame);
           break;
     default:
-          dbgprint("%s(%d),cam %d alarmindex  %d wrong WarnType %x !\n",
-                                  DEBUGARGS,m_cam_index,m_alarm_index,iType);
+          dbgprint("%s(%d),cam %d alarmindex  %d wrong WarnType !\n",
+                                  DEBUGARGS,CameraID,iType);
           usleep(40*1000);
           break;
   }
@@ -273,7 +270,7 @@ void CamAnaThread::resource_release()
 
 void CamAnaThread::run()
 {  // start within pause
-  while(m_AlarmFlag){
+  while(m_AnaFlag){
       pthread_mutex_lock(&mut);
       while (!m_Status)
       {
@@ -284,11 +281,11 @@ void CamAnaThread::run()
 
       switch (AnaIndex) {
         case 1:
-              m_AlarmCamera->Alarmthead1Frame.copyTo(frame1);
+              //m_AlarmCamera->Alarmthead1Frame.copyTo(frame1);
               alarm_run(frame1,WarnType);  //alarm_run(Mat & frame);
               break;
         case 2:
-              m_AlarmCamera->Alarmthead2Frame.copyTo(frame2);
+            //  m_AlarmCamera->Alarmthead2Frame.copyTo(frame2);
               alarm_run(frame2,WarnType);
               break;
         default:
@@ -296,7 +293,7 @@ void CamAnaThread::run()
           break;
       }
   }
-  resource_release();
+
   dbgprint("%s(%d),%d CAlarmThread exit!\n",DEBUGARGS,CameraID);
 	pthread_exit(NULL);
 }

@@ -16,7 +16,7 @@ export AS LD CC CXX  CPP AR NM
 export STRIP OBJCOPY OBJDUMP
 
 CXXFLAGS := -Wall  -O2 -g
-CXXFLAGS += -I $(shell pwd)/include -I ../Analysis
+CXXFLAGS += -I $(shell pwd)/include  -I $(shell pwd)/../Analysis
 CXXFLAGS += $(shell pkg-config --cflags OpenCVPC) -lavformat -lavcodec -lavfilter -lavutil -lswresample -lswscale -lz -D__STDC_CONSTANT_MACROS
 
 LDLIBS   := $(shell pkg-config --libs  OpenCVPC)-lboost_system -lboost_date_time -lboost_filesystem -lboost_thread -lboost_atomic -lpthread -lm
@@ -31,10 +31,10 @@ export SUBDIR
 TARGET := demo
 
 obj-y += main.o
+obj-y += Camera/
 obj-y += File/
 obj-y += Log/
 obj-y += Net/
-#obj-y += tmp/
 
 all :
 	make  -C ./ -f $(SUBDIR)/Makefile.build

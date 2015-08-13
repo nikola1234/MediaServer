@@ -5,7 +5,7 @@ extern CRtspCamera rtspCamera;
 CamReadThread::CamReadThread(string url,uint32 ID)
 {
   CameraID = ID;
-  m_videoStream =url
+  m_videoStream =url;
   m_CameraFlag = true;
 }
 

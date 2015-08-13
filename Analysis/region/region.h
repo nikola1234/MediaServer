@@ -14,14 +14,14 @@ public:
 	uint8 alarm;
 
 	vector< Rect > Rects;
-
+	uint16 frameindex;
 	int SetRectangle(vector< Rect > & rectangle);
 	int RegionDetectRun(Mat &dispalyFrame);
 
 private:
 	Mat TmpFrame;
 
-	uint16 frameindex;
+
 	float resolution;
 
 	int     m_rowsZoomRate;

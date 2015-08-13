@@ -2,7 +2,7 @@
 #define _DATA_H_
 
 #include "Common.h"
-#include "CmedDefine.h"
+#include "CmdDefine.h"
 
 typedef struct _ALARM_TIME_{
 
@@ -31,19 +31,6 @@ typedef struct _ALARM_DAY{
   ALARM_DAY_INT dayTime;
 
 }ALARM_DAY;
-
-typedef struct _VIDEO_DRAW  // pkg means special parameter
-{
-	uint16 	StartX;				//StartX
-	uint16 	StartY;				//StartY
-	uint16 	EndX;					//EndX    if draw is rectangle  means width
-	uint16 	EndY;					//EndY    if draw is rectangle  means height
-	uint16  Type;					//1 monitor 2 Inward and outward 3 region
-
-	_VIDEO_DRAW(){
-		memset(this, 0, sizeof(_VIDEO_DRAW));
-	}
-}VIDEO_DRAW;
 
 typedef struct _CAMERA_DB_PARAM
 {

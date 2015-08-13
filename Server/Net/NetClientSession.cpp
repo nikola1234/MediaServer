@@ -67,24 +67,24 @@ int NetClientSession::client_register_ack()
   	return 0;
 }
 
-int NetClientSession::get_cam_num()
-{
-	
-}
-
 int NetClientSession::push_camera_data(char* buffer ,int size)
 {
-   uint32 num = 0;
-    ST_VDCS_VIDEO_PUSH_CAM t_add_camera;
- 
-    memcpy(&t_add_camera,buffer,sizeof(ST_VDCS_VIDEO_PUSH_CAM));
-    if('r' == t_add_camera.CameUrL[0])
-    {
-    	 num = get_cam_num();
-    }
-    
-    
-    return 0;
+	int iRet = -1;
+	uint32 num = 0;
+	ST_VDCS_VIDEO_PUSH_CAM t_add_camera;
+
+	memcpy(&t_add_camera,buffer,sizeof(ST_VDCS_VIDEO_PUSH_CAM));
+	if('r' == t_add_camera.CameUrL[0])
+	{
+	    string url = t_add_camera.CameUrL;
+	    iRet = fOurServer->ManCam->try_to_open(url);
+	    if(iRet < 0){
+
+	    }
+	}
+
+
+	return 0;
 }
 
 int NetClientSession::ReciveData_GetParam(char* buffer ,int size)
@@ -101,9 +101,11 @@ int NetClientSession::ReciveData_GetParam(char* buffer ,int size)
 
 	switch (cmd ){
 		case SM_ANAY_VDCS_REGISTER:
+			fOurServer->m_log.Add(" %d client_register_ack", fOurSessionId);
 			client_register_ack();
 			break;
 		case SM_VDCS_ANAY_PUSH_CAMERA:
+			fOurServer->m_log.Add(" %d client push camera", fOurSessionId);
 			push_camera_data(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
 			break;
 		default: break;

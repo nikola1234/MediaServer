@@ -619,7 +619,7 @@ vector<Rect>  CSmoke::detectSmoke(Mat& originFrame)
 }
 
 
-int CSmoke::SmokeAlarmDetectRun(Mat & displayframe)
+int CSmoke::SmokeDetectRun(Mat & displayframe)
 {
 	Mat tmp;
 	displayframe.copyTo(tmp);

@@ -2,30 +2,32 @@
 #define _CAM_ANA_THREAD_H_
 
 #include "Common.h"
+#include "CmdDefine.h"
 
 #include "region/region.h"
 #include "fire/VideoHandler.h"
 #include "fire/fire.h"
-#include "somke/smoke.h"
+#include "smoke/smoke.h"
 #include "human/human.h"
 
 #define START_FRAME_INDEX     8
 #define INTERVAL_FRAME_INDEX  100
 #define STOP_FRAME_INDEX      40
 
-enum warnevent{
-    alarmOn   = 0x01;
-    alarmStop = 0x02;
+enum warnevent
+{
+    alarmOn   = 0x01,
+    alarmStop = 0x02,
 };
 
 class CamAnaThread
 {
 public:
-  CamAnaThread(CCamThread* &camera,uint8 ID);
+  CamAnaThread();
   ~CamAnaThread();
 
-  CCamThread* m_AlarmCamera;
-  bool  m_AlarmFlag;
+
+  bool  m_AnaFlag;
   bool  m_Status;
 
   Mat frame1;
@@ -42,7 +44,7 @@ public:
   uint8  intervalflag;
 
   CRegion* region;
-  VideoHandler* videoHandler ;
+  VideoHandler* videoHandler;
   CFire*   fire;
   CSmoke*  smoke;
   CHuman*  human;
@@ -65,7 +67,7 @@ public:
 		p->run();
 		return NULL;
 	}
-  void quit(){ m_AlarmFlag = false;}
+  void quit(){ m_AnaFlag = false;}
   void resume();
   void pause();
 
