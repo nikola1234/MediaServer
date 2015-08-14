@@ -13,9 +13,11 @@ public:
 	CamList();
 	~CamList();
 
+	
+	int add_cam_list(char * &url,uint32 ID);
 	int search_cam_by_url(char *url,int & ID);
 private:
-	std::list<T_CAM_LIST> camlist_;
+	std::list<T_CAM_LIST> camlist_;  /* url and ID */
 	
 	boost::shared_mutex m_CamListMutex_;
 };

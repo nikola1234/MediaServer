@@ -8,22 +8,25 @@
 #include "CameraAnalyze.h"
 #include "CameraParam.h"
 #include "Data.h"
+#include "CameraManage.h"
 
 class SingleCamera
 :public boost::enable_shared_from_this<SingleCamera>
 {
 
 public:
-	SingleCamera();
+	SingleCamera(ManageCamera*cam,uint32 ID);
 	~SingleCamera();
 	
 	uint32 GetCameraID(){return CameraID;}
-	void set_camera_param(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 	
+	int set_camera_param(ST_VDCS_VIDEO_PUSH_CAM & addCam);
+	void reset_camera_param(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 	string  get_rtsp_url();
 private:
 	uint32 CameraID;
 	CamParam * Param;
 	CamAnalyze *Ana;
+	ManageCamera * ManaCam;
 };
 #endif

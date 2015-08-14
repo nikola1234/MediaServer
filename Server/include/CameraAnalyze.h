@@ -2,7 +2,7 @@
 #define _CAMERA_ANALYZE_H_
 
 #include "Common.h"
-
+#include "Data.h"
 #include "CamReadThread.h"
 #include "CamTimeThread.h"
 #include "CamAnaThread.h"
@@ -11,8 +11,11 @@ class CamAnalyze
 {
 
 public:
-	CamAnalyze();
+	CamAnalyze(uint32 ID);
 	~CamAnalyze();
+
+
+	int start_all_thread(T_CAM_PARAM *pt_cam_param); 
 
 	void StopAnalyze();
 

@@ -1,10 +1,13 @@
 #include "SingleCamera.h"
 
-SingleCamera::SingleCamera();
+SingleCamera::SingleCamera(ManageCamera*cam,uint32 ID)
 {
-	CameraID = 0;
-	Param 	=NULL;
-	Ana		=NULL;
+	CameraID = ID;
+	ManaCam = cam;
+	
+	Param 	=  new CamParam(ID,this);
+	
+	Ana		=  new CamAnalyze(ID);
 }
 
 SingleCamera::~SingleCamera()
@@ -20,10 +23,14 @@ string  SingleCamera:: get_rtsp_url()
 	return url;
 }
 
-void SingleCamera::set_camera_param(ST_VDCS_VIDEO_PUSH_CAM & addCam)
+int SingleCamera:: set_camera_param(ST_VDCS_VIDEO_PUSH_CAM & addCam)
+{
+	Param->set(addCam);
+}
+
+void SingleCamera::reset_camera_param(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 {
 	Ana ->StopAnalyze();
-	Param->release();
-	Param->reset(addCam,CameraID);
+	Param->reset(addCam);
 }
 

@@ -12,6 +12,20 @@ typedef struct _CAM_LIST{
 	}
 }T_CAM_LIST;
 
+typedef struct _CAM_PARAM_{
+	
+	char url[SINGLE_URL_LEN_128];
+	uint8   CameraFunc; // 1 take photo 2 analyze
+	uint8   AnalyzeNUM;
+
+	uint16  AnalyzeType1;
+	uint16 AnalyzeType2;
+
+	_CAM_PARAM_(){
+		memset(this, 0, sizeof(_CAM_PARAM_));
+	}
+
+}T_CAM_PARAM;
 
 typedef struct _ALARM_TIME_{
 

@@ -10,6 +10,7 @@
 #include "SingleCamera.h"
 #include "CmdDefine.h"
 #include "Data.h"
+#include "CppSQLite3.h"
 
 class NetServer;
 class SingleCamera;
@@ -17,8 +18,8 @@ class ManageCamera
 {
 public:  
 	typedef boost::shared_ptr<SingleCamera> SingleCamPtr;	
-	typedef boost::shared_lock<boost::shared_mutex> ManCamReadLock;
-	typedef boost::unique_lock<boost::shared_mutex> ManCamWriteLock;
+	typedef boost::shared_lock<boost::shared_mutex> ReadLock;
+	typedef boost::unique_lock<boost::shared_mutex> WriteLock;
 
 public:
 
@@ -32,6 +33,8 @@ public:
   string Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 
 private:
+	uint32  get_camera_id();
+	int read_CameraID_from_DB();
 	SingleCamPtr search_cam_by_id(uint32 ID);
 	int reset_camera_param(uint32 ID,ST_VDCS_VIDEO_PUSH_CAM & addCam,string &url);
 
@@ -39,6 +42,8 @@ private:
 	std::list<SingleCamPtr> m_SinCamList;
 	boost::shared_mutex m_SinCamListMutex_;
 
+	std::list<uint32> CamID;
+	boost::shared_mutex m_CamIDListMutex_;
 
 	NetServer *Server;
 

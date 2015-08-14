@@ -5,18 +5,22 @@
 #include "Common.h"
 #include "CmdDefine.h"
 #include "Data.h"
+#include "SingleCamera.h"
 
 class CamParam
 {
 public:
-	CamParam();
+	CamParam(uint32 ID,SingleCamera *sincam);
 	~CamParam();
 
 	string get_camera_rtsp_url();
-	void release();
-	void reset(ST_VDCS_VIDEO_PUSH_CAM & addCam,uint32 ID);
+
+	
+	int set(ST_VDCS_VIDEO_PUSH_CAM & addCam);
+	void reset(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 
 private:
+	SingleCamera *SinCam;
 
 	uint32  CameraID;
 	char   CameraIP[IP_LEN_16];

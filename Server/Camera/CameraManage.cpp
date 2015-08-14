@@ -14,8 +14,59 @@ ManageCamera::~ManageCamera()
 
 }
 
+int ManageCamera::read_CameraID_from_DB(char * path)
+{
+	int ret = 0;
+	sqlite3* db = NULL;
+	char sqlbuf[1024];
+	char *ErrMsg=NULL;
+	char **pszResult = NULL;
+	char open_db_result = 0;
+
+	int nRow = 0;
+	int nColumn = 0;
+
+	memset(sqlbuf,0,sizeof(sqlbuf));
+
+	open_db_result = sqlite3_open(path,&db);
+	sprintf(sqlbuf,"select CameraID from vnmp_CameraInfo;");
+	ret = sqlite3_get_table(db, sqlbuf, &pszResult, &nRow, &nColumn, &ErrMsg);
+	if (ret != SQLITE_OK)
+	{
+		 m_log.Add("%s(%d),SQL error! %s" ,DEBUGARGS,ErrMsg);
+		sqlite3_free(ErrMsg);
+		ErrMsg = NULL;
+		sqlite3_free_table(pszResult);
+		sqlite3_close(db);
+		return -1;
+	}
+	else
+	{
+		int num = 0;
+		for (int i = 0; i <= nRow; ++i)
+		{
+			for (int j = 0; j < nColumn; ++j)
+			{
+				int n= atoi(*(pszResult + nColumn * i + j));	
+				if( n != 0){
+					CamID.push_back((uint32)n);
+					num++;
+				}
+			}
+		}
+	}
+	if (ErrMsg != NULL) sqlite3_free(ErrMsg);
+	ErrMsg = NULL;
+	sqlite3_free_table(pszResult);
+	sqlite3_close(db);
+	return 0;
+
+}
+
 int ManageCamera::InitFromDB()
 {
+	char DB_file[20] ="MS.sqlite";
+	read_CameraID_from_DB(DB_file);
   	return 0;
 }
 
@@ -23,38 +74,27 @@ int ManageCamera::try_to_open(string stream)
 {
 	VideoCapture  vcap;
 	 if(!vcap.open(stream)) {
+		 m_log.Add("%s(%d),try to open failed!" ,DEBUGARGS);
 	        return -1;
 	}
 	return 0;
 }
 
-int ManageCamera::create_camera_id(ST_VDCS_VIDEO_PUSH_CAM & addCam)
-{
-	uint num = 0;
-	int  iRet = 0;
-	do{
-		srand((unsigned)time(NULL));
-		num =600300000 +(uint32 )((rand()%500)+1);
-		ManCamReadLock readlock_(m_SinCamListMutex_);
-		std::list<SingleCamPtr>::iterator it = m_SinCamList.begin();
-		for ( ; it != m_SinCamList.end() ; it++ )
-		{
-			if ((*it)->GetCameraID() == num)
-			{
-				iRet = 1;
-				break;
-			}
-			iRet = 0;
-		}
-    		readlock_.unlock();
-	}while(iRet);
-
+uint32  ManageCamera::get_camera_id()
+{	uint32 ID = 0;
+	ReadLock read_lock (m_CamIDListMutex_);
+	if(CamID.size() >0)
+		ID = CamID.front();
+	read_lock.unlock();
+	WriteLock write_lock(m_CamIDListMutex_);
+	CamID.pop_front(); 
+	return ID;
 }
 
 SingleCamPtr ManageCamera::search_cam_by_id(uint32 ID)
 {
 	SingleCamPtr tmpcamptr=NULL;
-	ManCamReadLock readlock_(m_SinCamListMutex_);
+	ReadLock readlock_(m_SinCamListMutex_);
 	std::list<SingleCamPtr>::iterator it = m_SinCamList.begin();
 	for ( ; it != m_SinCamList.end() ; it++ )
 	{
@@ -72,16 +112,23 @@ int  ManageCamera::reset_camera_param(uint32 ID,ST_VDCS_VIDEO_PUSH_CAM & addCam,
 	SingleCamPtr camptr =NULL;
 	camptr = search_cam_by_id(ID);
 	if(camptr == NULL)return -1;
-	ManCamWriteLock writelock_(m_SinCamListMutex_);
-	camptr->set_camera_param(addCam);
+	
+	WriteLock writelock_(m_SinCamListMutex_);
+	camptr->reset_camera_param(addCam);
 	writelock_.unlock();
-	ManCamReadLock readlock_(m_SinCamListMutex_);
+	
+	ReadLock readlock_(m_SinCamListMutex_);
 	url =camptr->get_rtsp_url();
 	if(url.length() == 0){
-		dbgprint("%s(%d),wrong rtsp url !\n", DEBUGARGS);
+		m_log.Add("%s(%d),wrong rtsp url!" ,DEBUGARGS);
 		return -1;
 	}
 	return 0;
+}
+int ManageCamera::add_camID_list(char *&url ,uint32 ID)
+{
+	int iRet =  m_CamList.add_cam_list(url,ID);
+	return iRet;
 }
 
 string ManageCamera::Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam)
@@ -91,16 +138,34 @@ string ManageCamera::Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 	string url = "TT";
 	
 	iRet = m_CamList.search_cam_by_url(addCam.CameUrL,ID);
-	if(iRet = -1){
-		create_camera_id(addCam);
-		set_param();
-		set_or_change_analyze();
-		url =getUrl();
-		Add_or_Renew_DB();
+	if(iRet = -1){ /* have no camera */
+		ID = get_camera_id();
+		if(ID == 0){
+			m_log.Add("%s(%d),get camer id failure!" ,DEBUGARGS);
+			return url;
+		}
+		SingleCamPtr camptr = SingleCamPtr(new SingleCamera(this,(uint32)ID));
+		WriteLock writelock_(m_SinCamListMutex_);
+		m_SinCamList.push_front(camptr);
+		writelock_.unlock();
+		camptr->set_camera_param(addCam);
+		url =camptr->get_rtsp_url();
+		if(url.length() == 0){
+			m_log.Add("%s(%d),wrong rtsp url!" ,DEBUGARGS);
+			return url;
+		}
+		//add list
+		iRet =add_camID_list(addCam.CameUrL,(uint32)ID);
+		if(iRet < 0){
+			string tmpurl ="TT";
+			m_log.Add("%s(%d),add_camID_list failure!" ,DEBUGARGS);
+			return tmpurl;
+		}
+		//Add_or_Renew_DB();
 		return url;
 	}
 	
-	if(iRet == 0){
+	if(iRet == 0){ /* have exist camera */
 		if(ID <= 0){
 			m_log.Add("push exist camera %s and ID= %d return failure !" ,addCam.CameUrL,ID);
 			return url;
