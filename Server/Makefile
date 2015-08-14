@@ -35,6 +35,7 @@ obj-y += Camera/
 obj-y += File/
 obj-y += Log/
 obj-y += Net/
+obj-y += Db/
 
 all :
 	make  -C ./ -f $(SUBDIR)/Makefile.build

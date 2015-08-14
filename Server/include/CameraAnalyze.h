@@ -14,6 +14,7 @@ public:
 	CamAnalyze();
 	~CamAnalyze();
 
+	void StopAnalyze();
 
 private:
 	uint32 CameraID;

@@ -67,15 +67,24 @@ SingleCamPtr ManageCamera::search_cam_by_id(uint32 ID)
 	return tmpcamptr;
 }
 
-int  ManageCamera::reset_camera(uint32 ID,ST_VDCS_VIDEO_PUSH_CAM & addCam)
+int  ManageCamera::reset_camera_param(uint32 ID,ST_VDCS_VIDEO_PUSH_CAM & addCam,string &url)
 {
 	SingleCamPtr camptr =NULL;
 	camptr = search_cam_by_id(ID);
 	if(camptr == NULL)return -1;
+	ManCamWriteLock writelock_(m_SinCamListMutex_);
 	camptr->set_camera_param(addCam);
+	writelock_.unlock();
+	ManCamReadLock readlock_(m_SinCamListMutex_);
+	url =camptr->get_rtsp_url();
+	if(url.length() == 0){
+		dbgprint("%s(%d),wrong rtsp url !\n", DEBUGARGS);
+		return -1;
+	}
+	return 0;
 }
 
-string &ManageCamera::Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam)
+string ManageCamera::Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 {
 	int iRet = -1;
 	int ID = -1;
@@ -96,15 +105,11 @@ string &ManageCamera::Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 			m_log.Add("push exist camera %s and ID= %d return failure !" ,addCam.CameUrL,ID);
 			return url;
 		}
-		reset_camera((uint32)ID,addCam);
-		reset_param();
-		set_or_change_analyze(); /*start with stop*/
-		url = get_url();
-		Add_or_Renew_DB();
+		reset_camera_param((uint32)ID,addCam,url); /*stop analyze*/
+		//Add_or_Renew_DB();
 		return url;
 	}
 
-	
 	return url;
 }
 

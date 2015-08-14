@@ -269,13 +269,12 @@ void CamAnaThread::resource_release()
 }
 
 void CamAnaThread::run()
-{  // start within pause
+{  
   while(m_AnaFlag){
       pthread_mutex_lock(&mut);
       while (!m_Status)
       {
           pthread_cond_wait(&cond, &mut);
-          resource_release();
       }
       pthread_mutex_unlock(&mut);
 

@@ -10,10 +10,9 @@ CamTimeThread::CamTimeThread(uint32 ID)
 	Ana2Status = false;
 	AnalyzeNUM = 0;
 
-	//mut   = PTHREAD_MUTEX_INITIALIZER;
-	//cond  = PTHREAD_COND_INITIALIZER;
+
 	pthread_mutex_init (&mut,NULL);
-  pthread_cond_init(&cond, NULL);
+	pthread_cond_init(&cond, NULL);
 
 }
 
@@ -182,7 +181,6 @@ void CamTimeThread::run()
 		pthread_mutex_lock(&mut);
 		while (!m_Status)
 		{
-		  clear_time();
 		  pthread_cond_wait(&cond, &mut);
 		}
 		pthread_mutex_unlock(&mut);
@@ -198,7 +196,7 @@ void CamTimeThread::run()
 		default :
 			break;
 		}
-	  	sleep(4);
+	  	sleep(2);
 	}
 
 	dbgprint("%s(%d),%d CamTimeThread exit!\n",DEBUGARGS,CameraID);

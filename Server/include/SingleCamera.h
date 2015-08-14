@@ -20,6 +20,7 @@ public:
 	uint32 GetCameraID(){return CameraID;}
 	void set_camera_param(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 	
+	string  get_rtsp_url();
 private:
 	uint32 CameraID;
 	CamParam * Param;

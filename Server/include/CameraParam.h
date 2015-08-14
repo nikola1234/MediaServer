@@ -3,6 +3,7 @@
 #define _CAMERA_PARAM_H_
 
 #include "Common.h"
+#include "CmdDefine.h"
 #include "Data.h"
 
 class CamParam
@@ -11,52 +12,40 @@ public:
 	CamParam();
 	~CamParam();
 
-	void set_camera_id(uint32 ID){CameraID = ID;}
-	uint32 get_camera_id(){return CameraID;}
-
-	void  set_camera_ip(string ip){CameraIP =ip;}
-	string get_camera_ip(){return CameraIP;}
-
-	void change_framerate(uint8 rate){frameRate = rate;}
-
-	void  set_camera_url(string url){CamUrl =url;}
-	string get_camera_url(){return CamUrl;}
-
-	int get_camera_rtspurl(string &rtspurl);
-
-	void set_camera_func(uint8 func) {CameraFunc = func;}
-	uint8 get_camera_func() {return CameraFunc;}
-
-	void set_analyze_num(uint8 num)  {AnalyzeNUM = num;}
-	uint8 get_analyze_num() {return AnalyzeNUM;}
+	string get_camera_rtsp_url();
+	void release();
+	void reset(ST_VDCS_VIDEO_PUSH_CAM & addCam,uint32 ID);
 
 private:
 
 	uint32  CameraID;
-	string  CameraIP;
+	char   CameraIP[IP_LEN_16];
 	uint8   frameRate;
-	string  CamUrl;
-	string  RtspUrl;
+	char  CamUrl[SINGLE_URL_LEN_128];
+	char  RtspUrl[SINGLE_URL_LEN_128];
 
 	uint8   CameraFunc; // 1 take photo 2 analyze
 	uint8   AnalyzeNUM;
 	uint16  AnalyzeType;
 
-	uint16  MaxHumanNum;
-	float   ChangRate;
-
 	uint16  AnalyzeType1;
-	uint8   AnalyzeEn1;
+	uint16 AnalyzeType2;
+	
+	int generate_url();
+	int parse_type(uint16 & type);
+/*
+	uint16  MaxHumanNum;
+	float    ChangRate;
+
 	ALARM_DAY  AlarmTime1[WEEK_DAY_LEN_7];
 	uint16      PkgNum1;
 	vector < VIDEO_DRAW >  VideoDraw1;
 
-	uint16  AnalyzeType2;
-	uint8   AnalyzeEn2;
 	ALARM_DAY  AlarmTime2[WEEK_DAY_LEN_7];
 	uint16      PkgNum2;
 	vector < VIDEO_DRAW >  VideoDraw2;
 
+*/
 };
 
 #endif

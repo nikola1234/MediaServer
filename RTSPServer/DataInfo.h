@@ -124,6 +124,7 @@ public:
 	virtual int InsertSubSystemException(const char* chExceptionMsg){ return 0; };
 
 private:
+
 	//static int __stdcall funHandleRecvCommand(int user, int comtype, const char* comstring);
 	//UpdateAllCameraList 内部调用
 	int GetMaxCameraID(int iDevID, int iUnitID);

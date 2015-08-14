@@ -17,7 +17,7 @@ public:
 	void set_analyze_num( uint8 num);
 	void change_time_by_num(uint8 num,ALARM_DAY * time);
 	void clear_time();
-
+	
 	void run();
 	int  CreateTimeThread();
 	static void* RunTimeThread(void*  param){
