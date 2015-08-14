@@ -4,6 +4,15 @@
 #include "Common.h"
 #include "CmdDefine.h"
 
+typedef struct _CAM_LIST{
+	uint32 CameraID;
+	char url[SINGLE_URL_LEN_128];
+	  _CAM_LIST(){
+		memset(this, 0, sizeof(_CAM_LIST));
+	}
+}T_CAM_LIST;
+
+
 typedef struct _ALARM_TIME_{
 
 	uint8 hour;
@@ -76,38 +85,5 @@ typedef struct _CMAERA_DB_FUNC_PARAM
 		memset(this, 0, sizeof(_CMAERA_DB_FUNC_PARAM));
 	}
 }DBCAMERAFUNCPARAM;
-/*
-class CamDataInfo:
-	public IData
-{
 
-public:
-	CamDataInfo();
-	virtual ~CamDataInfo();
-
-	virtual int Open(const char* szfilepath); //打开数据库
-
-	virtual int getCameraInfo(int iCameraID, char chRemark);
-	virtual int getCameraConfig( int cameraid, DBCAMERACONFI *camera );
-	virtual int getCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera );
-
-	virtual int GetMaxCameraID(int iDevID);
-
-	virtual int setCameraInfo(int iCameraID, char chRemark);
-	virtual int setCameraInfo(int iCameraID, DBCAMERACONFI *camera );
-	virtual int setCameraInfo(int iCameraID, DBCAMERAFUNCPARAM *camera);
-
-	virtual int AddCameraInfo(int iCameraID, char chRemark);
-	virtual int AddCameraInfo(int iCameraID, DBCAMERACONFI *camera );
-	virtual int AddCameraInfo(int iCameraID, DBCAMERAFUNCPARAM *camera);
-
-	virtual int DelCameraInfo(int iCameraID);//
-public:
-	CMyLog m_log;
-protected:
-	boost::mutex m_db_mutex_;
-	std::string m_szFileDB;
-	cppsqlite3::CppSQLite3DB m_sqlite3db;
-};
-*/
 #endif

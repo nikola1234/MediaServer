@@ -63,7 +63,7 @@ private:
 public:
 	CMyLog m_log;
 	unsigned int m_Num;
-	char log_file[40];
+	
 	boost::posix_time::ptime  ptime_startup;
 	ManageCamera *ManCam;
 };

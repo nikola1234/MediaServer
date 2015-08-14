@@ -6,7 +6,6 @@ NetServer::NetServer()
    m_work_(m_io_service_)
 {
   m_Num =0;
-  memset(log_file, 0 ,40);
 }
 
 NetServer::~NetServer()
@@ -75,9 +74,11 @@ NetServer::NetClientPtr NetServer::CreateNetClientSession()
 			if ((*it)->GetOurSessionID() == m_Num)
 			{
 				iRet = 1;
+				break;
 			}
+			iRet = 0;
 		}
-    readlock_.unlock();
+    		readlock_.unlock();
 	}while(iRet);
 
 	NetClientPtr clientptr = NetClientPtr(new NetClientSession(this,m_Num));

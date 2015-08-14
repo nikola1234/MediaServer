@@ -1,8 +1,11 @@
-
+#include "boost/filesystem.hpp"
 #include "CameraManage.h"
 
 ManageCamera::ManageCamera()
 {
+	boost::filesystem::create_directory("log");
+	m_log.InitLog("./log/Cam-");
+	m_log.Add("Manage Camera Start !");
 
 }
 
@@ -25,12 +28,75 @@ int ManageCamera::try_to_open(string stream)
 	return 0;
 }
 
-string &Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam)
+int ManageCamera::create_camera_id(ST_VDCS_VIDEO_PUSH_CAM & addCam)
+{
+	uint num = 0;
+	int  iRet = 0;
+	do{
+		srand((unsigned)time(NULL));
+		num =600300000 +(uint32 )((rand()%500)+1);
+		ManCamReadLock readlock_(m_SinCamListMutex_);
+		std::list<SingleCamPtr>::iterator it = m_SinCamList.begin();
+		for ( ; it != m_SinCamList.end() ; it++ )
+		{
+			if ((*it)->GetCameraID() == num)
+			{
+				iRet = 1;
+				break;
+			}
+			iRet = 0;
+		}
+    		readlock_.unlock();
+	}while(iRet);
+
+}
+
+SingleCamPtr ManageCamera::search_cam_by_id(uint32 ID)
+{
+	SingleCamPtr tmpcamptr=NULL;
+	ManCamReadLock readlock_(m_SinCamListMutex_);
+	std::list<SingleCamPtr>::iterator it = m_SinCamList.begin();
+	for ( ; it != m_SinCamList.end() ; it++ )
+	{
+		if ((*it)->GetCameraID() == ID)
+		{
+			tmpcamptr = *it;
+			return tmpcamptr;
+		}
+	}
+	return tmpcamptr;
+}
+
+int  ManageCamera::reset_camera(uint32 ID,ST_VDCS_VIDEO_PUSH_CAM & addCam)
+{
+	SingleCamPtr camptr =NULL;
+	camptr = search_cam_by_id(ID);
+	if(camptr == NULL)return -1;
+	camptr->set_camera_param(addCam);
+}
+
+string &ManageCamera::Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 {
 	int iRet = -1;
+	int ID = -1;
 	string url = "TT";
-	iRet =Find_Cam_in_list_by_ip();  /* 0 have 1 none */
+	
+	iRet = m_CamList.search_cam_by_url(addCam.CameUrL,ID);
+	if(iRet = -1){
+		create_camera_id(addCam);
+		set_param();
+		set_or_change_analyze();
+		url =getUrl();
+		Add_or_Renew_DB();
+		return url;
+	}
+	
 	if(iRet == 0){
+		if(ID <= 0){
+			m_log.Add("push exist camera %s and ID= %d return failure !" ,addCam.CameUrL,ID);
+			return url;
+		}
+		reset_camera((uint32)ID,addCam);
 		reset_param();
 		set_or_change_analyze(); /*start with stop*/
 		url = get_url();
@@ -38,14 +104,7 @@ string &Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 		return url;
 	}
 
-	if(iRet ==  1){
-		create_camera_ID();
-		set_param();
-		set_or_change_analyze();
-		url =getUrl();
-		Add_or_Renew_DB();
-		return url;
-	}
+	
 	return url;
 }
 
