@@ -9,6 +9,8 @@
 #define T_PACKETHEAD_MAGIC	0xfefefefe
 
 #define  IP_LEN_16        16
+
+#define  TIME_NUM_3        3
 #define  WEEK_DAY_LEN_7   7
 
 #define  CAM_MAX_LEN   20
@@ -17,15 +19,15 @@
 
 typedef struct COMMON_PACKET_HEAD
 {
-	uint32	magic;					   //head
-	uint16  encrypt;				   //Encryption type
-	uint16	cmd;					     //CMD ID
-	uint32  EncryptLen;				 //Data packets Len - encrypted
-	uint32  UnEncryptLen;			 //Data packets Len - Before the encryption
-	uint32	CompressedLen;		 //The length of the compressed packet
-	uint32	UnCompressedLen;	 //UnCompressed packet length
-	uint16	chksum;					   //The checksum
-	uint16	unused;					   //unused
+	uint32	magic;					   
+	uint16  	encrypt;				  
+	uint16	cmd;					     
+	uint32  	EncryptLen;				
+	uint32  	UnEncryptLen;			
+	uint32	CompressedLen;		 
+	uint32	UnCompressedLen;	 
+	uint16	chksum;					   
+	uint16	unused;	
 
 	COMMON_PACKET_HEAD(){
 		memset(this, 0, sizeof(COMMON_PACKET_HEAD));
@@ -48,9 +50,12 @@ enum ANAY_VDCS_CMD {  				/* city Server interaction CMD */
 	SM_VDCS_ANAY_PUSH_CAMERA,
 	SM_VDCS_ANAY_PUSH_CAMERA_ACK,
 	
-	SM_VDCS_ANAY_PUSH_CAMERA_TYPE,
 	SM_VDCS_ANAY_PUSH_CAMERA_PARAM,
-
+	SM_VDCS_ANAY_PUSH_CAMERA_PARAM_ACK,
+		
+	SM_VDCS_ANAY_DELETE_CAMERA,
+	SM_VDCS_ANAY_DELETE_CAMERA_ACK,	
+	
 
 	SM_ANAY_HEATBEAT = 0X8003
 };
@@ -74,13 +79,13 @@ enum AnalyzeType
 {
 	HumanDetect 	=	0x0001,
 	SmokeDetect 	=	0x0002,
-	RegionDetect 	= 0x0004,
-	FixedObjDetect= 0x0008,
-	FireDetect 		= 0x0010,
-	ResidueDetect =	0x0020,
-
+	RegionDetect 	= 	0x0004,
+	FixedObjDetect	= 	0x0008,
+	FireDetect 		= 	0x0010,
+	ResidueDetect	 =	0x0020,
 };
 /***************************************************send******************************************************/
+//SM_VDCS_ANAY_REGISTER_ACK
 typedef struct _ANAY_VDCS_REGISTER_ACK
 {
 	uint32 ServerID;
@@ -91,6 +96,7 @@ typedef struct _ANAY_VDCS_REGISTER_ACK
 	}
 } T_ANAY_VDCS_REGISTER_ACK;
 
+//SM_VDCS_ANAY_PUSH_CAMERA_ACK
 typedef struct _ANAY_VDCS_PUSH_CAM_ACK
 {
 	uint8        ack; // 1 success  0 failure
@@ -103,20 +109,35 @@ typedef struct _ANAY_VDCS_PUSH_CAM_ACK
 	}
 }T_ANAY_VDCS_PUSH_CAM_ACK;
 
+//SM_VDCS_ANAY_PUSH_CAMERA_PARAM_ACK
+typedef struct _ANAY_VDCS_PUSH_CAM_PARAM_ACK
+{
+	uint8        ack; // 1 success  0 failure
+	
+	_ANAY_VDCS_PUSH_CAM_PARAM_ACK(){
+		memset(this, 0, sizeof(_ANAY_VDCS_PUSH_CAM_PARAM_ACK));
+	}
+}T_ANAY_VDCS_PUSH_CAM_PARAM_ACK;
+
 
 /***************************************************receive******************************************************/
-
-typedef struct _SM_ANAY_VDCS_DEVICE_STATUS
+//SM_VDCS_ANAY_PUSH_CAMERA
+typedef struct  _VDCS_VIDEO_PUSH_CAM
 {
-	char    ip[IP_LEN_16];
-	uint8 	DeviceType;
-	uint8 	status;             // 0 break 1 reconnect ok
+	char		ip[IP_LEN_16];
+	char		CameUrL[SINGLE_URL_LEN_128];
 
-	_SM_ANAY_VDCS_DEVICE_STATUS(){
-		memset(this, 0, sizeof(_SM_ANAY_VDCS_DEVICE_STATUS));
+	uint8		Enable;
+	uint8		frameRate;
+	uint8		CameraFunc;  /* 1 take photo 2 analyze*/
+	uint8		AnalyzeNUM; 
+	uint16      AnalyzeType; 
+
+	_VDCS_VIDEO_PUSH_CAM(){
+	memset(this, 0, sizeof(_VDCS_VIDEO_PUSH_CAM));
 	}
+}ST_VDCS_VIDEO_PUSH_CAM;
 
-}ST_SM_ANAY_VDCS_DEVICE_STATUS;
 
 typedef struct _ALARM_TIME{
 
@@ -130,8 +151,7 @@ typedef struct _ALARM_TIME{
 
 typedef struct _VIDEO_ALARM_TIME{
 
-	ALARM_TIME time1;
-	ALARM_TIME time2;
+	ALARM_TIME Time[TIME_NUM_3];
 
 	_VIDEO_ALARM_TIME(){
 		memset(this, 0, sizeof(_VIDEO_ALARM_TIME));
@@ -140,60 +160,56 @@ typedef struct _VIDEO_ALARM_TIME{
 
 typedef struct _VDCS_VIDEO_ALARM_TIME{
 
-	uint8   Enable;
 	VIDEO_ALARM_TIME AlarmTime;
-
+	
 	_VDCS_VIDEO_ALARM_TIME(){
 		memset(this, 0, sizeof(_VDCS_VIDEO_ALARM_TIME));
 	}
-}ST_VDCS_VIDEO_ALARM_TIME;
+}T_VDCS_VIDEO_ALARM_TIME;
 
-
-typedef struct _VIDEO_DRAW  // pkg means special parameter
+typedef struct _VIDEO_DRAW  
 {
 	uint16 	StartX;				//StartX
 	uint16 	StartY;				//StartY
-	uint16 	EndX;					//EndX    if draw is rectangle  means width
-	uint16 	EndY;					//EndY    if draw is rectangle  means height
-	uint16  Type;					// 1 rectangle 2 line
+	uint16 	EndX;				//EndX    if draw is rectangle  means width
+	uint16 	EndY;				//EndY    if draw is rectangle  means height
+	uint16  	Type;				// 1 rectangle 2 line
 
 	_VIDEO_DRAW(){
 		memset(this, 0, sizeof(_VIDEO_DRAW));
 	}
 }VIDEO_DRAW;
 
-//ST_VDCS_VIDEO_PUSH_CAM (1)
-typedef struct  _VDCS_VIDEO_PUSH_CAM
+
+//SM_VDCS_ANAY_PUSH_CAMERA_PARAM
+typedef struct  _VDCS_VIDEO_CAMERA_PARAM
+{
+	char 	CameUrL[SINGLE_URL_LEN_128];
+	uint16    	AnalyzeType;         /*single analyze*/
+	
+	uint16      MaxHumanNum;    /* HumanDetect needs */
+	float         ChangRate;           /* RegionDetect needs */
+	uint16      PkgNum;                /* structure refer to VIDEO_DRAW */
+	
+	T_VDCS_VIDEO_ALARM_TIME  AlarmTime[WEEK_DAY_LEN_7];
+	
+	_VDCS_VIDEO_CAMERA_PARAM(){
+		memset(this, 0, sizeof(_VDCS_VIDEO_CAMERA_PARAM));
+	}
+}T_VDCS_VIDEO_CAMERA_PARAM;
+
+
+//SM_VDCS_ANAY_DELETE_CAMERA
+typedef struct _VDCS_VIDEO_CAMERA_DELETE
 {
 	char		ip[IP_LEN_16];
-	char		CameUrL[SINGLE_URL_LEN_128];
-
-	uint8		Enable;
-	uint8		frameRate;
-	uint8		CameraFunc;
-	uint8		AnalyzeNUM;
-	uint16      AnalyzeType; //最多两个分析或运算
-
-	_VDCS_VIDEO_PUSH_CAM(){
-	memset(this, 0, sizeof(_VDCS_VIDEO_PUSH_CAM));
+	char 	CameUrL[SINGLE_URL_LEN_128];
+	
+	_VDCS_VIDEO_CAMERA_DELETE(){
+		memset(this, 0, sizeof(_VDCS_VIDEO_CAMERA_DELETE));
 	}
-}ST_VDCS_VIDEO_PUSH_CAM;
-
-//ST_VDCS_VIDEO_FUNC_PARAM (2)
-typedef struct _VDCS_VIDEO_FUNC_PARAM
-{
-	char        ip[IP_LEN_16];
-	uint16    	AnalyzeType;   //单独分析类型
-
-	ST_VDCS_VIDEO_ALARM_TIME  AlarmTime[WEEK_DAY_LEN_7];
-	uint16      MaxHumanNum;    /* HumanDetect needs */
-	float         ChangRate;          /* RegionDetect needs */
-	uint16      PkgNum;         /* structure refer to VIDEO_DRAW */
-
-	_VDCS_VIDEO_FUNC_PARAM(){
-		memset(this, 0, sizeof(_VDCS_VIDEO_FUNC_PARAM));
-	}
-}ST_VDCS_VIDEO_FUNC_PARAM;
+	
+}T_VDCS_VIDEO_CAMERA_DELETE;
 
 #pragma pack(pop)
 

@@ -17,6 +17,7 @@ public:
 	uint16 frameindex;
 	int SetRectangle(vector< Rect > & rectangle);
 	int RegionDetectRun(Mat &dispalyFrame);
+	float ChangRate;
 
 private:
 	Mat TmpFrame;

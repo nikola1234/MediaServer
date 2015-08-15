@@ -102,7 +102,6 @@ void NetClientSession::push_camera_data_ack2(ST_VDCS_VIDEO_PUSH_CAM & AddCamera,
 	memcpy(t_CamAddAck.RtspUrL,url.c_str(),url.length());
 	memcpy(AddFailureBuff+sizeof(T_PacketHead),&t_CamAddAck,sizeof(T_ANAY_VDCS_PUSH_CAM_ACK));
 	SendMessage(AddAckBuff,sizeof(AddAckBuff));
-	
 }
 
 int NetClientSession::push_camera_data(char* buffer ,int size)
@@ -128,6 +127,57 @@ int NetClientSession::push_camera_data(char* buffer ,int size)
 	return 0;
 }
 
+void NetClientSession::push_camera_param_ack(int ret)
+{
+	T_PacketHead  t_PackHeadAck;
+	T_ANAY_VDCS_PUSH_CAM_PARAM_ACK  t_CamAck;
+	char PushParamAckBuff[28 + 1] ={0};
+
+	t_PackHeadAck.magic	    =  T_PACKETHEAD_MAGIC;
+	t_PackHeadAck.cmd			  =  SM_VDCS_ANAY_PUSH_CAMERA_PARAM_ACK;
+	t_PackHeadAck.UnEncryptLen	 =  sizeof(T_ANAY_VDCS_PUSH_CAM_ACK);
+	memcpy(PushParamAckBuff,&t_PackHeadAck,sizeof(T_PacketHead));
+	if(ret < 0)
+		t_CamAck.ack   = 0;
+	else
+		t_CamAck.ack  = 1;
+	memcpy(PushParamAckBuff+sizeof(T_PacketHead),&t_CamAck,sizeof(T_ANAY_VDCS_PUSH_CAM_PARAM_ACK));
+	
+	SendMessage(PushParamAckBuff,sizeof(PushParamAckBuff));
+}
+
+int NetClientSession::push_camera_param(char * buffer , int size)
+{
+	int iRet = -1;
+	uint8    Num = 0;
+	vector <VIDEO_DRAW>  DrawPkg;
+	T_VDCS_VIDEO_CAMERA_PARAM t_CameraParam;
+	
+	memcpy(&t_CameraParam,buffer,sizeof(T_VDCS_VIDEO_CAMERA_PARAM));
+
+	for(Num=0; Num  < t_CameraParam.PkgNum; Numi++)
+	{
+		VIDEO_DRAW tmp;
+		memcpy(&tmp,buffer+sizeof(T_VDCS_VIDEO_CAMERA_PARAM)+sizeof(VIDEO_DRAW) *Num,sizeof(VIDEO_DRAW));
+		DrawPkg.push_back(tmp);
+	}
+	
+	iRet = fOurServer->ManCam->Set_or_Renew_Camera_Param(&t_CameraParam,DrawPkg);
+	if(iRet < 0)
+	{
+		fOurServer->m_log.Add(" %d client push_camera_param failure", fOurSessionId);
+		push_camera_param_ack(iRet);
+		return -1;
+	}
+	push_camera_param_ack(iRet);
+	return 0;
+}
+
+int NetClientSession::delete_camera(char * buffer , int size)
+{
+	return 0;
+}
+
 int NetClientSession::ReciveData_GetParam(char* buffer ,int size)
 {
 	uint16 cmd;
@@ -145,9 +195,21 @@ int NetClientSession::ReciveData_GetParam(char* buffer ,int size)
 			fOurServer->m_log.Add(" %d client_register_ack", fOurSessionId);
 			client_register_ack();
 			break;
+		case SM_VDCS_ANAY_DEVICE_STATUS_ACK:
+			break;
+		case SM_VDCS_ANAY_WARN_INFO_ACK:
+			break;
 		case SM_VDCS_ANAY_PUSH_CAMERA:
 			fOurServer->m_log.Add(" %d client push camera", fOurSessionId);
 			push_camera_data(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
+			break;
+		case SM_VDCS_ANAY_PUSH_CAMERA_PARAM:
+			fOurServer->m_log.Add(" %d client push camera param", fOurSessionId);
+			push_camera_param(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
+			break;
+		case SM_VDCS_ANAY_DELETE_CAMERA:
+			fOurServer->m_log.Add(" %d client delete camera ", fOurSessionId);
+			delete_camera(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
 			break;
 		default: break;
 	}

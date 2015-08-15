@@ -39,9 +39,66 @@ int CamParam::generate_url()
 	return 0;
 }
 
+uint16 check_analyzetype(uint16 &type)
+{
+	uint16 uType = 0;
+	switch(type){
+	case HumanDetect: 
+		uType = HumanDetect;
+		break;
+	case SmokeDetect :
+		uType = SmokeDetect;
+		break;
+	case RegionDetect :
+		uType = RegionDetect;
+		break;
+	case FixedObjDetect:
+		uType = FixedObjDetect;
+		break;
+	case FireDetect :
+		uType = FireDetect;
+		break;
+	case ResidueDetect :
+		uType = ResidueDetect;
+		break;
+	default: break;
+	}
+	if(uType == 0)	
+		dbgprint("%s(%d),push camera one analyze but none,type is %x!\n", DEBUGARGS,type);
+	return uType;
+}
 
+int CamParam::parse_type(uint16 & type)
+{
+	if(type &HumanDetect)  {
+		AnalyzeType1 = HumanDetect;
+		AnalyzeType2=check_analyzetype(type&(uint16)(~HumanDetect));
+		return 0;
+	}
+	if(type &SmokeDetect)  {
+		AnalyzeType1 = SmokeDetect;
+		AnalyzeType2=check_analyzetype(type&(uint16)(~SmokeDetect));
+		return 0;
+	}
+	if(type &RegionDetect)  {
+		AnalyzeType1 = RegionDetect;
+		AnalyzeType2=check_analyzetype(type&(uint16)(~RegionDetect));
+		return 0;
+	}
+	if(type &FixedObjDetect)  {
+		AnalyzeType1 = FixedObjDetect;
+		AnalyzeType2=check_analyzetype(type&(uint16)(~FixedObjDetect));
+		return 0;
+	}
+	if(type &FireDetect)  {
+		AnalyzeType1 = FireDetect;
+		AnalyzeType2=check_analyzetype(type&(uint16)(~FireDetect));
+		return 0;
+	}
 
-
+	dbgprint("%s(%d),parse type error,type is %x!\n", DEBUGARGS,type);
+	return -1;
+}
 
 int CamParam::set(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 {

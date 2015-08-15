@@ -30,6 +30,8 @@ public:
   int InitFromDB();
 
   int try_to_open(string stream);
+
+  int Set_or_Renew_Camera_Param(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg);
   string Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 
 private:

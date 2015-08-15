@@ -29,11 +29,13 @@ public:
 
   bool  m_AnaFlag;
   bool  m_Status;
+  bool AnalyzeEn;
 
   Mat frame1;
   Mat frame2;
 
-  uint16 WarnType;
+  uint8 AnaIndex;
+  uint16 AnalyzeType;
   uint8  alarm;
 
   uint32 frame;
@@ -48,7 +50,10 @@ public:
   CFire*   fire;
   CSmoke*  smoke;
   CHuman*  human;
+  vector <VIDEO_DRAW> pkg;
 
+
+  void set_video_draw( vector <VIDEO_DRAW> &DrawPkg);
   int alarmStrategy();
 
   int human_detect(Mat &frame);
@@ -73,7 +78,7 @@ public:
 
 private:
   uint8 CameraID;
-  uint8 AnaIndex;
+  
 
   pthread_mutex_t mut;
   pthread_cond_t cond;

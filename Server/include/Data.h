@@ -12,21 +12,6 @@ typedef struct _CAM_LIST{
 	}
 }T_CAM_LIST;
 
-typedef struct _CAM_PARAM_{
-	
-	char url[SINGLE_URL_LEN_128];
-	uint8   CameraFunc; // 1 take photo 2 analyze
-	uint8   AnalyzeNUM;
-
-	uint16  AnalyzeType1;
-	uint16 AnalyzeType2;
-
-	_CAM_PARAM_(){
-		memset(this, 0, sizeof(_CAM_PARAM_));
-	}
-
-}T_CAM_PARAM;
-
 typedef struct _ALARM_TIME_{
 
 	uint8 hour;
@@ -43,14 +28,12 @@ typedef struct _ALARM_TIME_INT{
 
 typedef struct _ALARM_DAY_INT{
 
-    ALARM_TIME_INT time1;
-    ALARM_TIME_INT time2;
+    ALARM_TIME_INT time[TIME_NUM_3];
 
 }ALARM_DAY_INT;
 
 typedef struct _ALARM_DAY{
 
-  uint8 En;
   ALARM_DAY_INT dayTime;
 
 }ALARM_DAY;
@@ -64,9 +47,9 @@ typedef struct _CAMERA_DB_PARAM
   char    CamUrl[SINGLE_URL_LEN_128];
   char    RtspUrl[SINGLE_URL_LEN_128];
 
-  uint8   CameraFunc;  // 1是拍照  2是分析
-  uint8   AnalyzeNUM;  // 分析个数
-  uint16  AnalyzeType; // 分析类型
+  uint8   CameraFunc; 
+  uint8   AnalyzeNUM;  
+  uint16  AnalyzeType; 
 
   uint8   CamStatus;
   _CAMERA_DB_PARAM(){
@@ -78,7 +61,7 @@ typedef struct _CMAERA_DB_FUNC_PARAM
 {
 	uint32   CameraID;
 	char    ip[IP_LEN_16];
-	uint8   AnalyzeNUM;  // 分析个数
+	uint8   AnalyzeNUM;  
 	uint16  AnalyzeType;
 	uint16  MaxHumanNum;
 	float   ChangRate;

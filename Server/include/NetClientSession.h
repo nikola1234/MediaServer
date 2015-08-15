@@ -11,6 +11,7 @@
 
 #define  BUFFER_SIZE  (10*1024)
 #define  BUFFER_SIZE_MIN  (512)
+
 class NetServer;
 class NetClientSession
 : public boost::enable_shared_from_this<NetClientSession>
@@ -28,13 +29,17 @@ public:
 private:
 	void incomingAcceptHandler();
 
-
-
 	int client_register_ack();
 	
 	void push_camera_data_ack1(ST_VDCS_VIDEO_PUSH_CAM & AddCamera);
 	void push_camera_data_ack2(ST_VDCS_VIDEO_PUSH_CAM & AddCamera,string &url);
 	int push_camera_data(char* buffer ,int size);
+
+
+	void push_camera_param_ack(int ret);
+	int push_camera_param(char * buffer , int size);	
+
+	int delete_camera(char * buffer , int size);	
 	
 	int ReciveData_GetParam(char* buffer ,int size);
 	void HandleRecvReponse(const boost::system::error_code& error, int recvsizes);

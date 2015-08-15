@@ -1,8 +1,9 @@
 #include "CamTimeThread.h"
 
-CamTimeThread::CamTimeThread(uint32 ID)
+CamTimeThread::CamTimeThread(SingleCamera* sincam)
 {
-	CameraID = ID;
+	cam =sincam;
+	CameraID = sincam ->CameraID;
 	m_TimeFlag = true;
 	m_Status     = false;
 
@@ -21,6 +22,76 @@ CamTimeThread::~CamTimeThread()
 	pthread_mutex_destroy(&mut);
 	pthread_cond_destroy(&cond);
 }
+
+void CamTimeThread::SetCamera_StartThread(uint8 num)
+{
+	AnalyzeNUM = num;
+	CreateTimeThread();
+}
+
+void CamTimeThread::parse_time_further_more(ALARM_TIME_INT* time_i,ALARM_TIME* time_c)
+{
+	char hour[3];
+	char min[3];
+	memset(hour, 0, 3);
+	memset(min, 0, 3);
+	
+	memcpy(hour, time_c->StartTime, 2);
+	memcpy(min,  time_c->StartTime+3, 2);
+
+	time_i->Start.hour = atoi(hour);
+	time_i->Start.min  = atoi(min);
+
+	memset(hour, 0, 3);
+	memset(min, 0, 3);
+	
+	memcpy(hour,  time_c->EndTime, 2);
+	memcpy(min,  time_c->EndTime+3, 2);
+	time_i->End.hour = atoi(hour);
+	time_i->End.min= atoi(min);
+	
+}
+void CamTimeThread::parse_time_further(ALARM_TIME_INT* time_int,ALARM_TIME* time_char)
+{
+	uint8 i = 0;
+	for(i=0; i < TIME_NUM_3 ; i++)
+	{
+		parse_time_further_more(&time_int[i] , &time_char[i]);
+	}
+}
+void CamTimeThread::parse_time(ALARM_DAY* AlarmTime,T_VDCS_VIDEO_ALARM_TIME *Time)
+{
+	uint8 i= 0;
+	for(i = 0; i < WEEK_DAY_LEN_7; i++ )
+	{
+		parse_time_further(AlarmTime[i].dayTime.time,Time[i].AlarmTime.Time);
+	}
+
+}
+void CamTimeThread::reset_time1_param(T_VDCS_VIDEO_ALARM_TIME *Time)
+{
+	uint8 i= 0;
+	pause();
+	usleep(100*1000);	
+	for(i = 0; i < WEEK_DAY_LEN_7; i++ )
+	{
+		memset(&AlarmTime1[i] , 0,sizeof(ALARM_DAY));
+	}
+	parse_time(AlarmTime1,Time);
+	resume();
+}
+void CamTimeThread::reset_time2_param(T_VDCS_VIDEO_ALARM_TIME *Time)
+{
+	pause();
+	usleep(100*1000);		
+	for(i = 0; i < WEEK_DAY_LEN_7; i++ )
+	{
+		memset(&AlarmTime2[i] , 0,sizeof(ALARM_DAY));
+	}
+	parse_time(AlarmTime2,Time);	
+	resume();
+}
+
 
 void CamTimeThread::set_analyze_num( uint8 num)
 {
@@ -89,29 +160,38 @@ int CamTimeThread::JudgeTimeDayEnd(T_AlarmTime &time)  /* 23:59 */
 	return 0;
 }
 
-int CamTimeThread::time_analyze(T_AlarmTime &timenow,ALARM_TIME_INT &time1, ALARM_TIME_INT &time2)
+int CamTimeThread::time_analyze(T_AlarmTime timenow, ALARM_TIME_INT*time_int )
 {
 	int iRet = -1;
 
-	iRet = JudgeTimeDayStart(time1.Start)&&JudgeTimeDayStart(time1.End);
+	iRet = JudgeTimeDayStart(time_int[0].Start)&&JudgeTimeDayStart(time[0].End);
 	if(iRet == 1) return 0;
 
-	iRet = AlarmTimeCompare(timenow ,time1.Start);
+	iRet = AlarmTimeCompare(timenow ,time_int[0].Start);
 	if(iRet < 0) return 0;
-	if(iRet == 0) return 1;
 
-	iRet = AlarmTimeCompare(timenow ,time1.End);
+	iRet = AlarmTimeCompare(timenow ,time_int[0].End);
 	if(iRet <= 0) return 1;
 
-	iRet = JudgeTimeDayStart(time2.Start)&&JudgeTimeDayStart(time2.End);
+	iRet = JudgeTimeDayStart(time_int[1].Start)&&JudgeTimeDayStart(time_int[1]..End);
 	if(iRet == 1) return 0;
 
-	iRet = AlarmTimeCompare(timenow ,time2.Start);
+	iRet = AlarmTimeCompare(timenow ,time_int[1].Start);
 	if(iRet < 0)  return 0;
 
-	iRet = AlarmTimeCompare(timenow ,time2.End);
+	iRet = AlarmTimeCompare(timenow ,time_int[1].End);
 	if(iRet <= 0) return 1;
-	if(iRet >0) return 0;
+
+	iRet = JudgeTimeDayStart(time_int[2].Start)&&JudgeTimeDayStart(time_int[2]..End);
+	if(iRet == 1) return 0;
+
+	iRet = AlarmTimeCompare(timenow ,time_int[2].Start);
+	if(iRet < 0)  return 0;
+
+	iRet = AlarmTimeCompare(timenow ,time_int[2].End);
+	if(iRet <= 0) return 1;	
+	return 0;
+	
 	return 2;
 }
 
@@ -128,7 +208,9 @@ void  CamTimeThread::change_analyze_status(int ret,bool &status)
 			if(status == false)
 				status = true;
 			break;
-		default: break;
+		default:
+			dbgprint("%s(%d),%d CamTimeThread wrong time_analyze %d!\n",DEBUGARGS,CameraID,ret);
+			break;
 	}
 }
 int CamTimeThread::time_detect(ALARM_DAY * Time,bool &status)
@@ -147,30 +229,28 @@ int CamTimeThread::time_detect(ALARM_DAY * Time,bool &status)
 	if(pTM->tm_wday == 0) pTM->tm_wday =7;
 	day =  pTM->tm_wday -1;
 
-	if(Time[day].En == 0)
-	{
-		status = false;
-		return 0;
-	}
-
 	NowTime.hour = (uint8)pTM->tm_hour;
 	NowTime.min  = (uint8)pTM->tm_min;
 
-	iRet = time_analyze(NowTime,Time[day].dayTime.time1,Time[day].dayTime.time2);
-	change_analyze_status(iRet,status);
-	return 0;
+	iRet = time_analyze(NowTime,Time[day].dayTime.time);
+	//change_analyze_status(iRet,status);
+	return iRet;
 }
 
 void CamTimeThread::time_detect_by_num(uint8 num)
-{
+{	
+	int iRet = -1;
 	switch(AnalyzeNUM){
 		case 1:
-			time_detect(AlarmTime1,Ana1Status);
+			iRet =time_detect(AlarmTime1);
+			change_analyze_status(iRet,cam->Ana1Thread->AnalyzeEn);
 			break;
 		case 2:
-			time_detect(AlarmTime2,Ana2Status);
+			iRet = time_detect(AlarmTime2);
+			change_analyze_status(iRet,cam->Ana2Thread->AnalyzeEn);
 			break;
 		default :
+			dbgprint("%s(%d),%d CamTimeThread wrong AnalyzeNUM %d!\n",DEBUGARGS,CameraID,AnalyzeNUM);
 			break;
 	}
 }
@@ -196,7 +276,7 @@ void CamTimeThread::run()
 		default :
 			break;
 		}
-	  	sleep(2);
+	  	usleep(50*1000);
 	}
 
 	dbgprint("%s(%d),%d CamTimeThread exit!\n",DEBUGARGS,CameraID);

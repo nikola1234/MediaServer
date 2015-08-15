@@ -2,13 +2,24 @@
 #include "RtspCamera.h"
 extern CRtspCamera rtspCamera;
 
-CamReadThread::CamReadThread(string url,uint32 ID)
+CamReadThread::CamReadThread(SingleCamera *sincam,NetServer *Server)
 {
-  CameraID = ID;
-  m_videoStream =url;
-  m_CameraFlag = true;
+	CameraID = sincam->CameraID;
+	cam = sincam;
+	server = Server;
+	m_CameraFlag = true;
 }
 
+int  CamReadThread::SetCamera_StartThread(string url)
+{
+	int iRet = -1;
+	m_videoStream = url;
+	iRet = InitCamera();
+	if(iRet < 0)	return	iRet;
+	
+	iRet = CreateCamReadThread();
+	return	iRet;
+}
 
 int CamReadThread::InitCamera()
 {
@@ -156,25 +167,25 @@ void CamReadThread::run()
 {
 	while(m_CameraFlag)
 	{
-			if(!(m_vcap.read(ReadFrame)))
-			{
-					dbgprint("%s(%d),%d CAM no frame!\n",DEBUGARGS,CameraID);
-					waitKey(40);
-					continue;
-			}
+		if(!(m_vcap.read(ReadFrame)))
+		{
+			dbgprint("%s(%d),%d CAM no frame!\n",DEBUGARGS,CameraID);
+			waitKey(40);
+			continue;
+		}
 
-			if(ReadFrame.empty())
-			{
-				waitKey(40);
-				continue;
-			}
-      ReadFrame.copyTo(frame1);
-      ReadFrame.copyTo(frame2);
-      ReadFrame.copyTo(EncodeFrame);
-      //TODO::EncodeFrame
-      Encode(EncodeFrame);
+		if(ReadFrame.empty())
+		{
+			waitKey(40);
+			continue;
+		}
+		ReadFrame.copyTo(frame1);
+		ReadFrame.copyTo(frame2);
+		ReadFrame.copyTo(EncodeFrame);
+		//TODO::EncodeFrame
+		Encode(EncodeFrame);
 	}
-  releaseEncode();
+  	releaseEncode();
 	dbgprint("%s(%d),%d CamThread exit!\n",DEBUGARGS,CameraID);
 	pthread_exit(NULL);
 }

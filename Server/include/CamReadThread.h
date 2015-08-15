@@ -6,15 +6,19 @@
 class CamReadThread
 {
 public:
-  CamReadThread(string url,uint32 ID);
-  ~CamReadThread();
+	CamReadThread(SingleCamera *sincam,NetServer *Server);
+	~CamReadThread();
 
-  Mat   frame1;
-  Mat   frame2;
+	Mat   frame1;
+	Mat   frame2;
 
-  int InitCamera();
 
-  void run();
+	int SetCamera_StartThread(string url);
+
+
+
+	int InitCamera();
+	void run();
 	int  CreateCamReadThread();
 	static void* RunCamThread(void*  param){
 		CamReadThread* p = (CamReadThread*)param;
@@ -53,6 +57,8 @@ private:
 	int GetCamParam();
 	int Encode(Mat &frame);
 
+	SingleCamera *cam;
+	NetServer* server;
 };
 
 

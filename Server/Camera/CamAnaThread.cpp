@@ -4,8 +4,10 @@ CamAnaThread::CamAnaThread()
 {
   m_AnaFlag   = true;
   m_Status      = false;
-  WarnType      = 0;
+  AnalyzeType      = 0;
+  AnaIndex  	= 0;
   alarm         = 0;
+  AnalyzeEn = 0;
 
   frame = 0;
   startflag         = 0;
@@ -48,6 +50,19 @@ CamAnaThread::~CamAnaThread()
 
     delete human;
     human = NULL;
+}
+
+
+void CamAnaThread::set_video_draw( vector <VIDEO_DRAW> &DrawPkg)
+{
+	uint8 i =0;
+	pkg.clear();
+	for(i = 0; i <DrawPkg.size(); i++)
+	{
+		VIDEO_DRAW  tmp;
+		tmp = DrawPkg[i];
+		pkg.push_back(tmp);
+	}
 }
 
 int CamAnaThread::alarmStrategy()
@@ -141,7 +156,7 @@ int  CamAnaThread::region_detect(Mat &frame)
   if(!frame.empty())
   {
   		region->RegionDetectRun(frame);
-      alarm = region->alarm ;
+      		alarm = region->alarm ;
   		usleep(20*1000);
   }
   else
@@ -244,7 +259,7 @@ int CamAnaThread::alarm_run(Mat &frame ,uint8 iType)
           //residue_detect(frame);
           break;
     default:
-          dbgprint("%s(%d),cam %d alarmindex  %d wrong WarnType !\n",
+          dbgprint("%s(%d),cam %d alarmindex  %d wrong AnalyzeType !\n",
                                   DEBUGARGS,CameraID,iType);
           usleep(40*1000);
           break;
@@ -270,30 +285,38 @@ void CamAnaThread::resource_release()
 
 void CamAnaThread::run()
 {  
-  while(m_AnaFlag){
-      pthread_mutex_lock(&mut);
-      while (!m_Status)
-      {
-          pthread_cond_wait(&cond, &mut);
-      }
-      pthread_mutex_unlock(&mut);
+	while(m_AnaFlag){
+		pthread_mutex_lock(&mut);
+		while (!m_Status)
+		{
+			  pthread_cond_wait(&cond, &mut);
+			  //release_resource()
+			  //vector_analyze()
+		}
+		pthread_mutex_unlock(&mut);
 
-      switch (AnaIndex) {
-        case 1:
-              //m_AlarmCamera->Alarmthead1Frame.copyTo(frame1);
-              alarm_run(frame1,WarnType);  //alarm_run(Mat & frame);
-              break;
-        case 2:
-            //  m_AlarmCamera->Alarmthead2Frame.copyTo(frame2);
-              alarm_run(frame2,WarnType);
-              break;
-        default:
-          usleep(40*1000);
-          break;
-      }
-  }
+		if(AnalyzeEn)
+		{
+			  switch (AnaIndex) {
+			    case 1:
+			          //m_AlarmCamera->Alarmthead1Frame.copyTo(frame1);
+			          alarm_run(frame1,AnalyzeType);  //alarm_run(Mat & frame);
+			          break;
+			    case 2:
+			        //  m_AlarmCamera->Alarmthead2Frame.copyTo(frame2);
+			          alarm_run(frame2,AnalyzeType);
+			          break;
+			    default:
+			      usleep(40*1000);
+			      break;
+			  }
+		}
+		else{
+			usleep(40*1000);
+		}
+	}
 
-  dbgprint("%s(%d),%d CAlarmThread exit!\n",DEBUGARGS,CameraID);
+	dbgprint("%s(%d),%d CAlarmThread exit!\n",DEBUGARGS,CameraID);
 	pthread_exit(NULL);
 }
 
