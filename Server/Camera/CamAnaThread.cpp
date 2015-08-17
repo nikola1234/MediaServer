@@ -132,7 +132,7 @@ int CamAnaThread::send_alarm_to_client(uint16 type,uint8 status)
 	}
 	memcpy(warnBuff+sizeof(T_PacketHead),&t_warninfo,sizeof(T_SM_ANAY_VDCS_WARN_INFO));
 	
-	iRet = server->SendBufferToAllNetClient(warnBuff,sizeof(PushParamAckBuff));
+	iRet = server->SendBufferToAllNetClient(warnBuff,sizeof(warnBuff));
 	return iRet;
 }
 
@@ -444,6 +444,16 @@ void CamAnaThread::set_analyze_vector( vector <VIDEO_DRAW> & DrawPkg)
 			break;
 	}
 }
+
+int CamAnaThread::check_thread_status()
+{
+	if((m_Status == true)&&(AnalyzeEn ==true))
+	{
+		return 1;
+	}
+	return 0;
+}
+
 
 void CamAnaThread::run()
 {  

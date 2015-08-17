@@ -141,8 +141,19 @@ typedef struct _SM_ANAY_VDCS_WARN_INFO
 	_SM_ANAY_VDCS_WARN_INFO(){
 		memset(this, 0, sizeof(_SM_ANAY_VDCS_WARN_INFO));
 	}
-
 } T_SM_ANAY_VDCS_WARN_INFO;
+
+typedef struct _SM_ANAY_VDCS_DEVICE_STATUS
+{
+	char   	CameUrl[SINGLE_URL_LEN_128];
+	uint8 	DeviceType;
+	uint8 	Status;  /* 1 break 0 nomal */
+	
+	T_SM_ANAY_VDCS_DEVICE_STATUS(){
+		memset(this, 0, sizeof(T_SM_ANAY_VDCS_DEVICE_STATUS));
+	}	
+}T_SM_ANAY_VDCS_DEVICE_STATUS;
+
 
 /***************************************************receive******************************************************/
 //SM_VDCS_ANAY_PUSH_CAMERA

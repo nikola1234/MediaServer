@@ -80,6 +80,7 @@ public:
 	void set_analyze_vector( vector <VIDEO_DRAW> & DrawPkg);
 
 
+	int check_thread_status();
 	void run();
 	int  CreateAnaThread();
 	static void* RunAnaThread(void*  param){

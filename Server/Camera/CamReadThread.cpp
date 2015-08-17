@@ -8,6 +8,18 @@ CamReadThread::CamReadThread(SingleCamera *sincam,NetServer *Server)
 	cam = sincam;
 	server = Server;
 	m_CameraFlag = true;
+	errReadNum = 0;
+
+	m_Status     = false;
+	pthread_mutex_init (&mut,NULL);
+	pthread_cond_init(&cond, NULL);
+
+}
+
+CamReadThread::~CamReadThread()
+{
+	pthread_mutex_destroy(&mut);
+	pthread_cond_destroy(&cond);
 }
 
 int  CamReadThread::SetCamera_StartThread(string url)
@@ -163,32 +175,127 @@ int CamReadThread::Encode(Mat &frame)
 	return 0;
 }
 
+void CamReadThread::draw(CamAnaThread * Anathread,Mat &frame)
+{
+	int i = 0;
+	int j = 0;
+
+	switch(Anathread->AnalyzeType){
+			case HumanDetect : 
+				if((Anathread->human->m_Flag& 0x02)  == 0x02){
+					for( i=0;i<Anathread>human->DirectionLines.size();i++)
+					{
+						line(frame,Anathread->human->DirectionLines[i].Start,Anathread->human->DirectionLines[i].End,Scalar( 64, 128, 0 ), 2, 8, 0);
+					}
+				}
+
+				if((Anathread->human->m_Flag& & 0x01)  == 1){  
+					for(j=0;j<Anathread->human->MonitorZoneRects.size();j++)
+					{
+						rectangle(frame, Anathread->human->Rects[j], Scalar( 64, 128, 0 ), 2, 8, 0);
+					}
+				}
+				break;
+			case SmokeDetect :
+				for(j=0;j<Anathread->smoke->Rects.size();j++)
+				{
+					rectangle(frame, Anathread->smoke->Rects[j], Scalar( 60, 60, 60  ), 2, 8, 0);
+				}
+				break;
+			case RegionDetect :	
+				for(j=0;j<Anathread->region->Rects.size();j++)
+				{
+					rectangle(frame, Anathread->region->Rects[j], Scalar( 255, 0, 0  ), 2, 8, 0);
+				}
+				break;
+			case FixedObjDetect :	
+				break;
+			case FireDetect :	
+				for(j=0;j<Anathread->fire->Rects.size();j++)
+				{
+					rectangle(frame, Anathread->fire->Rects[j], Scalar( 0, 0, 255 ), 2, 8, 0);
+				}
+				break;
+			case ResidueDetect:
+				break;
+			default :break;
+	}
+}
+void CamReadThread::draw_encode_frame(Mat & frame)
+{
+	int iRet = -1;
+	int i = 0;
+	int j = 0;
+	iRet = cam->Ana1Thread->check_thread_status();
+	if(iRet > 0){
+	       draw(cam->Ana1Thread,frame);
+	}
+
+	iRet = cam->Ana2Thread->check_thread_status();
+	if(iRet > 0){
+		draw(cam->Ana2Thread,frame);
+	}
+}
+
+void CamReadThread::report_camera_break()
+{
+	T_PacketHead                 t_CamHead;
+	T_SM_ANAY_VDCS_DEVICE_STATUS  t_CamStatus;
+	char CamStatusBuff [28 + 130] ={0};
+
+	t_CamHead.magic	   		 =  T_PACKETHEAD_MAGIC;
+	t_CamHead.cmd			  =  SM_ANAY_VDCS_DEVICE_STATUS;
+	t_CamHead.UnEncryptLen	 =  sizeof(T_SM_ANAY_VDCS_DEVICE_STATUS);
+	memcpy(CamStatusBuff,&t_CamHead,sizeof(T_PacketHead));
+
+	memcpy(t_CamStatus.CameUrl ,cam->CamUrl,SINGLE_URL_LEN_128);
+	t_CamStatus.DeviceType = DeviceTypeNetCamera;
+	t_CamStatus.Status   =    1;
+
+	memcpy(CamStatusBuff+sizeof(T_PacketHead),&t_CamStatus,sizeof(T_SM_ANAY_VDCS_DEVICE_STATUS));
+	
+	server->SendBufferToAllNetClient(CamStatusBuff,sizeof(CamStatusBuff));
+}
+
+void  CamReadThread::check_camera_status()
+{
+	errReadNum++;
+	if(errReadNum >2000){
+		report_camera_break();  
+		pause();
+	}
+
+}
 void CamReadThread::run()
 {
 	while(m_CameraFlag)
 	{
+		pthread_mutex_lock(&mut);
+		while (!m_Status)
+		{
+		  pthread_cond_wait(&cond, &mut);
+		}
+		pthread_mutex_unlock(&mut);
+		
 		if(!(m_vcap.read(ReadFrame)))
 		{
 			dbgprint("%s(%d),%d CAM no frame!\n",DEBUGARGS,CameraID);
+			check_camera_status();
 			waitKey(40);
 			continue;
 		}
-
-		if(ReadFrame.empty())
+		errReadNum = 0;
+		if(!ReadFrame.empty())
 		{
-			waitKey(40);
-			continue;
-		}
-		ReadFrame.copyTo(anaframe);
-		//ReadFrame.copyTo(frame2);
-		ReadFrame.copyTo(EncodeFrame);
-		if(cam->Ana1Thread->AnalyzeEn)
-		{
+			ReadFrame.copyTo(anaframe);
 			
+			ReadFrame.copyTo(EncodeFrame);
+			
+			draw_encode_frame(EncodeFrame);
+			
+			Encode(EncodeFrame);
 		}
-
-		//TODO::EncodeFrame
-		Encode(EncodeFrame);
+		usleep(50);
 	}
   	releaseEncode();
 	dbgprint("%s(%d),%d CamThread exit!\n",DEBUGARGS,CameraID);
@@ -207,3 +314,36 @@ int CamReadThread::CreateCamReadThread()
 	pthread_detach(ReadThread);
 	return 0;
 }
+
+
+void CamReadThread::resume()
+{
+    if (m_Status == false)
+    {
+        pthread_mutex_lock(&mut);
+        m_Status = true;
+        pthread_cond_signal(&cond);
+        dbgprint("%s(%d), cam %d read pthread run!\n",DEBUGARGS,CameraID);
+        pthread_mutex_unlock(&mut);
+    }
+    else
+    {
+        dbgprint("%s(%d), cam %d read pthread run already!\n",DEBUGARGS,CameraID);
+    }
+}
+
+void CamReadThread::pause()
+{
+    if (m_Status == true)
+    {
+        pthread_mutex_lock(&mut);
+        m_Status = false;
+        dbgprint("%s(%d), cam %d read pthread stop!\n",DEBUGARGS,CameraID);
+        pthread_mutex_unlock(&mut);
+    }
+    else
+    {
+        dbgprint("%s(%d), cam %d read pthread stop already!\n",DEBUGARGS,CameraID);
+    }
+}
+

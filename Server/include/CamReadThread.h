@@ -3,6 +3,9 @@
 
 #include "Common.h"
 #include "CmdDefine.h"
+#include "CamAnaThread.h"
+#include "SingleCamera.h"
+#include "NetServer.h"
 
 class CamReadThread
 {
@@ -15,6 +18,7 @@ public:
 	int SetCamera_StartThread(string url);
 
 	int InitCamera();
+
 	void run();
 	int  CreateCamReadThread();
 	static void* RunCamThread(void*  param){
@@ -23,11 +27,21 @@ public:
 		return NULL;
 	}
 	void quit(){m_CameraFlag = false;}
+	void resume();
+	void pause();
+
+private:
+
+	bool  m_CameraFlag;
+	bool  m_Status;
+	pthread_mutex_t mut;
+	pthread_cond_t cond;
+
 
 private:
 	uint32 CameraID;
 	string m_videoStream;
-	bool  m_CameraFlag;
+	
 	Mat ReadFrame;
 	Mat EncodeFrame;
 
@@ -49,10 +63,16 @@ private:
 
 	struct SwsContext *scxt;
 
+	uint32 errReadNum;
 	void releaseEncode();
 	int EncodeInit();
 	int GetCamParam();
 	int Encode(Mat &frame);
+	void draw(CamAnaThread * Anathread,Mat &frame);
+	void draw_encode_frame(Mat & frame);
+	
+	void report_camera_break();
+	void check_camera_status();
 
 	SingleCamera *cam;
 	NetServer* server;
