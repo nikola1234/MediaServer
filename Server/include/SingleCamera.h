@@ -25,8 +25,8 @@ public:
 	~SingleCamera();
 	
 	uint32 GetCameraID(){return CameraID;}
-
 	string  get_rtsp_url();
+
 	int set_camera_fix_param(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 	void reset_camera_fix_param(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 

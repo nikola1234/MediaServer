@@ -14,25 +14,36 @@ CSmoke::CSmoke(uint8 index)
 }
 
 
-int CSmoke::SetRectangle(vector< Rect > & rectangle)
+void CSmoke::sleep_release()
 {
-	uint16 i = 0;
-	Rects.clear();
-	if(0 == rectangle.size())
-	{
-  	cout<<"camera "<<m_index<<" CSmoke::SetRectangle size is 0"<<endl;
-		return -1;
-	}
+	alarm  = 0;
+	initialized = false;
+}
 
-	for(i = 0; i < rectangle.size();i++)
+void CSmoke::pause_release()
+{
+	alarm  = 0;
+	initialized = false;
+}
+
+int CSmoke::set_rectangle(vector <Rect> rect)
+{
+	uint8 i =0;
+	Rects.clear();
+	for(i = 0; i <rect.size(); i++)
 	{
 		Rect  tmp;
-		tmp = rectangle[i];
+		tmp = rect[i];
 		Rects.push_back(tmp);
+	}
+
+	if(Rects.size() == 0)
+	{
+		cout<<"camera "<<m_index<<" CFire::CSmoke wrong size is 0 "<<endl;
+		return -1;
 	}
 	return 0;
 }
-
 
 void CSmoke::initThreshold(int cols, int rows, float initValue)
 {

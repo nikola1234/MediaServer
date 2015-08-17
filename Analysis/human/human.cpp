@@ -18,7 +18,7 @@ CHuman::CHuman(uint8 index)
 
 	alarm = 0;
 	MaxNum = 0;
-	Flag = 0;
+	m_Flag = 0;
 
 	color = CV_RGB( 255, 0, 255 );
 	color_rect = CV_RGB( 0, 255, 255);
@@ -34,38 +34,53 @@ CHuman:: ~CHuman()
 	MonitorZoneRects.clear();
 }
 
-
-int CHuman::SetRectangle_Line_Flag_MaxNum(vector< Rect > & rectangle ,vector< Line > & line, uint8 flag, uint16 maxnum)
+void CHuman::sleep_release()
+{
+	alarm = 0;
+	frameindex = 0;
+	frameNum = 0;
+}
+void CHuman::pause_release()
 {
-	uint16 i = 0;
-
-	DirectionLines.clear();
-	MonitorZoneRects.clear();
-
-	if(0 == rectangle.size()&& 0 == line.size())
-	{
-  	cout<<"camera "<<m_index<<" CHuman::SetRectangle_Line_Flag_MaxNum size is 0"<<endl;
-		return -1;
-	}
-
-	for(i = 0; i < rectangle.size();i++)
-	{
-		Rect  tmp1;
-		tmp1 = rectangle[i];
-		MonitorZoneRects.push_back(tmp1);
-	}
-
-	for(i = 0; i < line.size();i++)
-	{
-		Line  tmp2;
-		tmp2 = line[i];
-		DirectionLines.push_back(tmp2);
-	}
- 	Flag 	= flag;
- 	MaxNum =	maxnum;
-	return 0;
+	alarm = 0;
+	frameindex = 0;
+	frameNum = 0;
+	memset(&humanstatis, 0, sizeof(humanstatis));
+	memset(&blobdata, 0 ,sizeof(blobdata));
 }
 
+int CHuman::set_rectangle_line(vector<Rect> rect,vector<Line> line)
+{
+
+	uint8 i =0;
+	MonitorZoneRects.clear();
+	for(i = 0; i <rect.size(); i++)
+	{
+		Rect  tmp;
+		tmp = rect[i];
+		MonitorZoneRects.push_back(tmp);
+	}
+
+	uint8 j =0;
+	DirectionLines.clear();
+	for(j = 0; j<line.size(); j++)
+	{
+		Line  tmp;
+		tmp = line[j];
+		DirectionLines.push_back(tmp);
+	}
+	
+	m_Flag = 0;
+	if(DirectionLines.size() == 0 && MonitorZoneRects.size() == 0)
+	{
+		cout<<"camera "<<m_index<<" CHuman::VIDEO_DRAW DirectionLines and MonitorZoneRects size is 0"<<endl;
+		return -1;
+	}
+	if(MonitorZoneRects.size()>0)m_Flag|=0x01;
+	if(DirectionLines.size() > 0) m_Flag |= 0x02;
+	return 0;
+}
+	
 void  CHuman::doorwaydetect(int lineNum )
 {
 		int id = 0;
@@ -515,7 +530,7 @@ void CHuman::census(Mat &displayframe)
 */
 	humannum = humannum + object.size();
 	humanstatis.numAll=humannum ;
-	/*
+	///*
 	for(int i=0; i<NUM; i++)
 	{
 		humanstatis.statis[i] = humanstatis.statis[i+1];
@@ -533,19 +548,19 @@ void CHuman::census(Mat &displayframe)
 		humanstatis.numAll = humanstatis.statis[(NUM-1)/3*2];
 		//cout<<"Frame.humanstatis.numAll==="<<Frame.humanstatis.numAll<<endl;
 		frameNum = 0;
-*/
+//*/
 		if(humanstatis.numAll > humanstatis.prenum)
 			humanstatis.inAll += humanstatis.numAll -humanstatis.prenum;
 		else if(humanstatis.numAll < humanstatis.prenum)
 			humanstatis.outAll += humanstatis.prenum - humanstatis.numAll;
 			humanstatis.prenum = humanstatis.numAll;
-	//}
+	}
 	//nikola
 	//line(human.alarmCap,variable.varparam.DirectionLines[0].Start,variable.varparam.DirectionLines[0].End,Scalar(255));//Frame.human.alarmCap
 
 }
 
-T_HUMANNUM & CHuman::GetAlarmHumanNum()
+T_HUMANNUM  CHuman::GetAlarmHumanNum()
 {
 	T_HUMANNUM t_HumanNum;
 	memset(&t_HumanNum,0,sizeof(T_HUMANNUM));
@@ -615,7 +630,7 @@ int CHuman::HumanDetectRun(Mat &displayframe)
 		}
 	}
 
-	if((Flag & 0x02)  == 0x02){
+	if((m_Flag & 0x02)  == 0x02){
 		for(int i=0;i<DirectionLines.size();i++)
 		{
 			line(displayframe,DirectionLines[i].Start,DirectionLines[i].End,Scalar(255));
@@ -624,7 +639,7 @@ int CHuman::HumanDetectRun(Mat &displayframe)
 	}
 
 
-	if((Flag & 0x01)  == 1){
+	if((m_Flag & 0x01)  == 1){
 
 		for(int ii=0;ii<MonitorZoneRects.size();ii++)
 		{
@@ -634,11 +649,11 @@ int CHuman::HumanDetectRun(Mat &displayframe)
 
 	human_detect(morph,displayframe);
 
-	if((Flag & 0x01)  == 1){
+	if((m_Flag & 0x01)  == 1){
 		census(displayframe);// for human statistics
 	}
 
-	if((Flag & 0x02)  == 0x02){
+	if((m_Flag & 0x02)  == 0x02){
 		blobdeal(displayframe);
 	}
 

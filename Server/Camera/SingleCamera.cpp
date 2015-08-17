@@ -16,9 +16,13 @@ SingleCamera::SingleCamera(ManageCamera*cam,uint32 ID)
 SingleCamera::~SingleCamera()
 {
 	delete ReadThread;
+	ReadThread = NULL;
 	delete TimeThread;
+	TimeThread =NULL;
 	delete Ana1Thread;
+	Ana1Thread =NULL;
 	delete Ana2Thread;
+	Ana2Thread =NULL;
 }
 
 string  SingleCamera:: get_rtsp_url()
@@ -176,6 +180,9 @@ int SingleCamera::reset_camera_var_param(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraPar
 		dbgprint("%s(%d),reset_camera_var_param wrong PkgNum  is %d, pkg.size() is %d!\n", DEBUGARGS,pt_CameraParam->PkgNum,pkg.size());
 		return -1;
 	}
+	
+	ReadThread->set_video_draw(Pkg);
+	
 	switch (pt_CameraParam->AnalyzeType){
 		case  AnalyzeType1:
 			Ana1Thread->pause();

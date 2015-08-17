@@ -15,24 +15,35 @@ CFire::~CFire()
 	Rects.clear();
 }
 
-int CFire::SetRectangle(vector< Rect > & rectangle)
+void CFire:sleep_release()
 {
-	uint16 i = 0;
-	Rects.clear();
-	if(0 == rectangle.size())
-	{
-  	cout<<"camera "<<m_index<<" CFire::SetRectangle size is 0"<<endl;
-		return -1;
-	}
+	alarm = 0;
+}
+void CFire:pause_release()
+{
+	alarm = 0;
+}
 
-	for(i = 0; i < rectangle.size();i++)
+
+int CFire::set_rectangle(vector <Rect> rect)
+{
+	uint8 i =0;
+	Rects.clear();
+	for(i = 0; i <rect.size(); i++)
 	{
 		Rect  tmp;
-		tmp = rectangle[i];
+		tmp = rect[i];
 		Rects.push_back(tmp);
+	}
+
+	if(Rects.size() == 0)
+	{
+		cout<<"camera "<<m_index<<" CFire::set_rectangle wrong size is 0 "<<endl;
+		return -1;
 	}
 	return 0;
 }
+
 
 int CFire::FireDetectRun(Mat& displayFrame,void* videoHandler)
 {
@@ -47,14 +58,14 @@ int CFire::FireDetectRun(Mat& displayFrame,void* videoHandler)
 			FlameRect.clear();
 			vector<Rect>  & tmpRect =handler->getDetector().getDecider().alarmRect;
 			for(uint16 k=0 ; k <tmpRect.size();k++)
-      {
+      			{
 				Rect  tmp;
 				tmp = tmpRect[k];
 				FlameRect.push_back(tmp);
 			}
 
 			for(uint16 j = 0; j< FlameRect.size(); j++)
-      {
+     			 {
 				FlameRect[j].x   =FlameRect[j].x +rt .x;
 				FlameRect[j].y   =FlameRect[j].y +rt .y;
 			}

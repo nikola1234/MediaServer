@@ -88,6 +88,25 @@ NetServer::NetClientPtr NetServer::CreateNetClientSession()
 	return clientptr;
 }
 
+
+int  NetServer::SendBufferToAllNetClient(char *buffer ,int size)
+{
+	if(m_ClientList.size() <= 1)
+	{
+		m_log.Add("NetServer::SendBufferToAllNetClient have no client");
+		return -1;
+	}
+	
+	writeLock writelock_(m_clientListMutex_);
+	std::list<NetClientPtr>::iterator it = m_ClientList.begin();
+	it++;
+	for ( ; it != m_ClientList.end() ; it++ )
+	{
+		(*it)->SendMessage(buffer,size);
+	}
+	return 0;
+}
+
 void NetServer::RemoveNetClientBySessionID(unsigned int sessionid)
 {
 	writeLock writelock_(m_clientListMutex_);

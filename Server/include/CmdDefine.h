@@ -119,6 +119,30 @@ typedef struct _ANAY_VDCS_PUSH_CAM_PARAM_ACK
 	}
 }T_ANAY_VDCS_PUSH_CAM_PARAM_ACK;
 
+#define  DOOR_NUM_2  2
+typedef struct _DOOR_
+{
+	uint32 in;
+	uint32 out;
+	
+	_DOOR_(){
+		memset(this, 0, sizeof(_DOOR_));
+	}	
+}T_DOOR;
+
+typedef struct _SM_ANAY_VDCS_WARN_INFO
+{	
+	char   	CameUrl[SINGLE_URL_LEN_128];
+	uint8 	WarnType;
+	uint8        Status;       	/* 1 start / 0 stop */
+	uint32      numALL;
+	T_DOOR Door[DOOR_NUM_2];
+	
+	_SM_ANAY_VDCS_WARN_INFO(){
+		memset(this, 0, sizeof(_SM_ANAY_VDCS_WARN_INFO));
+	}
+
+} T_SM_ANAY_VDCS_WARN_INFO;
 
 /***************************************************receive******************************************************/
 //SM_VDCS_ANAY_PUSH_CAMERA

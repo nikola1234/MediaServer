@@ -4,7 +4,6 @@
 
 extern T_ServerParam SerParam;
 
-
 NetClientSession::NetClientSession(NetServer* ourServer,unsigned int sessionId)
 :fOurServer(ourServer),fOurSessionId(sessionId),
 fSessionIsActive(true), client_socket_(ourServer->Get_io_service()),
@@ -155,6 +154,12 @@ int NetClientSession::push_camera_param(char * buffer , int size)
 	
 	memcpy(&t_CameraParam,buffer,sizeof(T_VDCS_VIDEO_CAMERA_PARAM));
 
+	if(t_CameraParam.PkgNum == 0)
+	{
+		fOurServer->m_log.Add(" %d client push_camera_param pkgnum is 0", fOurSessionId);
+		return -1;
+	}
+	
 	for(Num=0; Num  < t_CameraParam.PkgNum; Numi++)
 	{
 		VIDEO_DRAW tmp;

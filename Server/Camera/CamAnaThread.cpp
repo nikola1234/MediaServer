@@ -1,57 +1,53 @@
 #include "CamAnaThread.h"
 
-CamAnaThread::CamAnaThread()
+CamAnaThread::CamAnaThread(SingleCamera* sincam,NetServer *ser)
 {
-  m_AnaFlag   = true;
-  m_Status      = false;
-  AnalyzeType      = 0;
-  AnaIndex  	= 0;
-  alarm         = 0;
-  AnalyzeEn = 0;
+	cam = sincam;
+	server = ser;
 
-  frame = 0;
-  startflag         = 0;
-  stopflag          = 0;
-  intervalflag      = 0;
-  alarmStartframe   = 0;
-  alarmStopframe    = 0;
+	m_AnaFlag   = true;
+	m_Status      = false;
+	AnalyzeType      = 0;
+	AnaIndex  	= 0;
+	alarm         = 0;
+	AnalyzeEn = 0;
 
-  //mut   = PTHREAD_MUTEX_INITIALIZER;
-  //cond  = PTHREAD_COND_INITIALIZER;
-  pthread_mutex_init (&mut,NULL);
-  pthread_cond_init(&cond, NULL);
+	frame = 0;
+	startflag         = 0;
+	stopflag          = 0;
+	intervalflag      = 0;
+	alarmStartframe   = 0;
+	alarmStopframe    = 0;
+
+	pthread_mutex_init (&mut,NULL);
+	pthread_cond_init(&cond, NULL);
 
 
-  region = new CRegion(CameraID);
+	region = new CRegion(sincam->CameraID);
+	videoHandler = NULL;
+	fire = new CFire(sincam->CameraID ,&videoHandler);
+	smoke = new CSmoke(sincam->CameraID);
+	human = new CHuman(sincam->CameraID);
 
-  videoHandler = NULL;
-  fire = new CFire(CameraID ,&videoHandler);
-
-  smoke = new CSmoke(CameraID);
-
-  human = new CHuman(CameraID);
-
+	/*human*/
+	memset(&t_HumanNum,0,sizeof(T_HUMANNUM));
 }
 
 CamAnaThread::~CamAnaThread()
 {
-    pthread_mutex_destroy(&mut);
-    pthread_cond_destroy(&cond);
+	pthread_mutex_destroy(&mut);
+	pthread_cond_destroy(&cond);
 
-    delete region;
-    region = NULL;
-
-    videoHandler = NULL;
-    delete fire;
-    fire = NULL;
-
-    delete smoke;
-    smoke = NULL;
-
-    delete human;
-    human = NULL;
+	delete region;
+	region = NULL;
+	videoHandler = NULL;
+	delete fire;
+	fire = NULL;
+	delete smoke;
+	smoke = NULL;
+	delete human;
+	human = NULL;
 }
-
 
 void CamAnaThread::set_video_draw( vector <VIDEO_DRAW> &DrawPkg)
 {
@@ -67,220 +63,386 @@ void CamAnaThread::set_video_draw( vector <VIDEO_DRAW> &DrawPkg)
 
 int CamAnaThread::alarmStrategy()
 {
-  //alarm strategy 5 frame alarm  and 4s later start another
-  if( 1 == alarm && !startflag ){
-      alarmStartframe++;
-  }else{
-    alarmStartframe = 0;
-  }
+	//alarm strategy 5 frame alarm  and 4s later start another
+	if( 1 == alarm && !startflag ){
+		alarmStartframe++;
+	}else{
+		alarmStartframe = 0;
+	}
 
-  if(0 == alarm && stopflag){
-      alarmStopframe++;
-  }else{
-      alarmStopframe = 0;
-  }
+	if(0 == alarm && stopflag){
+		alarmStopframe++;
+	}else{
+		alarmStopframe = 0;
+	}
 
-  if(alarmStartframe > START_FRAME_INDEX)
-  {
-    startflag = 1;
-    intervalflag = 1;
-    alarmStartframe = 0;
-    return alarmOn;
-  }
+	if(alarmStartframe > START_FRAME_INDEX)
+	{
+		startflag = 1;
+		intervalflag = 1;
+		alarmStartframe = 0;
+		return alarmOn;
+	}
 
-  if(1 == intervalflag)
-  {
-      frame++;
-  }
+	if(1 == intervalflag)
+	{
+		frame++;
+	}
 
-  if (frame > INTERVAL_FRAME_INDEX)
-  {
-     stopflag  = 1;
-     intervalflag = 0;
-     frame = 0;
-  }
+	if (frame > INTERVAL_FRAME_INDEX)
+	{
+		stopflag  = 1;
+		intervalflag = 0;
+		frame = 0;
+	}
 
-  if(alarmStopframe >  STOP_FRAME_INDEX)
-  {
-    stopflag  = 0;
-    startflag = 0;
-    alarmStopframe = 0;
-    return alarmStop;
-  }
+	if(alarmStopframe >  STOP_FRAME_INDEX)
+	{
+		stopflag  = 0;
+		startflag = 0;
+		alarmStopframe = 0;
+		return alarmStop;
+ 	 }
 
-  return 0;
+ 	 return 0;
+}
+
+int CamAnaThread::send_alarm_to_client(uint16 type,uint8 status)
+{
+	int iRet = -1;
+	T_PacketHead                                 t_warnHead;
+	T_SM_ANAY_VDCS_WARN_INFO t_warninfo;
+	char warnBuff[28+150] ={0};
+
+	t_warnHead.magic	   		 =  T_PACKETHEAD_MAGIC;
+	t_warnHead.cmd			  =  SM_ANAY_VDCS_WARN_INFO;
+	t_warnHead.UnEncryptLen	 =  sizeof(T_SM_ANAY_VDCS_WARN_INFO);
+	memcpy(warnBuff,&t_warnHead,sizeof(T_PacketHead));
+
+	memcpy(t_warninfo.CameUrl ,cam->CamUrl,SINGLE_URL_LEN_128);
+	t_warninfo.WarnType = type;
+	t_warninfo.Status       = status;
+	if(type == HumanDetect)
+	{
+		t_warninfo.numALL  = t_HumanNum.humanALL;
+		t_warninfo.Door[0].in    	=	t_HumanNum.doorIN[0];
+		t_warninfo.Door[0].out  	=	t_HumanNum.doorOUT[0];
+		t_warninfo.Door[1].in     	=	t_HumanNum.doorIN[1];
+		t_warninfo.Door[1].out    =	t_HumanNum.doorOUT[1];
+	}
+	memcpy(warnBuff+sizeof(T_PacketHead),&t_warninfo,sizeof(T_SM_ANAY_VDCS_WARN_INFO));
+	
+	iRet = server->SendBufferToAllNetClient(warnBuff,sizeof(PushParamAckBuff));
+	return iRet;
 }
 
 int CamAnaThread::human_detect(Mat &frame)
 {
-  int iRet = -1;
+	int iRet = -1;
 
-  if(!frame.empty())
-  {
-      human->HumanDetectRun(frame);
-      alarm = human->alarm ;
-      usleep(20*1000);
-      /*
-      humanALL  	= human->humanstatis.numAll;
-			humanIN		= MAX(human->humanstatis.doorin[0],human->humanstatis.doorin[1]);//human->humanstatis.inAll;
-			humanOUT	= MAX(human->humanstatis.doorout[0],human->humanstatis.doorout[1]);//human->humanstatis.outAll;
-			for(int i=0; i<LINENUM;i++){
-				doorIN[i]		= human->humanstatis.doorin[i];
-				doorOUT[i]	= human->humanstatis.doorout[i];
-			}*/
-			//imshow(HumanAlarmWindow,HumandispalyFrame);
-  }
-  else
-  {
-      alarm = 0;
-      usleep(40*1000);
-  }
-  iRet =  alarmStrategy();
+	if(!frame.empty())
+	{
+		human->HumanDetectRun(frame);
+		alarm = human->alarm ;
+		t_HumanNum = human->GetAlarmHumanNum();
+	
+	}else{
+		alarm = 0;
+		usleep(40*1000);
+	}
+	
+	iRet =  alarmStrategy();
 
-  if(iRet == alarmOn)
-  {
-    //TODO: notify huamn alarm start and push rtsp
-  }
+	if(iRet == alarmOn)
+	{
+		//TODO: notify client huamn alarm start 
+		send_alarm_to_client(HumanDetect,1);
+	}
 
-  if(iRet == alarmStop)
-  {
-    //TODO: notify huamn alarm stop
-  }
-  return 0;
+	if(iRet == alarmStop)
+	{
+		//TODO: notify client huamn alarm stop
+		send_alarm_to_client(HumanDetect,0);
+	}
+	return 0;
 }
 
 int  CamAnaThread::region_detect(Mat &frame)
 {
-  int iRet = -1;
+	int iRet = -1;
 
-  if(!frame.empty())
-  {
-  		region->RegionDetectRun(frame);
-      		alarm = region->alarm ;
-  		usleep(20*1000);
-  }
-  else
-  {
-      alarm = 0;
-      usleep(40*1000);
-  }
-  iRet =  alarmStrategy();
+	if(!frame.empty())
+	{
+		region->RegionDetectRun(frame);
+  		alarm = region->alarm ;
+		usleep(30*1000);
+	}else{
+		alarm = 0;
+		usleep(40*1000);
+	}
+	iRet =  alarmStrategy();
 
-  if(iRet == alarmOn)
-  {
-    //TODO: notify region alarm start and push rtsp
-  }
+	if(iRet == alarmOn)
+	{
+		//TODO: notify client region alarm start 
+		send_alarm_to_client(RegionDetect,1);
+	}
 
-  if(iRet == alarmStop)
-  {
-    //TODO: notify region alarm stop
-  }
-  return 0;
+	if(iRet == alarmStop)
+	{
+		//TODO: notify client region alarm stop
+		send_alarm_to_client(RegionDetect,0);
+	}
+	return 0;
 }
 
 int  CamAnaThread::fire_detect(Mat &frame)
 {
-  int iRet = -1;
+	int iRet = -1;
 
-  if(!frame.empty())
-  {
-      fire->FireDetectRun(frame,(void *)videoHandler);
-      alarm = fire->alarm ;
-      usleep(20*1000);
-  }
-  else
-  {
-      alarm = 0;
-      usleep(40*1000);
-  }
-  iRet =  alarmStrategy();
+	if(!frame.empty())
+	{
+		fire->FireDetectRun(frame,(void *)videoHandler);
+		alarm = fire->alarm ;
+	}
+	else
+	{
+		alarm = 0;
+		usleep(40*1000);
+	}
+	iRet =  alarmStrategy();
 
-  if(iRet == alarmOn)
-  {
-    //TODO: notify fire alarm start and push rtsp
-  }
+	if(iRet == alarmOn)
+	{
+		//TODO: notify client fire alarm start
+		send_alarm_to_client(FireDetect,1);
+	}
 
-  if(iRet == alarmStop)
-  {
-    //TODO: notify fire alarm stop
-  }
-  return 0;
+	if(iRet == alarmStop)
+	{
+		//TODO: notify client fire alarm stop
+		send_alarm_to_client(FireDetect,0);
+	}
+	return 0;
 }
 
 int  CamAnaThread::smoke_detect(Mat &frame)
 {
-  int iRet = -1;
+	int iRet = -1;
 
-  if(!frame.empty())
-  {
-      smoke->SmokeDetectRun(frame);
-      alarm = smoke->alarm ;
-      usleep(20*1000);
-  }
-  else
-  {
-      alarm = 0;
-      usleep(40*1000);
-  }
-  iRet =  alarmStrategy();
+	if(!frame.empty())
+	{
+		smoke->SmokeDetectRun(frame);
+		alarm = smoke->alarm ;
+	}else{
+		alarm = 0;
+		usleep(40*1000);
+	}
+	
+	iRet =  alarmStrategy();
 
-  if(iRet == alarmOn)
-  {
-    //TODO: notify smoke alarm start and push rtsp
-  }
+	if(iRet == alarmOn)
+	{
+		//TODO: notify client smoke alarm start and push rtsp
+		send_alarm_to_client(SmokeDetect,1);
+	}
 
-  if(iRet == alarmStop)
-  {
-    //TODO: notify smoke alarm stop
-  }
-  return 0;
+	if(iRet == alarmStop)
+	{
+		//TODO: notify client smoke alarm stop
+		send_alarm_to_client(SmokeDetect,0);
+	}
+	return 0;
 }
 
 
 int CamAnaThread::alarm_run(Mat &frame ,uint8 iType)
 {
-  switch (iType) {
-    case HumanDetect:
-          human_detect(frame);
-          break;
-    case SmokeDetect:
-          smoke_detect(frame);
-          break;
-    case RegionDetect:
-          region_detect(frame);
-          break;
-    case FixedObjDetect:
-          //fixobj_detect(frame);
-          break;
-    case FireDetect:
-          fire_detect(frame);
-          break;
-    case ResidueDetect:
-          //residue_detect(frame);
-          break;
-    default:
-          dbgprint("%s(%d),cam %d alarmindex  %d wrong AnalyzeType !\n",
-                                  DEBUGARGS,CameraID,iType);
-          usleep(40*1000);
-          break;
-  }
-  return 0;
+	switch (iType) {
+	case HumanDetect:
+	      human_detect(frame);
+	      break;
+	case SmokeDetect:
+	      smoke_detect(frame);
+	      break;
+	case RegionDetect:
+	      region_detect(frame);
+	      break;
+	case FixedObjDetect:
+	      //fixobj_detect(frame);
+	      break;
+	case FireDetect:
+	      fire_detect(frame);
+	      break;
+	case ResidueDetect:
+	      //residue_detect(frame);
+	      break;
+	default:
+	      dbgprint("%s(%d),cam %d alarmindex  %d wrong AnalyzeType !\n",DEBUGARGS,CameraID,iType);
+	      usleep(40*1000);
+	      break;
+	}
+	return 0;
 }
 
-void CamAnaThread::resource_release()
+void CamAnaThread::analyze_pause_release()
 {
-  alarm = 0;
+	alarm = 0;
 
-  frame = 0;
-  startflag         = 0;
-  stopflag          = 0;
-  intervalflag      = 0;
-  alarmStartframe   = 0;
-  alarmStopframe    = 0;
+	frame = 0;
+	startflag         = 0;
+	stopflag          = 0;
+	intervalflag      = 0;
+	alarmStartframe   = 0;
+	alarmStopframe    = 0;
 
-  //release region resource
-  region->frameindex = 0;
-  region->alarm      = 0;
+	//human
+	human->pause_release();
+	region->pause_release();
+	fire->pause_release();
+	smoke->pause_release();
+}
+
+void CamAnaThread::analyze_sleep_release()
+{
+	alarm = 0;
+
+	frame = 0;
+	startflag         = 0;
+	stopflag          = 0;
+	intervalflag      = 0;
+	alarmStartframe   = 0;
+	alarmStopframe    = 0;
+
+	//human
+	human->sleep_release();
+	region->sleep_release();
+	fire->sleep_release();
+	smoke->sleep_release();
+}
+
+
+void CamAnaThread::parse_human_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect>& tmprect,vector<Line>  &tmpline)
+{
+	uint16 i = 0;
+	int x= 0;
+	int y = 0;
+	int width = 0;
+	int height = 0;
+
+	tmpline.clear();
+	tmprect.clear();
+	
+	if(Pkg.size() == 0)
+	{
+		dbgprint("%s(%d),%d camera parse_human_draw_package size is 0!\n",DEBUGARGS,CameraID);
+		return -1;
+	}
+
+	for(i=0; i < Pkg.size(); i++ )
+	{
+		VIDEO_DRAW tmp = Pkg[i];
+		if(tmp.Type == 1)
+		{
+			x=(int )tmp.StartX;
+			y=(int )tmp.StartY;
+			width =(int )tmp.EndX;
+			height=(int )tmp.EndY;		
+			tmprect.push_back(Rect(x, y, width, height));
+		}
+		if(tmp.Type ==2)
+		{ 
+			Line line;
+			line.Start.x =tmp.StartX;
+			line.Start.y=tmp.StartY;
+			line.End.x=tmp.EndX;
+			line.End.y=tmp.EndY;
+			tmpline.push_back(line);
+		}
+		else
+		{
+			dbgprint("%s(%d),%d camera parse_human_draw_package wrong type!\n",DEBUGARGS,CameraID);
+		}
+	}
+
+	if(tmpline.size() == 0 && tmprect.size() == 0)
+	{
+		dbgprint("%s(%d),%d camera parse_human_draw_package rect and line size is 0!\n",DEBUGARGS,CameraID);
+		return -1;
+	}
+	return 0;
+}
+
+void CamAnaThread::parse_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect>& tmprect)
+{
+	uint16 i = 0;
+	int x= 0;
+	int y = 0;
+	int width = 0;
+	int height = 0;
+
+	tmprect.clear();
+	
+	if(Pkg.size() == 0)
+	{
+		dbgprint("%s(%d),%d camera parse_draw_package size is 0!\n",DEBUGARGS,CameraID);
+		return -1;
+	}
+
+	for(i=0; i < Pkg.size(); i++ )
+	{
+		VIDEO_DRAW tmp = Pkg[i];
+		if(tmp.Type == 1)
+		{
+			x=(int )tmp.StartX;
+			y=(int )tmp.StartY;
+			width =(int )tmp.EndX;
+			height=(int )tmp.EndY;		
+			tmprect.push_back(Rect(x, y, width, height));
+		}
+		else
+		{
+			dbgprint("%s(%d),%d camera parse_draw_package wrong type!\n",DEBUGARGS,CameraID);
+		}
+	}
+
+	if( tmprect.size() == 0)
+	{
+		dbgprint("%s(%d),%d camera parse_draw_package rect and line size is 0!\n",DEBUGARGS,CameraID);
+		return -1;
+	}
+	return 0;
+}
+
+void CamAnaThread::set_analyze_vector( vector <VIDEO_DRAW> & DrawPkg)
+{	
+	vector<Rect> tmpRect;
+	vector<Line>  tmpLine;
+	switch (AnalyzeType){
+		case HumanDetect:
+			parse_human_draw_package(DrawPkg,tmpRect,tmpLine);
+			human->set_rectangle_line(tmpRect,tmpLine);
+			break;
+		case SmokeDetect:
+			parse_draw_package(DrawPkg,tmpRect);
+			smoke->set_rectangle(tmpRect);
+			break;		
+		case RegionDetect:
+			parse_draw_package(DrawPkg,tmpRect);
+			region->set_rectangle(tmpRect);
+			break;
+		case FixedObjDetect:
+			break;		
+		case FireDetect:
+			parse_draw_package(DrawPkg,tmpRect);
+			fire->set_rectangle(tmpRect);
+			break;		
+		case ResidueDetect:
+			break;		
+		default :
+			dbgprint("%s(%d),%d set_analyze_vector analyze wrong!\n",DEBUGARGS,CameraID);
+			break;
+	}
 }
 
 void CamAnaThread::run()
@@ -289,29 +451,19 @@ void CamAnaThread::run()
 		pthread_mutex_lock(&mut);
 		while (!m_Status)
 		{
+			  analyze_pause_release();
 			  pthread_cond_wait(&cond, &mut);
-			  //release_resource()
-			  //vector_analyze()
+			  set_analyze_vector(pkg);
 		}
 		pthread_mutex_unlock(&mut);
 
 		if(AnalyzeEn)
 		{
-			  switch (AnaIndex) {
-			    case 1:
-			          //m_AlarmCamera->Alarmthead1Frame.copyTo(frame1);
-			          alarm_run(frame1,AnalyzeType);  //alarm_run(Mat & frame);
-			          break;
-			    case 2:
-			        //  m_AlarmCamera->Alarmthead2Frame.copyTo(frame2);
-			          alarm_run(frame2,AnalyzeType);
-			          break;
-			    default:
-			      usleep(40*1000);
-			      break;
-			  }
-		}
-		else{
+		
+			cam->ReadThread->anaframe.copyTo(origFrame);
+			alarm_run(origFrame,AnalyzeType);
+		}else{
+			analyze_sleep_release();
 			usleep(40*1000);
 		}
 	}

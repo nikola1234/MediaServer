@@ -179,9 +179,14 @@ void CamReadThread::run()
 			waitKey(40);
 			continue;
 		}
-		ReadFrame.copyTo(frame1);
-		ReadFrame.copyTo(frame2);
+		ReadFrame.copyTo(anaframe);
+		//ReadFrame.copyTo(frame2);
 		ReadFrame.copyTo(EncodeFrame);
+		if(cam->Ana1Thread->AnalyzeEn)
+		{
+			
+		}
+
 		//TODO::EncodeFrame
 		Encode(EncodeFrame);
 	}

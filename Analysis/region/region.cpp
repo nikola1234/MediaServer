@@ -15,26 +15,37 @@ CRegion::~CRegion()
 	Rects.clear();
 }
 
-int CRegion::SetRectangle(vector< Rect > & rectangle)
+void CRegion::sleep_release()
 {
-	uint16 i = 0;
-	Rects.clear();
-	if(0 == rectangle.size())
-	{
-  	cout<<"camera "<<m_index<<" CRegion::SetRectangle size is 0"<<endl;
-		return -1;
-	}
+	alarm = 0;
+	frameindex = 0;
+}
+void CRegion::pause_release()
+{
+	alarm = 0;
+	frameindex = 0;
+}
 
-	for(i = 0; i < rectangle.size();i++)
+int CRegion::set_rectangle(vector <Rect> rect)
+{
+	uint8 i =0;
+	Rects.clear();
+	for(i = 0; i <rect.size(); i++)
 	{
 		Rect  tmp;
-		tmp = rectangle[i];
+		tmp = rect[i];
 		Rects.push_back(tmp);
+	}
+
+	if(Rects.size() == 0)
+	{
+		cout<<"camera "<<m_index<<" CRegion::set_rectangle wrong size is 0 "<<endl;
+		return -1;
 	}
 	return 0;
 }
 
-//报警与报警效果
+
 void CRegion::motiondetective(Mat &dispalyFrame,Mat &morph)
 {
 	bool motionAlarmDone = false;

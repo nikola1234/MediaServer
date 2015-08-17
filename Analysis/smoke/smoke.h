@@ -35,7 +35,11 @@ public:
 	Mat	bgEMap;
 
 	vector<Rect> Rects;
-	int SetRectangle(vector< Rect > & rectangle);
+
+
+	void sleep_release();
+	void pause_release();
+	int set_rectangle(vector <Rect> rect);
 	int SmokeDetectRun(Mat & displayframe);
 
 private:

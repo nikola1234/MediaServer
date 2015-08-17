@@ -17,6 +17,10 @@ typedef struct _HUMAN_NUM
 
 	int doorIN[LINENUM];
 	int doorOUT[LINENUM];
+	
+	_HUMAN_NUM(){
+		memset(this, 0, sizeof(_HUMAN_NUM));
+	}
 
 }T_HUMANNUM;
 
@@ -50,13 +54,13 @@ public:
 
 	uint8 	m_index;
 	int     m_rowsZoomRate;
-	int	    m_colsZoomRate;
+	int	 m_colsZoomRate;
 
 	int     m_zoomRows;
 	int     m_zoomCols;
 
 	float 	w_Rate;
-	float		h_Rate;
+	float	h_Rate;
 
 	CvScalar color ;
 	CvScalar color_rect ;
@@ -86,13 +90,17 @@ public:
 
 public:
 	uint8    alarm;
-	uint8    Flag;
+	uint8    m_Flag;
 	uint16   MaxNum;
 
 	vector< Rect >     MonitorZoneRects;
 	vector< Line >     DirectionLines;
-	T_HUMANNUM & GetAlarmHumanNum();
-	int SetRectangle_Line_Flag_MaxNum(vector< Rect > & rectangle ,vector< Line > & line, uint8 flag, uint16 maxnum);
+	
+	T_HUMANNUM GetAlarmHumanNum();
+
+	void sleep_release();
+	void pause_release();
+	int set_rectangle_line(vector<Rect> rect,vector<Line> line);
 	int HumanDetectRun(Mat &displayframe);
 
 };

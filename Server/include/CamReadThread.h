@@ -2,6 +2,7 @@
 #define _CAM_READ_THREAD_H_
 
 #include "Common.h"
+#include "CmdDefine.h"
 
 class CamReadThread
 {
@@ -9,13 +10,9 @@ public:
 	CamReadThread(SingleCamera *sincam,NetServer *Server);
 	~CamReadThread();
 
-	Mat   frame1;
-	Mat   frame2;
-
+	Mat  anaframe;
 
 	int SetCamera_StartThread(string url);
-
-
 
 	int InitCamera();
 	void run();

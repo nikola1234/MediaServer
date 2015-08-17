@@ -15,7 +15,10 @@ public:
 
 	vector< Rect > Rects;
 	uint16 frameindex;
-	int SetRectangle(vector< Rect > & rectangle);
+	
+	void sleep_release();
+	void pause_release();
+	int set_rectangle(vector <Rect> rect);
 	int RegionDetectRun(Mat &dispalyFrame);
 	float ChangRate;
 
