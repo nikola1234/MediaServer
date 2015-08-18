@@ -8,6 +8,7 @@
 #include <boost/system/error_code.hpp>
 #include "NetServer.h"
 #include "CmdDefine.h"
+#include "CameraManage.h"
 
 #define  BUFFER_SIZE  (10*1024)
 #define  BUFFER_SIZE_MIN  (512)
@@ -39,7 +40,11 @@ private:
 	void push_camera_param_ack(int ret);
 	int push_camera_param(char * buffer , int size);	
 
+	int delete_camera_ack(T_VDCS_VIDEO_CAMERA_DELETE* pt_CamDel,int ret);
 	int delete_camera(char * buffer , int size);	
+	
+	int device_status_ack(char * buffer,int size);
+	int warn_info_ack(char * buffer,int size);
 	
 	int ReciveData_GetParam(char* buffer ,int size);
 	void HandleRecvReponse(const boost::system::error_code& error, int recvsizes);

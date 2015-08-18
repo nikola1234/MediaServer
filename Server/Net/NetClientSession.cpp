@@ -178,8 +178,113 @@ int NetClientSession::push_camera_param(char * buffer , int size)
 	return 0;
 }
 
+int NetClientSession::delete_camera_ack(T_VDCS_VIDEO_CAMERA_DELETE* pt_CamDel,int ret)
+{
+	T_PacketHead  						t_PackHeadDelAck;
+	T_VDCS_VIDEO_CAMERA_DELETE_ACK  t_CamDelAck;
+	char DelAckBuff[28 + 145] ={0};
+
+	t_PackHeadDelAck.magic		  =  T_PACKETHEAD_MAGIC;
+	t_PackHeadDelAck.cmd			  =  SM_VDCS_ANAY_DELETE_CAMERA_ACK;
+	t_PackHeadDelAck.UnEncryptLen	  =	sizeof(T_VDCS_VIDEO_CAMERA_DELETE_ACK);
+	memcpy(DelAckBuff,&t_PackHeadDelAck,sizeof(T_PacketHead));
+
+	if(ret ==  1){
+		t_CamDelAck.ack   = 1;
+	}else{
+		t_CamDelAck.ack   = 0;
+	}
+	
+	memcpy(t_CamDelAck.ip ,pt_CamDel->ip,IP_LEN_16);
+	memcpy(t_CamDelAck.CameUrL,pt_CamDel->CameUrL,SINGLE_URL_LEN_128);
+	
+	memcpy(DelAckBuff+sizeof(T_PacketHead),&t_CamDelAck,sizeof(T_VDCS_VIDEO_CAMERA_DELETE_ACK));
+	SendMessage(DelAckBuff,sizeof(DelAckBuff));
+
+	return 0;
+}
+
 int NetClientSession::delete_camera(char * buffer , int size)
 {
+	int iRet = -1;
+	uint32 ID = 0;
+	SingleCamPtr  tmpCamPtr = NULL;
+
+	T_VDCS_VIDEO_CAMERA_DELETE  t_CamDel;
+
+	memcpy(&t_CamDel,buffer,sizeof(T_VDCS_VIDEO_CAMERA_DELETE));
+
+	tmpCamPtr = fOurServer->ManCam->search_camera_by_url(t_CamDel.CameUrL);
+	if(tmpCamPtr != NULL)
+	{
+		tmpCamPtr->TimeThread->quit();
+		tmpCamPtr->TimeThread->resume();
+		tmpCamPtr->Ana1Thread->quit();
+		tmpCamPtr->Ana1Thread->resume();
+		tmpCamPtr->Ana2Thread->quit();
+		tmpCamPtr->Ana2Thread->resume();
+		tmpCamPtr->ReadThread->quit();
+		tmpCamPtr->ReadThread->resume();
+		usleep(200*1000);
+		ID = tmpCamPtr->CameraID;
+		if(ID >0)
+		{
+			iRet = fOurServer->ManCam->remove_camera_by_id(ID);
+			if(iRet < 0) {
+				fOurServer->m_log.Add(" %d remove_camera_by_id fail", fOurSessionId);
+				delete_camera_ack(&t_CamDel,0);
+				return -1;
+			}
+			iRet = fOurServer->ManCam->resume_cameraID_in_list(ID);
+			if(iRet < 0) {
+				fOurServer->m_log.Add(" %d resume_cameraID_in_list fail", fOurSessionId);
+				delete_camera_ack(&t_CamDel,0);
+				return -1;
+			}
+		}else{
+			fOurServer->m_log.Add(" %d get camera ID fail", fOurSessionId);
+			delete_camera_ack(&t_CamDel,0);
+			return -1;
+		}
+		
+	}else{
+		fOurServer->m_log.Add(" %d get camera ptr fail", fOurSessionId);
+		delete_camera_ack(&t_CamDel,0);
+		return -1;
+	}
+	delete_camera_ack(&t_CamDel,1);
+	return 0;
+}
+
+int NetClientSession::device_status_ack(char * buffer,int size)
+{
+	T_VDCS_ANAY_DEVICE_STATUS_ACK t_AnaDeviceAck;
+	uint8 ack;
+
+	memcpy(&t_AnaDeviceAck,buffer,sizeof(T_VDCS_ANAY_DEVICE_STATUS_ACK));
+	
+	ack = t_AnaDeviceAck.Ack;
+	if(ack == 1){
+			dbgprint("ipCamera %s deivce break report  sucess!\n",t_AnaDeviceAck.CameUrL);
+	}else{
+		dbgprint("ipCamera %s deivce break reporterror!\n",,t_AnaDeviceAck.CameUrL);
+	}
+	return 0;
+}
+
+int NetClientSession::warn_info_ack(char * buffer,int size)
+{
+	T_VDCS_ANAY_WARN_INFO_ACK  t_AnayWarnAck;
+	uint8 ack;
+	
+	memcpy(&t_AnayWarnAck,buffer,sizeof(T_VDCS_ANAY_WARN_INFO_ACK));
+		
+	ack = t_AnayWarnAck.Ack;
+	if(ack == 1){
+			dbgprint("ipCamera %s warninfo  analyze  %x report sucess!\n",t_AnayWarnAck.CameUrL,t_AnayWarnAck.AnalyzeType);
+	}else{
+		dbgprint("ipCamera %s warninfo analyze  %x report error!\n",,t_AnayWarnAck.CameUrL,t_AnayWarnAck.AnalyzeType);
+	}
 	return 0;
 }
 
@@ -201,8 +306,12 @@ int NetClientSession::ReciveData_GetParam(char* buffer ,int size)
 			client_register_ack();
 			break;
 		case SM_VDCS_ANAY_DEVICE_STATUS_ACK:
+			fOurServer->m_log.Add(" %d device status ack", fOurSessionId);
+			device_status_ack(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
 			break;
 		case SM_VDCS_ANAY_WARN_INFO_ACK:
+			fOurServer->m_log.Add(" %d warn info ack", fOurSessionId);
+			warn_info_ack(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
 			break;
 		case SM_VDCS_ANAY_PUSH_CAMERA:
 			fOurServer->m_log.Add(" %d client push camera", fOurSessionId);

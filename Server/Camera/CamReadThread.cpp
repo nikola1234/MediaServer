@@ -31,6 +31,7 @@ int  CamReadThread::SetCamera_StartThread(string url)
 	
 	iRet = CreateCamReadThread();
 	return	iRet;
+	resume();
 }
 
 int CamReadThread::InitCamera()
@@ -263,9 +264,13 @@ void  CamReadThread::check_camera_status()
 	if(errReadNum >2000){
 		report_camera_break();  
 		pause();
+		cam->TimeThread->pause();
+		cam->Ana1Thread->pause();
+		cam->Ana2Thread->pause();
 	}
 
 }
+
 void CamReadThread::run()
 {
 	while(m_CameraFlag)

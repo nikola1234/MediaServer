@@ -34,10 +34,13 @@ public:
   int Set_or_Renew_Camera_Param(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg);
   string Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 
-private:
+public:
 	uint32  get_camera_id();
 	int read_CameraID_from_DB();
-	SingleCamPtr search_cam_by_id(uint32 ID);
+	SingleCamPtr search_camera_by_id(uint32 ID);
+	SingleCamPtr search_camera_by_url(char *url);
+	int remove_camera_by_id(uint32 ID);
+	int resume_cameraID_in_list(uint32 ID);
 	int reset_camera_param(uint32 ID,ST_VDCS_VIDEO_PUSH_CAM & addCam,string &url);
 
 private:

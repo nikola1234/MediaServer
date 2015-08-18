@@ -37,3 +37,20 @@ int CamList::search_cam_by_url(char *url,int & ID)
 	return -1;
 }
 
+int CamList::delete_cam_by_id(uint32 ID)
+{
+	CamreadLock writelock_(m_CamListMutex_);
+	
+	std::list<T_CAM_LIST>::iterator it = camlist_.begin();
+	for ( ; it != camlist_.end() ; it++ )
+	{
+		if((*it).CameraID == ID)
+		{
+			camlist_.erase(it);
+			return 0;
+		}
+	}
+	return -1;
+}
+
+

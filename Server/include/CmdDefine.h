@@ -99,11 +99,10 @@ typedef struct _ANAY_VDCS_REGISTER_ACK
 //SM_VDCS_ANAY_PUSH_CAMERA_ACK
 typedef struct _ANAY_VDCS_PUSH_CAM_ACK
 {
-	uint8        ack; // 1 success  0 failure
 	char		ip[IP_LEN_16];
 	char		CameUrL[SINGLE_URL_LEN_128];
 	char         RtspUrL[SINGLE_URL_LEN_128];
-
+	uint8        ack; 			/* 1 success  0 failure*/
 	_ANAY_VDCS_PUSH_CAM_ACK(){
 		memset(this, 0, sizeof(_ANAY_VDCS_PUSH_CAM_ACK));
 	}
@@ -130,6 +129,7 @@ typedef struct _DOOR_
 	}	
 }T_DOOR;
 
+//SM_ANAY_VDCS_WARN_INFO
 typedef struct _SM_ANAY_VDCS_WARN_INFO
 {	
 	char   	CameUrl[SINGLE_URL_LEN_128];
@@ -143,6 +143,7 @@ typedef struct _SM_ANAY_VDCS_WARN_INFO
 	}
 } T_SM_ANAY_VDCS_WARN_INFO;
 
+//SM_ANAY_VDCS_DEVICE_STATUS
 typedef struct _SM_ANAY_VDCS_DEVICE_STATUS
 {
 	char   	CameUrl[SINGLE_URL_LEN_128];
@@ -153,6 +154,18 @@ typedef struct _SM_ANAY_VDCS_DEVICE_STATUS
 		memset(this, 0, sizeof(T_SM_ANAY_VDCS_DEVICE_STATUS));
 	}	
 }T_SM_ANAY_VDCS_DEVICE_STATUS;
+
+//SM_VDCS_ANAY_DELETE_CAMERA_ACK
+typedef struct _VDCS_VIDEO_CAMERA_DELETE_ACK
+{
+	char         ip[IP_LEN_16];
+	char   	CameUrl[SINGLE_URL_LEN_128];
+	uint8 	Ack;
+	
+	_VDCS_VIDEO_CAMERA_DELETE_ACK(){
+		memset(this, 0, sizeof(_VDCS_VIDEO_CAMERA_DELETE_ACK));
+	}	
+}T_VDCS_VIDEO_CAMERA_DELETE_ACK;
 
 
 /***************************************************receive******************************************************/
@@ -232,6 +245,31 @@ typedef struct  _VDCS_VIDEO_CAMERA_PARAM
 		memset(this, 0, sizeof(_VDCS_VIDEO_CAMERA_PARAM));
 	}
 }T_VDCS_VIDEO_CAMERA_PARAM;
+
+//SM_VDCS_ANAY_DEVICE_STATUS_ACK
+typedef struct _VDCS_ANAY_DEVICE_STATUS_ACK
+{
+	char   	CameUrl[SINGLE_URL_LEN_128];
+	uint8 	DeviceType;
+	uint8        Ack;  	/* 1 sucess 0 fail */
+	
+	_VDCS_ANAY_DEVICE_STATUS_ACK(){
+		memset(this, 0, sizeof(_VDCS_ANAY_DEVICE_STATUS_ACK));
+	}
+}T_VDCS_ANAY_DEVICE_STATUS_ACK;
+
+
+//SM_VDCS_ANAY_WARN_INFO_ACK
+typedef struct _VDCS_ANAY_WARN_INFO_ACK
+{
+	char 	CameUrL[SINGLE_URL_LEN_128];
+	uint16    	AnalyzeType;         /*single analyze*/
+	uint8        Ack;				/* 1 sucess 0 fail */
+	
+	_VDCS_ANAY_WARN_INFO_ACK(){
+		memset(this, 0, sizeof(_VDCS_ANAY_WARN_INFO_ACK));
+	}	
+}T_VDCS_ANAY_WARN_INFO_ACK;
 
 
 //SM_VDCS_ANAY_DELETE_CAMERA
