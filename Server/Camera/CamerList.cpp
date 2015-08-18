@@ -11,7 +11,7 @@ CamList::~CamList()
 }
 
 
-int CamList::add_cam_list(char * &url,uint32 ID)
+int CamList::add_cam_list(char * url,uint32 ID)
 {
 	T_CAM_LIST tmp;
 	CamwriteLock writelock_(m_CamListMutex_);

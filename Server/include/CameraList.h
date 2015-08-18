@@ -14,7 +14,7 @@ public:
 	~CamList();
 
 	
-	int add_cam_list(char * &url,uint32 ID);
+	int add_cam_list(char * url,uint32 ID);
 	int search_cam_by_url(char *url,int & ID);
 	int delete_cam_by_id(uint32 ID);
 private:

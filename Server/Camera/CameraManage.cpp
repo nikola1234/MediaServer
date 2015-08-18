@@ -1,5 +1,6 @@
 #include "boost/filesystem.hpp"
 #include "CameraManage.h"
+#include "DataInfo.h"
 
 ManageCamera::ManageCamera()
 {
@@ -49,7 +50,7 @@ int ManageCamera::read_CameraID_from_DB(char * path)
 			{
 				int n= atoi(*(pszResult + nColumn * i + j));	
 				if( n != 0){
-					CamID.push_back((uint32)n);
+					CamIDList.push_back((uint32)n);
 					num++;
 				}
 			}
@@ -63,10 +64,40 @@ int ManageCamera::read_CameraID_from_DB(char * path)
 
 }
 
+void ManageCamera::erase_id_from_CamIDList(uint32 ID)
+{
+	std::list<uint32>::iterator Itor;
+	WriteLock write_lock(m_CamIDListMutex_);
+	for ( Itor = CamIDList.begin(); Itor != CamIDList.end(); )
+	{
+		if ( *Itor == ID )
+		{
+			Itor = CamIDList.erase(Itor);
+		}
+		else
+		{
+			Itor++;
+		}
+	}
+}
+
+int ManageCamera::init_camera_from_DB()
+{
+	uint32 ID = 0;
+	string rtspurl;
+
+	//按顺序读出cameraID，启动分析
+
+	DB_add_camera();
+	erase_id_from_CamIDList(ID);
+	m_CamList.add_cam_list(url, ID)
+}
+
 int ManageCamera::InitFromDB()
 {
 	char DB_file[20] ="MS.sqlite";
 	read_CameraID_from_DB(DB_file);
+	init_camera_from_DB();
   	return 0;
 }
 
@@ -83,11 +114,11 @@ int ManageCamera::try_to_open(string stream)
 uint32  ManageCamera::get_camera_id()
 {	uint32 ID = 0;
 	ReadLock read_lock (m_CamIDListMutex_);
-	if(CamID.size() >0)
-		ID = CamID.front();
+	if(CamIDList.size() >0)
+		ID = CamIDList.front();
 	read_lock.unlock();
 	WriteLock write_lock(m_CamIDListMutex_);
-	CamID.pop_front(); 
+	CamIDList.pop_front(); 
 	return ID;
 }
 
@@ -147,7 +178,8 @@ int ManageCamera::resume_cameraID_in_list(uint32 ID)
 	}
 
 	WriteLock writelock_(m_CamIDListMutex_);
-	CamID.push_back(ID);	
+	CamIDList.push_back(ID);	
+	//delete_camera_in_DB();
 	return 0;
 }
 
@@ -174,7 +206,6 @@ int ManageCamera::add_camID_list(char *&url ,uint32 ID)
 	int iRet =  m_CamList.add_cam_list(url,ID);
 	return iRet;
 }
-
 
 int ManageCamera::Set_or_Renew_Camera_Param(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg)
 {
@@ -225,7 +256,6 @@ string ManageCamera::Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 			m_log.Add("%s(%d),wrong rtsp url!" ,DEBUGARGS);
 			return url;
 		}
-		//add list
 		iRet =add_camID_list(addCam.CameUrL,(uint32)ID);
 		if(iRet < 0){
 			string tmpurl ="TT";

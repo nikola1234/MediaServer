@@ -11,6 +11,7 @@
 #include "CmdDefine.h"
 #include "Data.h"
 #include "CppSQLite3.h"
+#include "DataInfo.h"
 
 class NetServer;
 class SingleCamera;
@@ -36,6 +37,8 @@ public:
 
 public:
 	uint32  get_camera_id();
+	void erase_id_from_CamIDList(uint32 ID);
+	int init_camera_from_DB();
 	int read_CameraID_from_DB();
 	SingleCamPtr search_camera_by_id(uint32 ID);
 	SingleCamPtr search_camera_by_url(char *url);
@@ -47,7 +50,7 @@ private:
 	std::list<SingleCamPtr> m_SinCamList;
 	boost::shared_mutex m_SinCamListMutex_;
 
-	std::list<uint32> CamID;
+	std::list<uint32> CamIDList;
 	boost::shared_mutex m_CamIDListMutex_;
 
 	NetServer *Server;
@@ -55,6 +58,8 @@ private:
 	CamList m_CamList;
 
 	CMyLog m_log;
+
+	CamDataInfo CDataInfo;
 };
 
 #endif
