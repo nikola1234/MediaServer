@@ -112,8 +112,7 @@ int NetClientSession::push_camera_data(char* buffer ,int size)
 	memcpy(&t_add_camera,buffer,sizeof(ST_VDCS_VIDEO_PUSH_CAM));
 	if('r' == t_add_camera.CameUrL[0])
 	{
-	    string url = t_add_camera.CameUrL;
-	    iRet = fOurServer->ManCam->try_to_open(url);
+	    iRet = fOurServer->ManCam->try_to_open(t_add_camera.ip,t_add_camera.CameUrL);
 	    if(iRet < 0){
 		fOurServer->m_log.Add("open %s failed!", url.c_str());
 		push_camera_data_ack1(t_add_camera);
@@ -160,7 +159,7 @@ int NetClientSession::push_camera_param(char * buffer , int size)
 		return -1;
 	}
 	
-	for(Num=0; Num  < t_CameraParam.PkgNum; Numi++)
+	for(Num=0; Num  < t_CameraParam.PkgNum; Num++)
 	{
 		VIDEO_DRAW tmp;
 		memcpy(&tmp,buffer+sizeof(T_VDCS_VIDEO_CAMERA_PARAM)+sizeof(VIDEO_DRAW) *Num,sizeof(VIDEO_DRAW));

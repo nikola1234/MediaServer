@@ -30,7 +30,7 @@ public:
   void AddServer(NetServer *ourServer){Server = ourServer;}
   int InitFromDB();
 
-  int try_to_open(string stream);
+  int try_to_open(char * ip ,char* stream);
 
   int Set_or_Renew_Camera_Param(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg);
   string Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam);
@@ -38,6 +38,18 @@ public:
 public:
 	uint32  get_camera_id();
 	void erase_id_from_CamIDList(uint32 ID);
+	void fill_push_cam(DBCAMERACONFI *pt_caminfo,ST_VDCS_VIDEO_PUSH_CAM*pt_addCam);
+	void fill_var_param(DBCAMERAFUNCPARAM* pt_Camfuncparam,T_VDCS_VIDEO_CAMERA_PARAM*pt_varParam,vector <VIDEO_DRAW>   &PKG,uint8 num);
+
+
+	void Add_Camerainfo_DB(ST_VDCS_VIDEO_PUSH_CAM* pt_addCam,string url,uint32 ID);
+	void Renew_camerainfo_DB(ST_VDCS_VIDEO_PUSH_CAM* pt_addCam,string url,uint32 ID);
+	
+	int parser_type(DBCAMERAFUNCPARAM*  pt_FuncParam,uint16 type);
+	int set_camerafunc_DB(DBCAMERACONFI* pt_Caminfo);
+	void  Renew_camerafunc_DB(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & PKG,int ID);
+
+	
 	int init_camera_from_DB();
 	int read_CameraID_from_DB();
 	SingleCamPtr search_camera_by_id(uint32 ID);

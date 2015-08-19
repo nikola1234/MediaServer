@@ -7,7 +7,7 @@
 
 #ifndef _MYLOG_H
 #define _MYLOG_H
-#include"unistd.h"
+
 #include "boost/thread.hpp"
 
 class CMyLog

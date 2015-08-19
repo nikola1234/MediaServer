@@ -82,6 +82,7 @@ void CamTimeThread::reset_time1_param(T_VDCS_VIDEO_ALARM_TIME *Time)
 }
 void CamTimeThread::reset_time2_param(T_VDCS_VIDEO_ALARM_TIME *Time)
 {
+	uint8 i= 0;
 	pause();
 	usleep(100*1000);		
 	for(i = 0; i < WEEK_DAY_LEN_7; i++ )

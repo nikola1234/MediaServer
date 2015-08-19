@@ -1,10 +1,9 @@
-
+//#include "stdafx.h"
 #include "MyLog.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 #include <stdarg.h>
 #include <string.h>
-#include <stdio.h>
 
 CMyLog::CMyLog()  //构造函数，设置日志文件的默认路径
 {
@@ -30,6 +29,7 @@ void CMyLog::InitLog(const char* lpszLogPath)
 
 void CMyLog::Add(const char* fmt, ...)
 {
+    /*
 	boost::lock_guard<boost::mutex> lock_guard_(mutex_);
 
 	try      
@@ -67,6 +67,7 @@ void CMyLog::Add(const char* fmt, ...)
 		}
 	}
 	catch (...){}
+    */
 }
 
 

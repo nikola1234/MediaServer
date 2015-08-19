@@ -45,10 +45,13 @@ using namespace std;
 #define DB_NOT_EXIST          -1
 #define DB_PATH_LEN           128
 #define DB_PATH               "./DataBase/"
+#define DBNAME                "CameraDB.db"
 #define DB_CREATE_ERROR       -1
+
 typedef unsigned long  uint32;
 typedef unsigned char  uint8;
 typedef unsigned  int   uint16;
+
 typedef struct _CAMERA_DB_PARAM
 {
   uint32   CameraID;
@@ -61,12 +64,28 @@ typedef struct _CAMERA_DB_PARAM
   uint8   CameraFunc;  // 1??????  2??¡¤???
   uint8   AnalyzeNUM;  // ¡¤???????
   uint16  AnalyzeType; // ¡¤????¨¤??
-
-  uint8   CamStatus;
+  int   CamStatus;
   _CAMERA_DB_PARAM(){
         memset(this, 0, sizeof(_CAMERA_DB_PARAM));
     }
 }DBCAMERACONFI;
+
+typedef struct _STR_TIME
+{
+    char En;
+    char StartTime[6];
+    char EndTime[6];
+}StrTime;
+
+typedef struct _STR_TIME_DAY
+{
+    StrTime Time[3];
+}StrTimeDay;
+
+//typedef struct _STR_TIME_DAY
+//{
+//    StrTimeData Time[WEEK_DAY_LEN_7];
+//}StrTimeDay;
 
 typedef struct _ALARM_TIME_{
 
@@ -84,16 +103,14 @@ typedef struct _ALARM_TIME_INT{
 
 typedef struct _ALARM_DAY_INT{
 
-    ALARM_TIME_INT time1;
-    ALARM_TIME_INT time2;
+    ALARM_TIME_INT time[3];
 
 }ALARM_DAY_INT;
-
 typedef struct _ALARM_DAY{
 
-  uint8 En;
+  char En;
   ALARM_DAY_INT dayTime;
-
+//  char *str;
 }ALARM_DAY;
 
 typedef struct _VIDEO_DRAW  // pkg means special parameter
@@ -121,15 +138,21 @@ typedef struct _CMAERA_DB_FUNC_PARAM
 
     uint16  AnalyzeType1;
     uint8   AnalyzeEn1;
-    ALARM_DAY  AlarmTime1[WEEK_DAY_LEN_7]; // 7*9 = 63 bytes
+//    ALARM_DAY  AlarmTime1[WEEK_DAY_LEN_7]; // 7*9 = 63 bytes
+    char    AlarmTime1[295];
     uint16      PkgNum1;
-    vector < VIDEO_DRAW >  WatchRegion1;    //10*n bytes
+//    vector < VIDEO_DRAW >  WatchRegion1;    //10*n bytes
+//    char   WatchRegion1[1024];
+    char  *WatchRegion1;
+//    string  WatchRegion1;
 
     uint16  AnalyzeType2;
     uint8   AnalyzeEn2;
-    ALARM_DAY  AlarmTime2[WEEK_DAY_LEN_7];
+//    ALARM_DAY  AlarmTime2[WEEK_DAY_LEN_7];
+    char      AlarmTime2[295];
     uint16      PkgNum2;
-    vector < VIDEO_DRAW >  WatchRegion2;
+//    vector < VIDEO_DRAW >  WatchRegion2;
+    char* WatchRegion2;
 
     _CMAERA_DB_FUNC_PARAM(){
         memset(this, 0, sizeof(_CMAERA_DB_FUNC_PARAM));
@@ -141,7 +164,13 @@ class CamDataInfo
 public:
     CamDataInfo();
     virtual ~CamDataInfo();
-
+    virtual void ParseAlarmArea( char *str, VIDEO_DRAW *output);
+    virtual void AreaToDB( char **areaStr, vector < VIDEO_DRAW >  &WatchRegion );
+    virtual void DBToArea(char *m_areaNode,vector < VIDEO_DRAW >  &WatchRegion);
+    virtual int ConvertToTime(char *time,char *t);
+    virtual int TimeToConvert(char *t,char *time);
+    virtual int anlyzetime(char *str, StrTimeDay * strtimeday,ALARM_DAY* alarmtime1);
+    virtual int TimeToDB(char *str, StrTimeDay * strtimeday,ALARM_DAY* alarmtime1,char sel);
     virtual int Open(const char* szfilepath);
     virtual int exist(const char* dbname);
     virtual int sqlite3_create_db(const char *db_name);
@@ -159,8 +188,10 @@ public:
     virtual int AddCameraConfig(int iCameraID, DBCAMERACONFI *camera );
     virtual int AddCameraAlarmInfo(int iCameraID, DBCAMERAFUNCPARAM *camera);
     /*********************del***********************/
-    virtual int DelCameraInfo(int iCameraID);//
+    virtual int DelCameraConfig(int iCamera);
+    virtual int DelCameraAlarmInfo(int iCamera);
     virtual int GetMaxCameraID(const char *db_name);
+    virtual int getAllCameraConfigID( DBCAMERACONFI *camera,vector<int> &res);
 private:
   //  int GetMaxCameraID(void);
 

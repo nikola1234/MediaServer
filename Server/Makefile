@@ -16,12 +16,12 @@ export AS LD CC CXX  CPP AR NM
 export STRIP OBJCOPY OBJDUMP
 
 CXXFLAGS := -Wall  -O2 -g
-CXXFLAGS += -I $(shell pwd)/include  -I $(shell pwd)/../Analysis -I $(shell pwd)/../Database
+CXXFLAGS += -I $(shell pwd)/include  -I $(shell pwd)/../Analysis
 CXXFLAGS += $(shell pkg-config --cflags OpenCVPC) -lavformat -lavcodec -lavfilter -lavutil -lswresample -lswscale -lz -D__STDC_CONSTANT_MACROS
 
 LDLIBS   := $(shell pkg-config --libs  OpenCVPC)-lboost_system -lboost_date_time -lboost_filesystem -lboost_thread -lboost_atomic -lpthread -lm
 
-dynamicLIBS     :=  ../RTSPServer/lib/libRTSPServerSO.so  ../RTSPClient/lib/libRTSPClientSO.so ../Database/lib/libDatabaseSO.so  ../Analysis/lib/libAnalysisSO.so  ./lib/libjson.so
+dynamicLIBS     :=  ../RTSPServer/lib/libRTSPServerSO.so  ../RTSPClient/lib/libRTSPClientSO.so ../Analysis/lib/libAnalysisSO.so  ./lib/libjson.so ./lib/libsqlite3.so
 
 export CXXFLAGS LDLIBS
 

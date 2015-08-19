@@ -4,6 +4,7 @@
 #include "boost/thread.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
+//#include <string>
 namespace fs = boost::filesystem;
 
 #include "DataInfo.h"
@@ -20,7 +21,275 @@ CamDataInfo::~CamDataInfo()
 {
 //	StopRecvCommand((int)this);
 }
+void CamDataInfo::ParseAlarmArea( char *str, VIDEO_DRAW *output)
+{
+    char *p = NULL;
+    int index = 1;
+    while ( (p = strstr(str, ",")) != NULL )
+    {
+        *p = 0;
+        p ++;
 
+        switch ( index )
+        {
+        case 1:
+            output->StartX = atoi( str );
+            break;
+        case 2:
+            output->StartY = atoi( str );
+            break;
+        case 3:
+            output->EndX = atoi( str );
+            break;
+        case 4:
+            output->EndY = atoi( str );
+            break;
+        }
+
+        index ++;
+        str = p;
+    }
+
+    output->Type = atoi( str );
+}
+void CamDataInfo::AreaToDB(char **areaStr, vector < VIDEO_DRAW >  &WatchRegion )
+{
+    int size1 = WatchRegion.size();
+    char str[1024]={0};
+    char str1[100]={0};
+    int num = 0;
+
+    for ( int index = 0; index < size1; index ++ )
+    {
+        int realStartX = WatchRegion[index].StartX;
+        int realStartY = WatchRegion[index].StartY;
+        int realEndX   = WatchRegion[index].EndX;
+        int realEndY   = WatchRegion[index].EndY;
+        int type       = WatchRegion[index].Type;
+
+        char buf[1024] = {0};		//ï¿½ï¿½ï¿½ï¿½  ï¿½ï¿½Ê¼Xï¿½ï¿½ï¿½ê¡¢Yï¿½ï¿½ï¿½ê£¬ï¿½ï¿½ï¿½ï¿½
+        sprintf( buf, "%d,%d,%d,%d,%d|", realStartX, realStartY, realEndX, realEndY, type );
+        sprintf( str1, "%s", buf );
+        strcat(str,str1);
+//        snprintf( areaStr, sizeof(buf),"%s", buf );
+//        memcpy(areaStr,buf,sizeof(buf));
+//        areaStr += strlen(buf);
+        num += strlen(buf);
+    }
+     num--;
+     if(str[num] == '|')
+         str[num] = 0;
+     *areaStr = str;
+}
+
+void CamDataInfo::DBToArea(char *m_areaNode,vector < VIDEO_DRAW >  &WatchRegion)
+{
+//    char *p=str.c_str();
+    if ( strlen( m_areaNode) == 0 )
+    {
+        return;
+    }
+
+    char str[1024] = {0};
+    char *p1 = NULL;
+    char *p2 = NULL;
+    int num = 1;
+//       char *str=(char *)m_areaNode.data;
+    strncpy( str, m_areaNode, sizeof(str)-1 );
+    p2 = str;
+
+    //ï¿½ï¿½ï¿½Ð¶ï¿½ ï¿½Ü¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¸ï¿½ "|"ï¿½ï¿½ï¿½È¹ï¿½ï¿½Ð¶ï¿½ï¿½Ù¸ï¿½
+    while ( (p1 = strstr(p2, "|")) != NULL )
+    {
+        p1 ++;
+        p2 = p1;
+        num ++;
+    }
+
+    int size = num * sizeof(VIDEO_DRAW) ;
+    char *buf = (char*) malloc( size );
+    if ( buf == NULL )
+    {
+        return;
+    }
+
+    memset( buf, 0, size );
+
+    p1 = NULL; p2 = str;
+    VIDEO_DRAW area;
+
+    while( (p1 = strstr(p2, "|")) != NULL )
+    {
+        *p1 = 0;
+        p1 ++;
+
+        memset( &area, 0, sizeof(VIDEO_DRAW) );
+
+        this->ParseAlarmArea( p2, &area );
+        WatchRegion.push_back(area);
+        memcpy( buf, &area, sizeof(VIDEO_DRAW) );
+        buf += sizeof(VIDEO_DRAW);
+
+        p2 = p1;
+
+    }
+
+    memset( &area, 0, sizeof(VIDEO_DRAW) );
+
+    this->ParseAlarmArea( p2, &area );
+    WatchRegion.push_back(area);
+
+}
+int CamDataInfo::ConvertToTime(char *time,char *t)
+{
+    char *p1 = NULL;//23:59
+    char p2[3];
+    char hour;
+    char minute;
+
+    if((p1 = strstr(time,":"))!=NULL)
+    {
+        p2[0] = time[0];
+        p2[1] = time[1];
+//        memcpy(p2,time,2);
+        hour = atoi(p2);
+        if(hour < 0 || hour > 24)
+        {
+            printf("hour error");
+            return -1;
+        }
+    }
+
+    if((p1 = strstr(time,":"))!=NULL)
+    {
+         p1++;
+         minute = atoi(p1);
+          if(minute < 0 || minute > 60)
+          {
+             printf("minute error");
+             return -1;
+          }
+    }
+    t[0] = hour;
+    t[1] = minute;
+    return 0;
+
+}
+int CamDataInfo::TimeToConvert(char *t,char *time)
+{
+    char p[3];
+    char buf[10];
+    char buf1[10];
+    p[0] = t[0];
+    p[1] = t[1];
+
+    sprintf(buf,"%02d",p[0]);
+    sprintf(buf1,"%02d",p[1]);
+    sprintf(time,"%s:%s",buf,buf1);
+    return 0;
+
+}
+int CamDataInfo::anlyzetime(char *str, StrTimeDay * strtimeday,ALARM_DAY* alarmtime1)
+{
+    char buf[6]={0};
+    char time[3] = {0};
+    int num = 0;
+    int index = 0;
+
+
+    for(int day = 0; day < WEEK_DAY_LEN_7; day ++)
+    {
+        num = day * 42;
+        for(int session = 0;session < 3; session ++)
+        {
+            index = session * 14;
+            strtimeday[day].Time[session].En = atoi(&str[num]);
+            for(int i=0;i<5;i++)
+                buf[i] = str[num + index + i + 2];
+            memcpy(strtimeday[day].Time[session].StartTime,buf,sizeof(strtimeday[day].Time[session].StartTime));
+            for(int i=0;i<5;i++)
+                buf[i] = str[num + index + i + 8];
+             memcpy(strtimeday[day].Time[session].EndTime,buf,sizeof(strtimeday[day].Time[session].EndTime));
+        }
+    }
+
+    for(int i = 0; i < WEEK_DAY_LEN_7; i ++)
+    {
+        alarmtime1[i].En                         = strtimeday[i].Time[0].En + (strtimeday[i].Time[1].En << 1) + (strtimeday[i].Time[2].En << 2);
+        ConvertToTime(strtimeday[i].Time[0].StartTime,time);
+        alarmtime1[i].dayTime.time[0].Start.hour   = time[0];
+        alarmtime1[i].dayTime.time[0].Start.min    = time[1];
+
+        ConvertToTime(strtimeday[i].Time[0].EndTime,time);
+        alarmtime1[i].dayTime.time[0].End.hour     = time[0];
+        alarmtime1[i].dayTime.time[0].End.min      = time[1];
+
+        ConvertToTime(strtimeday[i].Time[1].StartTime,time);
+        alarmtime1[i].dayTime.time[1].Start.hour   = time[0];
+        alarmtime1[i].dayTime.time[1].Start.min    = time[1];
+
+        ConvertToTime(strtimeday[i].Time[1].EndTime,time);
+        alarmtime1[i].dayTime.time[1].End.hour     = time[0];
+        alarmtime1[i].dayTime.time[1].End.min      = time[1];
+
+        ConvertToTime(strtimeday[i].Time[2].StartTime,time);
+        alarmtime1[i].dayTime.time[2].Start.hour   = time[0];
+        alarmtime1[i].dayTime.time[2].Start.min    = time[1];
+
+        ConvertToTime(strtimeday[i].Time[2].EndTime,time);
+        alarmtime1[i].dayTime.time[2].End.hour     = time[0];
+        alarmtime1[i].dayTime.time[2].End.min      = time[1];
+
+    }
+    return 0;
+}
+int CamDataInfo::TimeToDB(char *str, StrTimeDay * strtimeday,ALARM_DAY* alarmtime1,char sel)
+{
+    char hour[3] = {0};
+    char min[3]  = {0};
+    char time[6] = {0};
+//    char t[3]    ={0};
+    char en[2]      = {0};
+    int index = 0;
+   // char *str =NULL;
+    memset(str,0,sizeof(str));
+    for(int day = 0; day < WEEK_DAY_LEN_7; day ++)
+    {
+        for(int session = 0;session < 3; session ++)
+        {
+            sprintf(en,"%d",alarmtime1[day].En);
+            strcat(str,en);
+            //(alarmtime1[day].En > 0)?strcat(str,"1"):strcat(str,"0");
+
+            index ++;
+          //  *(str + index) = '|';
+            strcat(str,"|");
+            index += 5;
+//            t[0] = alarmtime1[day].dayTime.time[session].Start.hour;
+//            t[1] = alarmtime1[day].dayTime.time[session].Start.min;
+//            TimeToConvert(t,time);
+            sprintf(hour,"%02d",alarmtime1[day].dayTime.time[session].Start.hour);
+            sprintf(min,"%02d",alarmtime1[day].dayTime.time[session].Start.min);
+            sprintf(time,"%s:%s",hour,min);
+            strcat(str,time);
+            index ++;
+            strcat(str,"|");
+
+            index += 5;
+            sprintf(hour,"%02d",alarmtime1[day].dayTime.time[session].End.hour);
+            sprintf(min,"%02d",alarmtime1[day].dayTime.time[session].End.min);
+            sprintf(time,"%s:%s",hour,min);
+            strcat(str,time);
+            index ++;
+            strcat(str,"|");
+            index ++;
+        }
+    }
+    index --;
+    *(str + index) ='\0';
+
+    return 0;
+}
 
 int CamDataInfo::exist(const char* db_name)
 {
@@ -43,13 +312,13 @@ int CamDataInfo::exist(const char* db_name)
 int CamDataInfo::sqlite3_create_db(const char *db_name)
 {
 
-    sqlite3* db = NULL;                             /**<sqlite3 ??¡À¨²*/
+    sqlite3* db = NULL;
 
-    char open_db_result = 0;                        /**<?¨°?????????¨¢??*/
-    char db_tpath[DB_PATH_LEN] = {0};               /**<???????¡¤??*/
+    char open_db_result = 0;
+    char db_tpath[DB_PATH_LEN] = {0};
     int db_exist_result = 0;
     int mkdir_return = 0 ;
-    sprintf(db_tpath,"%s%s",DB_PATH,db_name);       /**<???????????¡¤??*/
+    sprintf(db_tpath,"%s%s",DB_PATH,db_name);
 
     db_exist_result = exist(db_name);
 
@@ -57,7 +326,7 @@ int CamDataInfo::sqlite3_create_db(const char *db_name)
     {
         return DB_OK;
     }
-    printf("create db-------------------------- :%s%s\n",DB_PATH,db_name);       /**<???????????¡¤??*/
+    printf("create db-------------------------- :%s%s\n",DB_PATH,db_name);
     printf("make dir:%s",DB_PATH);
     mkdir_return = mkdir(DB_PATH, 0755);
 
@@ -68,7 +337,7 @@ int CamDataInfo::sqlite3_create_db(const char *db_name)
         sqlite3_close(db);
         return DB_OK;
     }
-    else                                            /**<?¨°????????????????????????????????????*/
+    else
     {
         sqlite3_close(db);
         return DB_CREATE_ERROR;
@@ -80,28 +349,27 @@ int CamDataInfo::sqlite3_create_table(const char* db_name)
     char *ErrMsg=0;
     int  ret = 0;
     sqlite3* db = NULL;
-
     char open_db_result = 0;
     char db_tpath[DB_PATH_LEN] = {0};
 
     sprintf(db_tpath,"%s%s",DB_PATH,db_name);
     open_db_result = sqlite3_open(db_tpath,&db);
-    const char *SQL1="create table CameraInfo (CameraID INTEGETER PRIMARY KEY,IP char(16),Port INTEGETER,"
-                     "frameRate INTEGETER,CamUrl char(128),RtspUrl char(128),CameraFunc INTEGETER,"
+    const char *SQL1="create table CameraInfo (CameraID INTEGER PRIMARY KEY AUTOINCREMENT,IP varchar(16),Port INTEGETER,"
+                     "frameRate INTEGETER,CamUrl varchar(128),RtspUrl varchar(128),CameraFunc INTEGETER,"
                      "AnalyzeNUM INTEGETER, AnalyzeType INTEGETER, CamStatus INTEGETER);";
-//Ö´ÐÐ½¨±í
+//Ö´ï¿½Ð½ï¿½ï¿½ï¿½
     ret = sqlite3_exec(db,SQL1,0,0,&ErrMsg);
     if(ret != SQLITE_OK)
     {
         fprintf(stderr,"SQL1 Error:%s\n",ErrMsg);
         sqlite3_free(ErrMsg);
     }
-    const char *SQL2="create table CameraFuncParam (CameraID INTEGETER PRIMARY KEY,IP char(16),AnalyzeNUM INTEGETER,"
+    const char *SQL2="create table CameraFuncParam (CameraID INTEGER PRIMARY KEY AUTOINCREMENT,IP varchar(16),AnalyzeNUM INTEGETER,"
                      "AnalyzeType INTEGETER,MaxHumanNum INTEGETER,ChangeRate REAL,AnalyzeType1 INTEGETER,"
-                     "AnalyzeEn1 INTEGETER,AlarmTime1 char(84), PkgNum1 INTEGETER, WatchRegion1 varchar(256),"
+                     "AnalyzeEn1 INTEGETER,AlarmTime1 VARCHAR2(295), PkgNum1 INTEGETER, WatchRegion1 varchar(1024),"
                      " AnalyzeType2 INTEGETER,"
-                     "AnalyzeEn2 INTEGETER,AlarmTime2 char(84), PkgNum2 INTEGETER, WatchRegion2 varchar(256));";
-//Ö´ÐÐ½¨±í
+                     "AnalyzeEn2 INTEGETER,AlarmTime2 VARCHAR2(295), PkgNum2 INTEGETER, WatchRegion2 varchar(1024));";
+//Ö´ï¿½Ð½ï¿½ï¿½ï¿½
     ret = sqlite3_exec(db,SQL2,0,0,&ErrMsg);
     if(ret != SQLITE_OK)
     {
@@ -135,8 +403,6 @@ int CamDataInfo::GetMaxCameraID(const char *db_name)
 {
     int ret;
     char *ErrMsg=0;
-
-
     sqlite3* db = NULL;
     char open_db_result = 0;
     char db_tpath[DB_PATH_LEN] = {0};
@@ -145,7 +411,6 @@ int CamDataInfo::GetMaxCameraID(const char *db_name)
     char SqlBuf[SQL_STRING_MAX];
     memset(SqlBuf,0,sizeof(SqlBuf));
 
-
     try
     {
         boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
@@ -153,39 +418,21 @@ int CamDataInfo::GetMaxCameraID(const char *db_name)
         open_db_result = sqlite3_open(db_tpath,&db);
 
         const char *SQL1 = "SELECT COUNT (*) as CNT FROM sqlitemaster where type = 'table' and name = 'CameraInfo'";
-        //Ö´ÐÐ½¨±í
         ret = sqlite3_exec(db,SQL1,0,0,&ErrMsg);
-        printf("MaxCameraID = %d\n",ret);
         if(ret == 0)
         {
             fprintf(stderr,"SQL Error:%s\n",ErrMsg);
-            printf("MaxCameraID = %d\n",ret);
+            sqlite3_free(ErrMsg);
             sqlite3_close(db);
             return 0;
-            //sqlite3_free(ErrMsg);
+
         }
-//        DataTable dt = SqlLiteHelper.GetDataTabl(strcreatsqlvalue);
-//        sprintf_s(SqlBuf,"select MAX(CameraID) as CameraID from CameraInfo");
-//        cppsqlite3::CppSQLite3Query q = m_sqlite3db.execQuery(SqlBuf);
-//        if(!q.eof())
-//        {
-//            if (!q.fieldIsNull("CameraID"))
-//            {
-//                return atoi(q.fieldValue("CameraID"));
-//            }
-//            return -1;
-//        }
-//        else
-//        {
-//            return -1;
-//        }
     }
     catch (cppsqlite3::CppSQLite3Exception& e)
     {
 //		m_log.Add("CDataInfo::GetMaxCameraID: %d : %s ", e.errorCode(), e.errorMessage());
         return -1;
     }
-    return -1;
 }
 
 int CamDataInfo::getCameraInfo(int iCameraID, char chRemark)
@@ -202,7 +449,7 @@ int CamDataInfo::AddCameraInfo(int iCameraID, char chRemark)
 }
 int select_callback(void *data,int col_count,char **col_values,char **col_name)
 {
-    //Ã¿Ìõ¼ÇÂ¼»Øµ÷Ò»´Î¸Ãº¯Êý£¬ÓÐ¶àÉÙÌõ¾Í»Øµ÷¶àÉÙ´Î
+    //Ã¿ï¿½ï¿½ï¿½ï¿½Â¼ï¿½Øµï¿½Ò»ï¿½Î¸Ãºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»Øµï¿½ï¿½ï¿½ï¿½Ù´ï¿½
     int i;
     for(i=0;i<col_count;i++)
     {
@@ -237,21 +484,21 @@ int CamDataInfo::getCameraConfig( int cameraid, DBCAMERACONFI *camera )
     int nColumn = 0;
     char SqlBuf[SQL_STRING_MAX];
     memset(SqlBuf,0,sizeof(SqlBuf));
-    void *data = NULL;
+
 	try
 	{
 		boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
-        open_db_result = sqlite3_open("./CameraDB.db",&db);
+        open_db_result = sqlite3_open("./DataBase/CameraDB.db",&db);
 
         sprintf_s(SqlBuf,"select CameraID, IP, Port, frameRate, CamUrl,"
             "RtspUrl, CameraFunc, AnalyzeNUM, AnalyzeType, CamStatus "
             "from CameraInfo where CameraID = %d ", cameraid);
 //         sprintf_s(SqlBuf,"select * from CameraInfo;");
 //		camera->CameraID = cameraid;
-//        //²éÑ¯Êý¾Ý±íÄÚÈÝ
+//        //ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½Ý±ï¿½ï¿½ï¿½ï¿½ï¿½
 //        printf("query\n");
 //        sqlite3_exec(db,SqlBuf,select_callback,data,&ErrMsg);
-        // »ñÈ¡ÉÏÃæsqlÓï¾äÖ¸¶¨µÄ¼ÇÂ¼¼¯
+        // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½sqlï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ä¼ï¿½Â¼ï¿½ï¿½
         ret = sqlite3_get_table(db, SqlBuf, &pszResult, &nRow, &nColumn, &ErrMsg);
         if (ret != SQLITE_OK)
         {
@@ -264,17 +511,16 @@ int CamDataInfo::getCameraConfig( int cameraid, DBCAMERACONFI *camera )
         }
         else
         {
-            // ´Ë¼ÇÂ¼¼¯³É¹¦»ñÈ¡ºó,×îÇ°ÃæµÄnColume¸öÔªËØÊÇÁÐÃû
-            // Òò´Ë,ÔÚ×öÑ­»·¶ÁÈ¡¼ÇÂ¼ÊÇ£¬ÐÐÊýÊÇ±È·µ»ØµÄÐÐÊý¶àÒ»ÐÐ,´æ·ÅÁÐÃû
-            printf("%d record!\n", nRow);
-            printf("%d line!\n", nColumn);
-			if((nRow == 0)&&(nColumn == 0))
-			{
-				   sqlite3_close(db);
-				   return 0;
-			}
-				
-            int index = nColumn;
+            // ï¿½Ë¼ï¿½Â¼ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½È¡ï¿½ï¿½,ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½nColumeï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½Â¼ï¿½Ç£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç±È·ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%d ï¿½ï¿½Â¼!\n", nRow);
+            printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%d ï¿½ï¿½!\n", nColumn);
+            if((nRow == 0)&&(nColumn == 0))
+            {
+                sqlite3_close(db);
+                printf("DB is empty\n");
+                return 0;
+            }
             for (int i = 0; i <= nRow; ++i)
             {
                 for (int j = 0; j < nColumn; ++j)
@@ -297,71 +543,7 @@ int CamDataInfo::getCameraConfig( int cameraid, DBCAMERACONFI *camera )
         ErrMsg = NULL;
         sqlite3_free_table(pszResult);
         sqlite3_close(db);
-//        camera = (DBCAMERACONFI *)data;
-
-        //memcpy(camera,data,sizeof(data));
-
-//        cppsqlite3::CppSQLite3Query q = m_sqlite3db.execQuery(SqlBuf);
-//		ret = sqlite3_exec(db,SqlBuf,0,0,&ErrMsg);
-        /*
-        if(!q.eof())//end=1,else=0
-        {
-            if (!q.fieldIsNull("CameraID"))
-            {
-                camera->CameraID = atoi(q.fieldValue("CameraID"));
-            }
-
-            memset(camera->ip, 0, 256);
-            if (!q.fieldIsNull("IP"))
-            {
-                strcpy(camera->ip, q.fieldValue("IP"));
-            }
-
-
-           if (!q.fieldIsNull("Port"))
-           {
-                camera->Port = atoi(q.fieldValue("Port"));
-                printf("ok\n");
-           }
-//            char URL[256]; memset(URL, 0, 256);
-//            sprintf( URL, "rtsp://%s:%d/%d", ip, port, cameraid );
-//            std::string strurl = URL;
-//            CameraURLArray.push_back(strurl);
-
-//            q.nextRow();
-            if (!q.fieldIsNull("frameRate"))
-            {
-                camera->frameRate = atoi(q.fieldValue("frameRate"));
-            }
-
-            if (!q.fieldIsNull("CameraFunc"))
-            {
-                camera->CameraFunc = atoi(q.fieldValue("CameraFunc"));
-            }
-
-            if (!q.fieldIsNull("AnalyzeNUM"))
-            {
-                camera->AnalyzeNUM = atoi(q.fieldValue("AnalyzeNUM"));
-            }
-
-            if (!q.fieldIsNull("AnalyzeType"))
-            {
-                camera->AnalyzeType = atoi(q.fieldValue("AnalyzeType"));
-            }
-
-            if (!q.fieldIsNull("CamStatus"))
-            {
-                camera->CamStatus = atoi(q.fieldValue("CamStatus"));
-            }
-            return 1;
-        }
-        else
-        {
-            printf("err\n");
-//			m_log.Add("CamDataInfo::getCameraInfo: no camera[Cameraid:%d].", cameraid);
-            return -1;
-        }
-        */
+        return 0;
 	}
     catch(cppsqlite3::CppSQLite3Exception& e)
 	{
@@ -370,110 +552,8 @@ int CamDataInfo::getCameraConfig( int cameraid, DBCAMERACONFI *camera )
 		return -1;
 	}
 }
-
-int CamDataInfo::getCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera )
+int CamDataInfo::getAllCameraConfigID( DBCAMERACONFI *camera,vector<int> &res)
 {
-    try
-    {
-        boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
-
-        char SqlBuf[SQL_STRING_MAX];
-        memset(SqlBuf,0,sizeof(SqlBuf));
-
-//		sprintf_s(SqlBuf,"select CameraID, CameraName, Input, a.Remark as Remark,"
-//			"a.DevID as DevID, DevType, c.UnitName as UnitName, b.isMatrix as isMatrix "
-//			"from vnmp_CameraInfo a, vnmp_DevType b, vnmp_UnitInfo c "
-//			"where CameraID='%d' and a.DevID = b.DevID and a.UnitID = c.UnitID", cameraid);
-
-        sprintf_s(SqlBuf,"select CameraID, CameraIP, AnalyzeNUM, AnalyzeType, MaxHumanNUM,"
-            "ChangeRate, AnalyzeType1, AnalyzeEn1, AlarmTime1, PkgNum1, WatchRegion1, "
-            "AnalyzeType2, AnalyzeEn2, AlarmTime2, PkgNum2, WatchRegion2, "
-            "from CameraFuncParam"
-            "where CameraID='%d' ", cameraid);
-
-        camera->CameraID = cameraid;
-        cppsqlite3::CppSQLite3Query q = m_sqlite3db.execQuery(SqlBuf);
-
-        if(!q.eof())//end=1,else=0
-        {
-            if (!q.fieldIsNull("CameraID"))
-            {
-                camera->CameraID = atoi(q.fieldValue("CameraID"));
-            }
-
-            memset(camera->ip, 0, 256);
-            if (!q.fieldIsNull("CameraIP"))
-                strcpy(camera->ip, q.fieldValue("CameraIP"));
-
-           if (!q.fieldIsNull("AnalyzeNUM"))
-                camera->AnalyzeNUM = atoi(q.fieldValue("AnalyzeNUM"));
-
-           if (!q.fieldIsNull("AnalyzeType"))
-                camera->AnalyzeType = atoi(q.fieldValue("AnalyzeType"));
-
-           if (!q.fieldIsNull("MaxHumanNum"))
-                camera->MaxHumanNum = atoi(q.fieldValue("MaxHumanNum"));
-
-           if (!q.fieldIsNull("ChangeRate"))
-                camera->ChangeRate = atoi(q.fieldValue("ChangeRate"));
-
-           if (!q.fieldIsNull("AnalyzeType1"))
-                camera->AnalyzeType1 = atoi(q.fieldValue("AnalyzeType1"));
-
-           if (!q.fieldIsNull("AnalyzeEn1"))
-                camera->AnalyzeEn1 = atoi(q.fieldValue("AnalyzeEn1"));
-
-//           char time_tmp[84];
-//           memset(time_tmp, 0, 84);
-            memset(camera->AlarmTime1, 0, 84);
-//           if (!q.fieldIsNull("AlarmTime1"))
-//               memcpy(camera->AlarmTime1,atoi(q.fieldValue("AlarmTime1")),84);
-
-           if (!q.fieldIsNull("PkgNum1"))
-           {
-               camera->PkgNum1 = atoi(q.fieldValue("PkgNum1"));
-           }
-
-//             memset(camera->WatchRegion1, 0, sizeof(camera->WatchRegion1));
-//           if (!q.fieldIsNull("WatchRegion1"))
-//               memcpy(camera->WatchRegion1,atoi(q.fieldValue("WatchRegion1")),sizeof(camera->WatchRegion1));
-
-           if (!q.fieldIsNull("AnalyzeType2"))
-                camera->AnalyzeType2 = atoi(q.fieldValue("AnalyzeType2"));
-
-           if (!q.fieldIsNull("AnalyzeEn2"))
-                camera->AnalyzeEn2 = atoi(q.fieldValue("AnalyzeEn2"));
-
-//           char time_tmp[84];
-//           memset(time_tmp, 0, 84);
-           memset(camera->AlarmTime2, 0, 84);
-//           if (!q.fieldIsNull("AlarmTime2"))
-//               memcpy(camera->AlarmTime2,atoi(q.fieldValue("AlarmTime2")),84);
-
-           if (!q.fieldIsNull("PkgNum2"))
-           {
-               camera->PkgNum2 = atoi(q.fieldValue("PkgNum2"));
-           }
-
-            return 1;
-        }
-        else
-        {
-//			m_log.Add("CamDataInfo::getCameraInfo: no camera[Cameraid:%d].", cameraid);
-            return -1;
-        }
-    }
-    catch(cppsqlite3::CppSQLite3Exception& e)
-    {
-//		std::cerr << "CamDataInfo::getCameraInfo" << e.errorCode() << ":" << e.errorMessage() << std::endl;
-//		m_log.Add("CamDataInfo::getCameraInfo: %d : %s ", e.errorCode(), e.errorMessage());
-        return -1;
-    }
-}
-
-int CamDataInfo::setCameraConfig( int cameraid, DBCAMERACONFI *camera )
-{
-    ///*
     char *ErrMsg=0;
     int  ret = 0;
     sqlite3* db = NULL;
@@ -483,22 +563,56 @@ int CamDataInfo::setCameraConfig( int cameraid, DBCAMERACONFI *camera )
     int nColumn = 0;
     char SqlBuf[SQL_STRING_MAX];
     memset(SqlBuf,0,sizeof(SqlBuf));
-    void *data = NULL;
+
     try
     {
         boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
         open_db_result = sqlite3_open("./DataBase/CameraDB.db",&db);
 
-        sprintf_s(SqlBuf,"update CameraInfo set IP = %s, Port = %d,frameRate = %d, CamUrl = %s,RtspUrl = %s ,CameraFunc = %d,"
-                         "AnalyzeNUM = %d,AnalyzeType = %d,CamStatus =%d where CameraID = %d;",
-            camera->ip, camera->Port,camera->frameRate,camera->CamUrl,camera->RtspUrl,camera->CameraFunc,camera->AnalyzeNUM,camera->AnalyzeType,camera->CamStatus,cameraid);
-//        sprintf_s(SqlBuf,"REPLACE INTO CameraInfo (CameraID, IP, Port, frameRate, CameraFunc, AnalyzeNUM, AnalyzeType, CamStatus) VALUES (%d, %d, %d, %d, %d, %d, %d);",
-//            camera->CameraID, camera->ip, camera->Port,camera->frameRate,camera->CameraFunc,camera->AnalyzeNUM,camera->CamStatus,);
-//        return m_sqlite3db.execDML( SqlBuf );
-         ret = sqlite3_exec(db,SqlBuf,0,0,&ErrMsg);
-         return ret;
-        //
+//        sprintf_s(SqlBuf,"select CameraID from CameraInfo where CameraID = %d ", cameraid);
+        sprintf_s(SqlBuf,"select * from CameraInfo;");
+//		camera->CameraID = cameraid;
+//        //ï¿½ï¿½Ñ¯ï¿½ï¿½ï¿½Ý±ï¿½ï¿½ï¿½ï¿½ï¿½
+//        printf("query\n");
+//        sqlite3_exec(db,SqlBuf,select_callback,data,&ErrMsg);
+        // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½sqlï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ä¼ï¿½Â¼ï¿½ï¿½
+        ret = sqlite3_get_table(db, SqlBuf, &pszResult, &nRow, &nColumn, &ErrMsg);
+        if (ret != SQLITE_OK)
+        {
+            std::cout << "SQL error " << ErrMsg << std::endl;
+//            sqlite3_free(ErrMsg);
+//            ErrMsg = NULL;
+//            sqlite3_free_table(pszResult);
+//            sqlite3_close(db);
+            return -1;
+        }
+        else
+        {
+            printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%d ï¿½ï¿½Â¼!\n", nRow);
+            printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%d ï¿½ï¿½!\n", nColumn);
+            if((nRow == 0)&&(nColumn == 0))
+            {
+                sqlite3_close(db);
+                printf("DB is empty\n");
+                return 0;
+            }
+            for (int i = 0; i <= nRow; ++i)
+            {
+                for (int j = 0; j < nColumn; ++j)
+                {
+                    std::cout << *(pszResult + nColumn * i + j) << "\t";
+                }
 
+                camera->CameraID = atoi(*(pszResult + nColumn * i + 0));
+                res.push_back(camera->CameraID);
+                std::cout << std::endl;
+            }
+        }
+        if (ErrMsg != NULL) sqlite3_free(ErrMsg);
+        ErrMsg = NULL;
+        sqlite3_free_table(pszResult);
+        sqlite3_close(db);
+        return 0;
     }
     catch(cppsqlite3::CppSQLite3Exception& e)
     {
@@ -506,51 +620,161 @@ int CamDataInfo::setCameraConfig( int cameraid, DBCAMERACONFI *camera )
 //		m_log.Add("CamDataInfo::getCameraInfo: %d : %s ", e.errorCode(), e.errorMessage());
         return -1;
     }
-    //*/
+}
+
+int CamDataInfo::getCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera )
+{
+
+    char *ErrMsg=0;
+    int  ret = 0;
+    sqlite3* db = NULL;
+    char open_db_result = 0;
+    char **pszResult = 0;
+    int nRow = 0;
+    int nColumn = 0;
+    char SqlBuf[SQL_STRING_MAX];
+    memset(SqlBuf,0,sizeof(SqlBuf));
+
+    try
+    {
+        boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
+        open_db_result = sqlite3_open("./DataBase/CameraDB.db",&db);
+
+//        sprintf_s(SqlBuf,"select CameraID, IP, Port, frameRate, CamUrl,"
+//            "RtspUrl, CameraFunc, AnalyzeNUM, AnalyzeType, CamStatus "
+//            "from CameraInfo where CameraID = %d ", cameraid);
+
+        sprintf_s(SqlBuf,"select CameraID, IP, AnalyzeNUM, AnalyzeType, MaxHumanNUM,"
+            "ChangeRate, AnalyzeType1, AnalyzeEn1, AlarmTime1, PkgNum1, WatchRegion1, "
+            "AnalyzeType2, AnalyzeEn2, AlarmTime2, PkgNum2, WatchRegion2 from CameraFuncParam where CameraID = %d ", cameraid);
+
+        ret = sqlite3_get_table(db, SqlBuf, &pszResult, &nRow, &nColumn, &ErrMsg);
+        if (ret != SQLITE_OK)
+        {
+            std::cout << "SQL error " << ErrMsg << std::endl;
+            sqlite3_free(ErrMsg);
+            ErrMsg = NULL;
+            sqlite3_free_table(pszResult);
+            sqlite3_close(db);
+            return -1;
+        }
+        else
+        {
+            // ï¿½Ë¼ï¿½Â¼ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½È¡ï¿½ï¿½,ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½nColumeï¿½ï¿½Ôªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            // ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½Â¼ï¿½Ç£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç±È·ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%d ï¿½ï¿½Â¼!\n", nRow);
+            printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½%d ï¿½ï¿½!\n", nColumn);
+            if((nRow == 0)&&(nColumn == 0))
+            {
+                sqlite3_close(db);
+                printf("DB is empty\n");
+                return 0;
+            }
+            for (int i = 0; i <= nRow; ++i)
+            {
+                for (int j = 0; j < nColumn; ++j)
+                {
+                    std::cout << *(pszResult + nColumn * i + j) << "\t";
+                }
+	
+				printf("sssssssssss  is    %s\n",*(pszResult + nColumn * i + 0));
+                camera->CameraID = atoi(*(pszResult + nColumn * i + 0));
+				printf("ip is %s\n",*(pszResult + nColumn * i  + 1));
+                strcpy(camera->ip, *(pszResult + nColumn * i  + 1));
+                camera->AnalyzeNUM = atoi(*(pszResult + nColumn * i  + 2));
+                camera->AnalyzeType = atoi(*(pszResult + nColumn * i + 3));
+                camera->MaxHumanNum = atoi(*(pszResult + nColumn * i + 4));
+                camera->ChangeRate = atof(*(pszResult + nColumn * i + 5));
+                camera->AnalyzeType1 = atoi(*(pszResult + nColumn * i + 6));
+                camera->AnalyzeEn1 = atoi(*(pszResult + nColumn * i + 7));
+
+                memset(camera->AlarmTime1, 0, sizeof(camera->AlarmTime1));
+                strcpy(camera->AlarmTime1,*(pszResult + nColumn * i  + 8));
+                camera->PkgNum1 = atoi(*(pszResult + nColumn * i + 9));
+
+                memset(&camera->WatchRegion1, 0, sizeof(camera->WatchRegion1));
+//                strcpy(&camera->WatchRegion1,*(pszResult + nColumn * i  + 10));
+                memcpy(&camera->WatchRegion1, (pszResult + nColumn * i  + 10), sizeof(camera->WatchRegion1));
+
+                camera->AnalyzeType2 = atoi(*(pszResult + nColumn * i + 11));
+                camera->AnalyzeEn2 = atoi(*(pszResult + nColumn * i + 12));
+
+                memset(camera->AlarmTime2, 0, sizeof(camera->AlarmTime2));
+                strcpy(camera->AlarmTime2,*(pszResult + nColumn * i  + 13));
+                camera->PkgNum2 = atoi(*(pszResult + nColumn * i + 14));
+
+                memset(&camera->WatchRegion2, 0, sizeof(camera->WatchRegion2));
+//                strcpy(&camera->WatchRegion2,*(pszResult + nColumn * i  + 15));
+                memcpy(&camera->WatchRegion2, (pszResult + nColumn * i  + 15), sizeof(camera->WatchRegion2));
+
+
+                std::cout << std::endl;
+            }
+        }
+        if (ErrMsg != NULL) sqlite3_free(ErrMsg);
+        ErrMsg = NULL;
+        sqlite3_free_table(pszResult);
+        sqlite3_close(db);
+        return 0;
+    }
+    catch(cppsqlite3::CppSQLite3Exception& e)
+    {
+//		std::cerr << "CamDataInfo::getCameraInfo" << e.errorCode() << ":" << e.errorMessage() << std::endl;
+//		m_log.Add("CamDataInfo::getCameraInfo: %d : %s ", e.errorCode(), e.errorMessage());
+        return -1;
+    }
+
+
+}
+
+int CamDataInfo::setCameraConfig( int cameraid, DBCAMERACONFI *camera )
+{
+    char *ErrMsg=0;
+    int  ret = 0;
+    sqlite3* db = NULL;
+    char open_db_result = 0;
+    char SqlBuf[SQL_STRING_MAX];
+    memset(SqlBuf,0,sizeof(SqlBuf));
+
+    try
+    {
+        boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
+        open_db_result = sqlite3_open("./DataBase/CameraDB.db",&db);
+
+        sprintf_s(SqlBuf,"update CameraInfo set IP = '%s', Port = %d,frameRate = %d, CamUrl = '%s',RtspUrl = '%s' ,CameraFunc = %d,"
+                         "AnalyzeNUM = %d,AnalyzeType = %d,CamStatus =%d where CameraID = %d;",
+            camera->ip, camera->Port,camera->frameRate,camera->CamUrl,camera->RtspUrl,camera->CameraFunc,camera->AnalyzeNUM,camera->AnalyzeType,camera->CamStatus,cameraid);
+//        sprintf_s(SqlBuf,"REPLACE INTO CameraInfo (CameraID, IP, Port, frameRate, CameraFunc, AnalyzeNUM, AnalyzeType, CamStatus) VALUES (%d, %d, %d, %d, %d, %d, %d);",
+//            camera->CameraID, camera->ip, camera->Port,camera->frameRate,camera->CameraFunc,camera->AnalyzeNUM,camera->CamStatus,);
+//        return m_sqlite3db.execDML( SqlBuf );
+         ret = sqlite3_exec(db,SqlBuf,0,0,&ErrMsg);
+         return ret;
+    }
+    catch(cppsqlite3::CppSQLite3Exception& e)
+    {
+//		std::cerr << "CamDataInfo::getCameraInfo" << e.errorCode() << ":" << e.errorMessage() << std::endl;
+//		m_log.Add("CamDataInfo::getCameraInfo: %d : %s ", e.errorCode(), e.errorMessage());
+        return -1;
+    }   
 }
 
 int CamDataInfo::setCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera )
 {
-    /*
     char SqlBuf[SQL_STRING_MAX];
     memset(SqlBuf,0,sizeof(SqlBuf));
     try
     {
         boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
 //        ContentValues cv = new ContentValues();
-
 //        cv.put("CameraID","camera->CameraID");
-//        cv.put("CameraIP","camera->ip");
-//        cv.put("AnalyzeNUM","camera->AnalyzeNUM");
-//        cv.put("AnalyzeType","camera->AnalyzeType");
-//        cv.put("MaxHumanNUM","camera->MaxHumanNUM");
-//        cv.put("ChangeRate","camera->ChangeRate");
-//        cv.put("AnalyzeType1","camera->AnalyzeType1");
-//        cv.put("AnalyzeEn1","camera->AnalyzeEn1");
-//        cv.put("AlarmTime1","camera->AlarmTime1");
-//        cv.put("PkgNum1","camera->PkgNum1");
-//        cv.put("WatchRegion1","camera->WatchRegion1");
-//        cv.put("AnalyzeType2","camera->AnalyzeType2");
-//        cv.put("AnalyzeEn2","camera->AnalyzeEn2");
-//        cv.put("AlarmTime2","camera->AlarmTime2");
-//        cv.put("PkgNum2","camera->PkgNum2");
-//        cv.put("WatchRegion2","camera->WatchRegion2");
-//        update("CameraFuncParam",cv,"CameraID=?",cameraid);
-
-//        sprintf_s(SqlBuf,"update CameraFuncParam set CameraIP = %d, AnalyzeNUM = %d,"
-//                         "AnalyzeType = %d,MaxHumanNUM =%d ,ChangeRate = %d,"
-//                         "AnalyzeType1 = %d, AnalyzeEn1 = %d,AlarmTime1 = '%sZ,PkgNum1 = %d,WatchRegion1 = %d,"
-//                         "AnalyzeType2 = %d, AnalyzeEn2 = %d,AlarmTime2 = '%sZ,PkgNum2 = %d,WatchRegion2 = %d,where CameraID = %d",
-//            camera->ip, camera->AnalyzeNUM,camera->AnalyzeType,camera->MaxHumanNum,camera->ChangeRate,
-//            camera->AnalyzeType1,camera->AnalyzeEn1,camera->AlarmTime1,camera->PkgNum1,camera->WatchRegion1,
-//            camera->AnalyzeType2,camera->AnalyzeEn2,camera->AlarmTime2,camera->PkgNum2,camera->WatchRegion2,camera->CameraID);
-        sprintf_s(SqlBuf,"update CameraFuncParam set CameraIP = %d, AnalyzeNUM = %d,"
-                         "AnalyzeType = %d,MaxHumanNUM =%d ,ChangeRate = %d,"
-                         "AnalyzeType1 = %d, AnalyzeEn1 = %d,AlarmTime1 = '%sZ,PkgNum1 = %d,"
-                         "AnalyzeType2 = %d, AnalyzeEn2 = %d,AlarmTime2 = '%sZ,PkgNum2 = %d,where CameraID = %d",
+        camera->CameraID = cameraid;
+        sprintf_s(SqlBuf,"update CameraFuncParam set CameraIP = '%s', AnalyzeNUM = %d,"
+                         "AnalyzeType = %d,MaxHumanNUM =%d ,ChangeRate = %f,"
+                         "AnalyzeType1 = %d, AnalyzeEn1 = %d,AlarmTime1 = '%s',PkgNum1 = %d,WatchRegion1 = '%s',"
+                         "AnalyzeType2 = %d, AnalyzeEn2 = %d,AlarmTime2 = '%s',PkgNum2 = %d,WatchRegion2 = '%s',where CameraID = %d",
             camera->ip, camera->AnalyzeNUM,camera->AnalyzeType,camera->MaxHumanNum,camera->ChangeRate,
-            camera->AnalyzeType1,camera->AnalyzeEn1,camera->AlarmTime1,camera->PkgNum1,
-            camera->AnalyzeType2,camera->AnalyzeEn2,camera->AlarmTime2,camera->PkgNum2,camera->CameraID);
+            camera->AnalyzeType1,camera->AnalyzeEn1,camera->AlarmTime1,camera->PkgNum1,camera->WatchRegion1,
+            camera->AnalyzeType2,camera->AnalyzeEn2,camera->AlarmTime2,camera->PkgNum2,camera->WatchRegion2,camera->CameraID);
 //        sprintf_s(SqlBuf,"REPLACE INTO CameraInfo (CameraID, IP, Port, frameRate, CameraFunc, AnalyzeNUM, AnalyzeType, CamStatus) VALUES (%d, %d, %d, %d, %d, %d, %d);",
 //            camera->CameraID, camera->ip, camera->Port,camera->frameRate,camera->CameraFunc,camera->AnalyzeNUM,camera->CamStatus,);
         return m_sqlite3db.execDML( SqlBuf );
@@ -563,7 +787,6 @@ int CamDataInfo::setCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera )
 //		m_log.Add("CamDataInfo::getCameraInfo: %d : %s ", e.errorCode(), e.errorMessage());
         return -1;
     }
-    */
 }
 
 int CamDataInfo::AddCameraConfig( int cameraid, DBCAMERACONFI *camera )
@@ -575,45 +798,38 @@ int CamDataInfo::AddCameraConfig( int cameraid, DBCAMERACONFI *camera )
     int  ret = 0;
     sqlite3* db = NULL;
     char open_db_result = 0;
-
     try
     {
         boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
         open_db_result = sqlite3_open("./DataBase/CameraDB.db",&db);
 //        SQLiteDatabase db = databaseHelper.getWritableDatabase();
-
 //        ContentValues cv = new ContentValues();
 //        String[] args = { String.valueof("id") };
-//        cv.put("CameraID","camera->CameraID");
-//        cv.put("IP","camera->ip");
-//        cv.put("Port","camera->Port");
-//        cv.put("frameRate","camera->frameRate");
-//        cv.put("CameraFunc","camera->CameraFunc");
-//        cv.put("AnalyzeNUM","camera->AnalyzeNUM");
-//        cv.put("AnalyzeType","camera->AnalyzeType");
-//        cv.put("CamStatus","camera->CamStatus");
-//       update("CameraInfo",cv,"CameraID=?",cameraid);
 //        long rowid = db.insert("CameraInfo", null, cv);
 
-//        return 1;
-//        sprintf_s(SqlBuf,"REPLACE INTO vnmp_CameraState (CameraID, vnmpOnline, CameraID, LastUpdateTime) VALUES (%d, %d, %d, '%sZ');",
-//            iCameraID, iOnline, iStatus, boost::posix_time::to_iso_string(boost::posix_time::second_clock::local_time()).c_str());
 //        sprintf_s(SqlBuf,"REPLACE INTO CameraInfo (CameraID, IP, Port, frameRate, CameraFunc, AnalyzeNUM, AnalyzeType, CamStatus) VALUES (%d, %d, %d, %d, %d, %d, %d);",
 //            camera->CameraID, camera->ip, camera->Port,camera->frameRate,camera->CameraFunc,camera->AnalyzeNUM,camera->CamStatus,);
         camera->CameraID=cameraid;
-        sprintf_s(SqlBuf,"insert into CameraInfo (CameraID, IP, Port, frameRate, CamUrl, RtspUrl ,CameraFunc, AnalyzeNUM, AnalyzeType, CamStatus) values (%d, %s, %d, %d,%s,%s, %d, %d, %d, %d)",
-            camera->CameraID, camera->ip, camera->Port,camera->frameRate,camera->CamUrl,camera->RtspUrl,camera->CameraFunc,camera->AnalyzeNUM,camera->CamStatus);
+        if(cameraid == NULL)
+        {
+            sprintf_s(SqlBuf,"insert into CameraInfo (IP, Port, frameRate, CamUrl, RtspUrl ,CameraFunc, AnalyzeNUM, AnalyzeType, CamStatus) values ('%s', %d, %d,'%s','%s', %d, %d, %d, %d);",
+                camera->ip, camera->Port,camera->frameRate,camera->CamUrl,camera->RtspUrl,camera->CameraFunc,camera->AnalyzeNUM,camera->AnalyzeType,camera->CamStatus);
+        }
+        else
+        {
+                    sprintf_s(SqlBuf,"insert into CameraInfo (CameraID, IP, Port, frameRate, CamUrl, RtspUrl ,CameraFunc, AnalyzeNUM, AnalyzeType, CamStatus) values (%d,'%s', %d, %d,'%s','%s', %d, %d, %d, %d);",
+                        camera->CameraID, camera->ip, camera->Port,camera->frameRate,camera->CamUrl,camera->RtspUrl,camera->CameraFunc,camera->AnalyzeNUM,camera->AnalyzeType,camera->CamStatus);
+        }
+
 //        return m_sqlite3db.execDML( SqlBuf );
-  ret = sqlite3_exec(db,SqlBuf,0,0,&ErrMsg);
-        //ÏòÊý¾Ý¿â²åÈëÊý¾Ý
-//        camera->CameraID=6;
-//           const char *SQL2="insert into CameraInfo values(atoi(camera->CameraID),'123456789012345',3,4,'123456789012345','123456789012345',7,8,9,10);";
-//           ret = sqlite3_exec(db,SQL2,0,0,&ErrMsg);
+        ret = sqlite3_exec(db,SqlBuf,0,0,&ErrMsg);
+
 //           if(ret !=SQLITE_OK)
 //           {
-//               printf("²åÈëÊý¾Ý³É¹¦\n");
+//               printf("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³É¹ï¿½\n");
 //           }
-  sqlite3_close(db);
+         sqlite3_close(db);
+         return ret;
 //           printf("1111\n");
     }
     catch(cppsqlite3::CppSQLite3Exception& e)
@@ -627,7 +843,6 @@ int CamDataInfo::AddCameraConfig( int cameraid, DBCAMERACONFI *camera )
 
 int CamDataInfo::AddCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera )
 {
-  //  /*
     char SqlBuf[SQL_STRING_MAX];
     memset(SqlBuf,0,sizeof(SqlBuf));
     char *ErrMsg=0;
@@ -638,48 +853,27 @@ int CamDataInfo::AddCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera )
     {
         boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
         open_db_result = sqlite3_open("./DataBase/CameraDB.db",&db);
-//        SQLiteDatabase db = databaseHelper.getWritableDatabase();
-//        ContentValues cv = new ContentValues();
-//        String[] args = { String.valueof("id") };
-
-//        cv.put("CameraID","camera->CameraID");
-//        cv.put("CameraIP","camera->ip");
-//        cv.put("AnalyzeNUM","camera->AnalyzeNUM");
-//        cv.put("AnalyzeType","camera->AnalyzeType");
-//        cv.put("MaxHumanNUM","camera->MaxHumanNUM");
-//        cv.put("ChangeRate","camera->ChangeRate");
-//        cv.put("AnalyzeType1","camera->AnalyzeType1");
-//        cv.put("AnalyzeEn1","camera->AnalyzeEn1");
-//        cv.put("AlarmTime1","camera->AlarmTime1");
-//        cv.put("PkgNum1","camera->PkgNum1");
-//        cv.put("WatchRegion1","camera->WatchRegion1");
-//        cv.put("AnalyzeType2","camera->AnalyzeType2");
-//        cv.put("AnalyzeEn2","camera->AnalyzeEn2");
-//        cv.put("AlarmTime2","camera->AlarmTime2");
-//        cv.put("PkgNum2","camera->PkgNum2");
-//        cv.put("WatchRegion2","camera->WatchRegion2");
-
-//        update("CameraFuncParam",cv,"CameraID=?",cameraid);
-//        long rowid = db.insert("CameraFuncParam", null, cv);
         camera->CameraID=cameraid;
-//        sprintf_s(SqlBuf,"insert into CameraFuncParam (CameraID, IP, AnalyzeNUM, AnalyzeType, MaxHumanNUM, ChangeRate,"
-//                         "AnalyzeType1, AnalyzeEn1, AlarmTime1, PkgNum1, WatchRegion1,"
-//                         "AnalyzeType2, AnalyzeEn2, AlarmTime2, PkgNum2, WatchRegion2) VALUES (%d, %s, %d, %d, %d, %f, %d, %d,%s, %d, %s, %d, %d,%s,%d,%s);",
-//            camera->CameraID, camera->ip, camera->AnalyzeNUM,camera->AnalyzeType,camera->MaxHumanNum,camera->ChangeRate,
-//            camera->AnalyzeType1,camera->AnalyzeEn1,camera->AlarmTime1,camera->PkgNum1,camera->WatchRegion1,
-//            camera->AnalyzeType2,camera->AnalyzeEn2,camera->AlarmTime2,camera->PkgNum2,camera->WatchRegion2);
-        sprintf_s(SqlBuf,"insert into CameraFuncParam (CameraID, IP, AnalyzeNUM, AnalyzeType, MaxHumanNUM, ChangeRate,"
-                         "AnalyzeType1, AnalyzeEn1, AlarmTime1, PkgNum1,"
-                         "AnalyzeType2, AnalyzeEn2, AlarmTime2, PkgNum2) VALUES (%d, %s, %d, %d, %d, %f, %d, %d,%s, %d, %d, %d,%s,%d);",
-            camera->CameraID, camera->ip, camera->AnalyzeNUM,camera->AnalyzeType,camera->MaxHumanNum,camera->ChangeRate,
-            camera->AnalyzeType1,camera->AnalyzeEn1,camera->AlarmTime1,camera->PkgNum1,
-            camera->AnalyzeType2,camera->AnalyzeEn2,camera->AlarmTime2,camera->PkgNum2);
-//        sprintf_s(SqlBuf,"insert into CameraFuncParam (CameraID, IP, AnalyzeNUM, AnalyzeType, MaxHumanNUM, ChangeRate,"
-//                         "AnalyzeType1, AnalyzeEn1, AlarmTime1, PkgNum1,"
-//                         "AnalyzeType2, AnalyzeEn2, AlarmTime2, PkgNum2) VALUES (%d, %s, %d, %d, %d, %f, %d, %d,%s, %d, %d, %d,%s,%d);",
-//            camera->CameraID, camera->ip, camera->AnalyzeNUM,camera->AnalyzeType,camera->MaxHumanNum,camera->ChangeRate,
-//            camera->AnalyzeType1,camera->AnalyzeEn1,camera->AlarmTime1,camera->PkgNum1,
-//            camera->AnalyzeType2,camera->AnalyzeEn2,camera->AlarmTime2,camera->PkgNum2);
+        if(cameraid == NULL)
+        {
+            sprintf_s(SqlBuf,"insert into CameraFuncParam (IP, AnalyzeNUM, AnalyzeType, MaxHumanNUM, ChangeRate,"
+                             "AnalyzeType1, AnalyzeEn1, AlarmTime1, PkgNum1, WatchRegion1,"
+                             "AnalyzeType2, AnalyzeEn2, AlarmTime2, PkgNum2, WatchRegion2) VALUES ('%s', %d, %d, %d, %f, %d, %d,'%s', %d, '%s', %d, %d,'%s',%d,'%s');",
+                camera->ip, camera->AnalyzeNUM,camera->AnalyzeType,camera->MaxHumanNum,camera->ChangeRate,
+                camera->AnalyzeType1,camera->AnalyzeEn1,camera->AlarmTime1,camera->PkgNum1,camera->WatchRegion1,
+                camera->AnalyzeType2,camera->AnalyzeEn2,camera->AlarmTime2,camera->PkgNum2,camera->WatchRegion2);
+        }
+        else
+        {
+            sprintf_s(SqlBuf,"insert into CameraFuncParam (CameraID, IP, AnalyzeNUM, AnalyzeType, MaxHumanNUM, ChangeRate,"
+                             "AnalyzeType1, AnalyzeEn1, AlarmTime1, PkgNum1, WatchRegion1,"
+                             "AnalyzeType2, AnalyzeEn2, AlarmTime2, PkgNum2, WatchRegion2) VALUES (%d, '%s', %d, %d, %d, %f, %d, %d,'%s', %d, '%s', %d, %d,'%s',%d,'%s');",
+                camera->CameraID, camera->ip, camera->AnalyzeNUM,camera->AnalyzeType,camera->MaxHumanNum,camera->ChangeRate,
+                camera->AnalyzeType1,camera->AnalyzeEn1,camera->AlarmTime1,camera->PkgNum1,camera->WatchRegion1,
+                camera->AnalyzeType2,camera->AnalyzeEn2,camera->AlarmTime2,camera->PkgNum2,camera->WatchRegion2);
+        }
+
+
 //        return m_sqlite3db.execDML( SqlBuf );
           ret = sqlite3_exec(db,SqlBuf,0,0,&ErrMsg);
           sqlite3_close(db);
@@ -691,32 +885,60 @@ int CamDataInfo::AddCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera )
 //		m_log.Add("CamDataInfo::getCameraInfo: %d : %s ", e.errorCode(), e.errorMessage());
         return -1;
     }
-  //  */
 }
 
 
 
-int CamDataInfo::DelCameraInfo(int iCamera)
+int CamDataInfo::DelCameraConfig(int iCamera)
 {
 //    SQLiteDatabase db = databaseHelper.getWritableDatabase();
 //    db.delete("person", "personid<?", new String[]{"2"});
 //    db.close();
 	char SqlBuf[SQL_STRING_MAX];
+    char *ErrMsg=0;
+    int  ret = 0;
+    sqlite3* db = NULL;
+    char open_db_result = 0;
 	memset(SqlBuf,0,sizeof(SqlBuf));
 	try
 	{
 		boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
-        sprintf_s(SqlBuf,"Delete from CameraInfo where CameraID = %d ", iCamera);
-		return m_sqlite3db.execDML( SqlBuf );
+        open_db_result = sqlite3_open("./DataBase/CameraDB.db",&db);
+        sprintf_s(SqlBuf,"Delete from CameraInfo where CameraID = %d;", iCamera);
+//		return m_sqlite3db.execDML( SqlBuf );
+        ret = sqlite3_exec(db,SqlBuf,0,0,&ErrMsg);
+        sqlite3_close(db);
+        return ret;
 	}
     catch (cppsqlite3::CppSQLite3Exception& e)
 	{
 //        m_log.Add("CamDataInfo::DelCameraInfo: %d : %s ", e.errorCode(), e.errorMessage());
 		return -1;
 	}
-	return -1;
+}
+int CamDataInfo::DelCameraAlarmInfo(int iCamera)
+{
+    char SqlBuf[SQL_STRING_MAX];
+    char *ErrMsg=0;
+    int  ret = 0;
+    sqlite3* db = NULL;
+    char open_db_result = 0;
+    memset(SqlBuf,0,sizeof(SqlBuf));
+    try
+    {
+        boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
+        open_db_result = sqlite3_open("./DataBase/CameraDB.db",&db);
+        sprintf_s(SqlBuf,"Delete from CameraFuncParam where CameraID = %d;", iCamera);
+//		return m_sqlite3db.execDML( SqlBuf );
+        ret = sqlite3_exec(db,SqlBuf,0,0,&ErrMsg);
+        sqlite3_close(db);
+        return ret;
+    }
+    catch (cppsqlite3::CppSQLite3Exception& e)
+    {
+//        m_log.Add("CamDataInfo::DelCameraInfo: %d : %s ", e.errorCode(), e.errorMessage());
+        return -1;
+    }
 }
 
-//void CamDataInfo::UpdateAllCameraList(int iDevID, unsigned long lCameraNum, STCAMERAINFO* CameraInfoArray)
-//{
-//}
+

@@ -16,6 +16,9 @@ class CamReadThread;
 class CamTimeThread;
 class CamAnaThread;
 
+
+uint16 check_analyzetype(uint16 &type);
+
 class SingleCamera
 :public boost::enable_shared_from_this<SingleCamera>
 {
