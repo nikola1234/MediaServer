@@ -3,8 +3,10 @@
 CamAnaThread::CamAnaThread(SingleCamera* sincam,NetServer *ser)
 {
 	cam = sincam;
-	server = ser;
+	CameraID = cam->CameraID;
 
+	server = ser;
+	
 	m_AnaFlag   = true;
 	m_Status      = false;
 	AnalyzeType      = 0;
@@ -322,7 +324,7 @@ void CamAnaThread::analyze_sleep_release()
 }
 
 
-void CamAnaThread::parse_human_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect>& tmprect,vector<Line>  &tmpline)
+int CamAnaThread::parse_human_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect>& tmprect,vector<Line>  &tmpline)
 {
 	uint16 i = 0;
 	int x= 0;
@@ -373,7 +375,7 @@ void CamAnaThread::parse_human_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rec
 	return 0;
 }
 
-void CamAnaThread::parse_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect>& tmprect)
+int CamAnaThread::parse_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect>& tmprect)
 {
 	uint16 i = 0;
 	int x= 0;

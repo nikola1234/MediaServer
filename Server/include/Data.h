@@ -13,7 +13,7 @@ typedef struct _CAM_LIST{
 }T_CAM_LIST;
 
 
-typedef struct _ALARM_TIME{
+typedef struct _ALARM_TIME_{
 
     uint8 hour;
     uint8 min;

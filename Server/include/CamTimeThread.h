@@ -5,27 +5,27 @@
 #include "Data.h"
 #include "SingleCamera.h"
 
+class SingleCamera;
 class CamTimeThread
 {
 public:
 
-	CamTimeThread(SingleCamera* sincam);
+	CamTimeThread(SingleCamera * sincam);
 	~CamTimeThread();
 
 	bool Ana1Status;
 	bool Ana2Status;
 
-
 	void SetCamera_StartThread(uint8 num);
-	
+
 	void reset_time1_param(T_VDCS_VIDEO_ALARM_TIME *Time);
 	void reset_time2_param(T_VDCS_VIDEO_ALARM_TIME *Time);
-	
+
 
 	void set_analyze_num( uint8 num);
 	void change_time_by_num(uint8 num,ALARM_DAY * time);
 	void clear_time();
-	
+
 	void run();
 	int  CreateTimeThread();
 	static void* RunTimeThread(void*  param){
@@ -56,9 +56,9 @@ private:
 	int JudgeTimeDayStart(T_AlarmTime &time);
 	int JudgeTimeDayEnd(T_AlarmTime &time);
 	void change_analyze_status(int ret,bool &status);
-	
+
 	int time_analyze(T_AlarmTime timenow, ALARM_TIME_INT*time_int );
-	int time_detect(ALARM_DAY * Time,bool &status);
+	int time_detect(ALARM_DAY * Time);
 	void time_detect_by_num(uint8 num);
 
 	SingleCamera *cam;

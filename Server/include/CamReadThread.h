@@ -7,6 +7,8 @@
 #include "SingleCamera.h"
 #include "NetServer.h"
 
+class CamAnaThread;
+
 class CamReadThread
 {
 public:

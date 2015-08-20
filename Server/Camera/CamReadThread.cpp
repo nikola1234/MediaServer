@@ -4,8 +4,9 @@ extern CRtspCamera rtspCamera;
 
 CamReadThread::CamReadThread(SingleCamera *sincam,NetServer *Server)
 {
-	CameraID = sincam->CameraID;
 	cam = sincam;
+	CameraID = cam->CameraID;
+
 	server = Server;
 	m_CameraFlag = true;
 	errReadNum = 0;
@@ -28,10 +29,15 @@ int  CamReadThread::SetCamera_StartThread(string url)
 	m_videoStream = url;
 	iRet = InitCamera();
 	if(iRet < 0)	return	iRet;
-	
+
 	iRet = CreateCamReadThread();
-	return	iRet;
+	if(iRet < 0)
+	{	
+		return -1;
+	}
+	
 	resume();
+	return 0;
 }
 
 int CamReadThread::InitCamera()
@@ -139,6 +145,7 @@ int CamReadThread::Encode(Mat &frame)
 
 	cvtColor( frame , rgb_frame, CV_BGR2RGB ) ;
 	avpicture_fill((AVPicture*)m_pRGBFrame,(uint8_t *)rgb_frame.data,AV_PIX_FMT_RGB24,m_cols,m_rows);
+	printf("------------\n");
 	sws_scale(scxt,m_pRGBFrame->data,m_pRGBFrame->linesize,0,m_rows,m_pYUVFrame->data,m_pYUVFrame->linesize);
 
 	av_init_packet(&pkt);
@@ -178,40 +185,40 @@ int CamReadThread::Encode(Mat &frame)
 
 void CamReadThread::draw(CamAnaThread * Anathread,Mat &frame)
 {
-	int i = 0;
-	int j = 0;
+	uint8 i = 0;
+	uint8 j = 0;
 
 	switch(Anathread->AnalyzeType){
-			case HumanDetect : 
-				if((Anathread->human->m_Flag& 0x02)  == 0x02){
-					for( i=0;i<Anathread>human->DirectionLines.size();i++)
+			case HumanDetect :
+				if((Anathread->human->m_Flag & 0x02)  == 0x02){
+					for( i=0;i < Anathread->human->DirectionLines.size();i++)
 					{
 						line(frame,Anathread->human->DirectionLines[i].Start,Anathread->human->DirectionLines[i].End,Scalar( 64, 128, 0 ), 2, 8, 0);
 					}
 				}
 
-				if((Anathread->human->m_Flag& & 0x01)  == 1){  
+				if((Anathread->human->m_Flag & 0x01)  == 1){
 					for(j=0;j<Anathread->human->MonitorZoneRects.size();j++)
 					{
-						rectangle(frame, Anathread->human->Rects[j], Scalar( 64, 128, 0 ), 2, 8, 0);
+						rectangle(frame, Anathread->human->MonitorZoneRects[j], Scalar( 64, 128, 0 ), 2, 8, 0);
 					}
 				}
 				break;
 			case SmokeDetect :
-				for(j=0;j<Anathread->smoke->Rects.size();j++)
+				for(j=0;j < Anathread->smoke->Rects.size();j++)
 				{
 					rectangle(frame, Anathread->smoke->Rects[j], Scalar( 60, 60, 60  ), 2, 8, 0);
 				}
 				break;
-			case RegionDetect :	
+			case RegionDetect :
 				for(j=0;j<Anathread->region->Rects.size();j++)
 				{
 					rectangle(frame, Anathread->region->Rects[j], Scalar( 255, 0, 0  ), 2, 8, 0);
 				}
 				break;
-			case FixedObjDetect :	
+			case FixedObjDetect :
 				break;
-			case FireDetect :	
+			case FireDetect :
 				for(j=0;j<Anathread->fire->Rects.size();j++)
 				{
 					rectangle(frame, Anathread->fire->Rects[j], Scalar( 0, 0, 255 ), 2, 8, 0);
@@ -225,8 +232,6 @@ void CamReadThread::draw(CamAnaThread * Anathread,Mat &frame)
 void CamReadThread::draw_encode_frame(Mat & frame)
 {
 	int iRet = -1;
-	int i = 0;
-	int j = 0;
 	iRet = cam->Ana1Thread->check_thread_status();
 	if(iRet > 0){
 	       draw(cam->Ana1Thread,frame);
@@ -254,7 +259,7 @@ void CamReadThread::report_camera_break()
 	t_CamStatus.Status   =    1;
 
 	memcpy(CamStatusBuff+sizeof(T_PacketHead),&t_CamStatus,sizeof(T_SM_ANAY_VDCS_DEVICE_STATUS));
-	
+
 	server->SendBufferToAllNetClient(CamStatusBuff,sizeof(CamStatusBuff));
 }
 
@@ -262,7 +267,7 @@ void  CamReadThread::check_camera_status()
 {
 	errReadNum++;
 	if(errReadNum >2000){
-		report_camera_break();  
+		report_camera_break();
 		pause();
 		cam->TimeThread->pause();
 		cam->Ana1Thread->pause();
@@ -278,10 +283,11 @@ void CamReadThread::run()
 		pthread_mutex_lock(&mut);
 		while (!m_Status)
 		{
-		  pthread_cond_wait(&cond, &mut);
+		  	pthread_cond_wait(&cond, &mut);
 		}
 		pthread_mutex_unlock(&mut);
-		
+
+		printf("8888888888888888888888\n");
 		if(!(m_vcap.read(ReadFrame)))
 		{
 			dbgprint("%s(%d),%d CAM no frame!\n",DEBUGARGS,CameraID);
@@ -290,16 +296,20 @@ void CamReadThread::run()
 			continue;
 		}
 		errReadNum = 0;
+		printf("77777777777777777777777\n");
 		if(!ReadFrame.empty())
 		{
+			printf("555frefefedrfge557\n");
 			ReadFrame.copyTo(anaframe);
-			
+			printf("5rw3453tgtrggdfg\n");
 			ReadFrame.copyTo(EncodeFrame);
-			
+			printf("5dewfgbhjnuyjnmyujmg\n");
 			draw_encode_frame(EncodeFrame);
-			
+			printf("dddddddddddddddddddddddddddddd\n");
 			Encode(EncodeFrame);
+			printf("ddddefvgtbbbbbbbbbbbbbbb44444444444ddddddddd\n");
 		}
+		printf("555555555555557\n");
 		usleep(50);
 	}
   	releaseEncode();
@@ -351,4 +361,3 @@ void CamReadThread::pause()
         dbgprint("%s(%d), cam %d read pthread stop already!\n",DEBUGARGS,CameraID);
     }
 }
-

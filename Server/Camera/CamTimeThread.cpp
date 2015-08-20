@@ -3,7 +3,8 @@
 CamTimeThread::CamTimeThread(SingleCamera* sincam)
 {
 	cam =sincam;
-	CameraID = sincam ->CameraID;
+	CameraID = cam ->CameraID;
+
 	m_TimeFlag = true;
 	m_Status     = false;
 
@@ -35,7 +36,7 @@ void CamTimeThread::parse_time_further_more(ALARM_TIME_INT* time_i,ALARM_TIME* t
 	char min[3];
 	memset(hour, 0, 3);
 	memset(min, 0, 3);
-	
+
 	memcpy(hour, time_c->StartTime, 2);
 	memcpy(min,  time_c->StartTime+3, 2);
 
@@ -44,12 +45,12 @@ void CamTimeThread::parse_time_further_more(ALARM_TIME_INT* time_i,ALARM_TIME* t
 
 	memset(hour, 0, 3);
 	memset(min, 0, 3);
-	
+
 	memcpy(hour,  time_c->EndTime, 2);
 	memcpy(min,  time_c->EndTime+3, 2);
 	time_i->End.hour = atoi(hour);
 	time_i->End.min= atoi(min);
-	
+
 }
 void CamTimeThread::parse_time_further(ALARM_TIME_INT* time_int,ALARM_TIME* time_char)
 {
@@ -64,7 +65,7 @@ void CamTimeThread::parse_time(ALARM_DAY* AlarmTime,T_VDCS_VIDEO_ALARM_TIME *Tim
 	uint8 i= 0;
 	for(i = 0; i < WEEK_DAY_LEN_7; i++ )
 	{
-		parse_time_further(AlarmTime[i].dayTime.time,Time[i].AlarmTime.Time);
+		parse_time_further(AlarmTime[i].dayTime.time,Time[i].alarmtime.Time);
 	}
 
 }
@@ -72,7 +73,7 @@ void CamTimeThread::reset_time1_param(T_VDCS_VIDEO_ALARM_TIME *Time)
 {
 	uint8 i= 0;
 	pause();
-	usleep(100*1000);	
+	usleep(100*1000);
 	for(i = 0; i < WEEK_DAY_LEN_7; i++ )
 	{
 		memset(&AlarmTime1[i] , 0,sizeof(ALARM_DAY));
@@ -84,12 +85,12 @@ void CamTimeThread::reset_time2_param(T_VDCS_VIDEO_ALARM_TIME *Time)
 {
 	uint8 i= 0;
 	pause();
-	usleep(100*1000);		
+	usleep(100*1000);
 	for(i = 0; i < WEEK_DAY_LEN_7; i++ )
 	{
 		memset(&AlarmTime2[i] , 0,sizeof(ALARM_DAY));
 	}
-	parse_time(AlarmTime2,Time);	
+	parse_time(AlarmTime2,Time);
 	resume();
 }
 
@@ -165,7 +166,7 @@ int CamTimeThread::time_analyze(T_AlarmTime timenow, ALARM_TIME_INT*time_int )
 {
 	int iRet = -1;
 
-	iRet = JudgeTimeDayStart(time_int[0].Start)&&JudgeTimeDayStart(time[0].End);
+	iRet = JudgeTimeDayStart(time_int[0].Start) && JudgeTimeDayStart(time_int[0].End);
 	if(iRet == 1) return 0;
 
 	iRet = AlarmTimeCompare(timenow ,time_int[0].Start);
@@ -174,7 +175,7 @@ int CamTimeThread::time_analyze(T_AlarmTime timenow, ALARM_TIME_INT*time_int )
 	iRet = AlarmTimeCompare(timenow ,time_int[0].End);
 	if(iRet <= 0) return 1;
 
-	iRet = JudgeTimeDayStart(time_int[1].Start)&&JudgeTimeDayStart(time_int[1]..End);
+	iRet = JudgeTimeDayStart(time_int[1].Start) && JudgeTimeDayStart(time_int[1].End);
 	if(iRet == 1) return 0;
 
 	iRet = AlarmTimeCompare(timenow ,time_int[1].Start);
@@ -183,16 +184,16 @@ int CamTimeThread::time_analyze(T_AlarmTime timenow, ALARM_TIME_INT*time_int )
 	iRet = AlarmTimeCompare(timenow ,time_int[1].End);
 	if(iRet <= 0) return 1;
 
-	iRet = JudgeTimeDayStart(time_int[2].Start)&&JudgeTimeDayStart(time_int[2]..End);
+	iRet = JudgeTimeDayStart(time_int[2].Start) && JudgeTimeDayStart(time_int[2].End);
 	if(iRet == 1) return 0;
 
 	iRet = AlarmTimeCompare(timenow ,time_int[2].Start);
 	if(iRet < 0)  return 0;
 
 	iRet = AlarmTimeCompare(timenow ,time_int[2].End);
-	if(iRet <= 0) return 1;	
+	if(iRet <= 0) return 1;
 	return 0;
-	
+
 	return 2;
 }
 
@@ -214,7 +215,7 @@ void  CamTimeThread::change_analyze_status(int ret,bool &status)
 			break;
 	}
 }
-int CamTimeThread::time_detect(ALARM_DAY * Time,bool &status)
+int CamTimeThread::time_detect(ALARM_DAY * Time)
 {
 	uint8 day = 0;
 	int iRet = -1;
@@ -239,7 +240,7 @@ int CamTimeThread::time_detect(ALARM_DAY * Time,bool &status)
 }
 
 void CamTimeThread::time_detect_by_num(uint8 num)
-{	
+{
 	int iRet = -1;
 	switch(AnalyzeNUM){
 		case 1:

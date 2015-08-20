@@ -15,11 +15,11 @@ CFire::~CFire()
 	Rects.clear();
 }
 
-void CFire:sleep_release()
+void CFire::sleep_release()
 {
 	alarm = 0;
 }
-void CFire:pause_release()
+void CFire::pause_release()
 {
 	alarm = 0;
 }

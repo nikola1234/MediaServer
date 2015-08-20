@@ -10,6 +10,15 @@ CamList::~CamList()
 	camlist_.clear();
 }
 
+void CamList::Get_All_Camera()
+{
+	CamreadLock readlock_(m_CamListMutex_);
+	std::list<T_CAM_LIST>::iterator it = camlist_.begin();
+	for ( ; it != camlist_.end() ; it++ )
+	{
+		printf("Camlist ID is %d\n", (int)(*it).CameraID);
+	}
+}
 
 int CamList::add_cam_list(char * url,uint32 ID)
 {
@@ -21,10 +30,10 @@ int CamList::add_cam_list(char * url,uint32 ID)
 	return 0;
 }
 
-int CamList::search_cam_by_url(char *url,int & ID)
+int CamList::search_cam_by_url(char *url,int ID)
 {
 	CamreadLock readlock_(m_CamListMutex_);
-	
+
 	std::list<T_CAM_LIST>::iterator it = camlist_.begin();
 	for ( ; it != camlist_.end() ; it++ )
 	{
@@ -40,7 +49,7 @@ int CamList::search_cam_by_url(char *url,int & ID)
 int CamList::delete_cam_by_id(uint32 ID)
 {
 	CamreadLock writelock_(m_CamListMutex_);
-	
+
 	std::list<T_CAM_LIST>::iterator it = camlist_.begin();
 	for ( ; it != camlist_.end() ; it++ )
 	{
@@ -52,5 +61,3 @@ int CamList::delete_cam_by_id(uint32 ID)
 	}
 	return -1;
 }
-
-

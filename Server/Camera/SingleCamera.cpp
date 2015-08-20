@@ -7,10 +7,10 @@ SingleCamera::SingleCamera(ManageCamera*cam,uint32 ID)
 {
 	CameraID = ID;
 	ManaCam = cam;
-	ReadThread = new CamReadThread(this,cam->Server);
+	ReadThread = new CamReadThread(this,ManaCam->Server);
 	TimeThread = new CamTimeThread(this);
-	Ana1Thread = new CamAnaThread(this,cam->Server);
-	Ana2Thread = new CamAnaThread(this,cam->Server);
+	Ana1Thread = new CamAnaThread(this,ManaCam->Server);
+	Ana2Thread = new CamAnaThread(this,ManaCam->Server);
 }
 
 SingleCamera::~SingleCamera()
@@ -34,15 +34,16 @@ string  SingleCamera:: get_rtsp_url()
 int SingleCamera::generate_url()
 {
 	char rtsp[128] ={0};
-	uint32 port =558;
+	uint32 port =556;
 	if(strlen(SerParam.Serverip) == 0) return -1;
 	sprintf(rtsp,"%s%s:%d/%d","rtsp://",SerParam.Serverip,port,CameraID);
 	memcpy(RtspUrl,rtsp,SINGLE_URL_LEN_128);
+	printf("RtspUrl is %s\n",RtspUrl);
 	return 0;
 }
 
 
-uint16 check_analyzetype(uint16 &type)
+uint16 check_analyzetype(uint16 type)
 {
 	uint16 uType = 0;
 	switch(type){
@@ -71,31 +72,31 @@ uint16 check_analyzetype(uint16 &type)
 	return uType;
 }
 
-int SingleCamera::parse_type(uint16 & type)
+int SingleCamera::parse_type(uint16  type)
 {
-	if(type &HumanDetect)  {
+	if(type & HumanDetect)  {
 		AnalyzeType1 = HumanDetect;
-		AnalyzeType2=check_analyzetype(type&(uint16)(~HumanDetect));
+		AnalyzeType2= check_analyzetype(type &( (uint16)(~HumanDetect)));
 		return 0;
 	}
-	if(type &SmokeDetect)  {
+	if(type & SmokeDetect)  {
 		AnalyzeType1 = SmokeDetect;
-		AnalyzeType2=check_analyzetype(type&(uint16)(~SmokeDetect));
+		AnalyzeType2=check_analyzetype(type & ((uint16)(~SmokeDetect)));
 		return 0;
 	}
-	if(type &RegionDetect)  {
+	if(type & RegionDetect)  {
 		AnalyzeType1 = RegionDetect;
-		AnalyzeType2=check_analyzetype(type&(uint16)(~RegionDetect));
+		AnalyzeType2=check_analyzetype(type& ((uint16)(~RegionDetect)));
 		return 0;
 	}
-	if(type &FixedObjDetect)  {
+	if(type & FixedObjDetect)  {
 		AnalyzeType1 = FixedObjDetect;
-		AnalyzeType2=check_analyzetype(type&(uint16)(~FixedObjDetect));
+		AnalyzeType2=check_analyzetype(type&((uint16)(~FixedObjDetect)));
 		return 0;
 	}
-	if(type &FireDetect)  {
+	if(type & FireDetect)  {
 		AnalyzeType1 = FireDetect;
-		AnalyzeType2=check_analyzetype(type&(uint16)(~FireDetect));
+		AnalyzeType2=check_analyzetype(type& ((uint16)(~FireDetect)));
 		return 0;
 	}
 
@@ -105,9 +106,10 @@ int SingleCamera::parse_type(uint16 & type)
 
 int SingleCamera:: set_camera_fix_param(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 {
-	int iRet = -1; 
-	memset(CameraIP,addCam.ip,IP_LEN_16);
+	printf("set_camera_fix_param \n");
+	memcpy(CameraIP,addCam.ip,IP_LEN_16);
 	memcpy(CamUrl,addCam.CameUrL,SINGLE_URL_LEN_128);
+	
 	frameRate 	= addCam.frameRate;
 	CameraFunc 	= addCam.CameraFunc;
 	AnalyzeNUM    = addCam.AnalyzeNUM;
@@ -150,7 +152,7 @@ void SingleCamera::reset_camera_fix_param(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 	AnalyzeType1 = 0;
 	AnalyzeType2 = 0;
 
-	memset(CameraIP,addCam.ip,IP_LEN_16);
+	memcpy(CameraIP,addCam.ip,IP_LEN_16);
 	memcpy(CamUrl,addCam.CameUrL,SINGLE_URL_LEN_128);
 	frameRate	= addCam.frameRate;
 	CameraFunc	= addCam.CameraFunc;
@@ -175,40 +177,40 @@ void SingleCamera::reset_camera_fix_param(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 
 int SingleCamera::reset_camera_var_param(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg)
 {
-	if(pt_CameraParam->PkgNum != pkg.size())
+	if((pt_CameraParam->PkgNum != Pkg.size())||(Pkg.size() == 0))
 	{
-		dbgprint("%s(%d),reset_camera_var_param wrong PkgNum  is %d, pkg.size() is %d!\n", DEBUGARGS,pt_CameraParam->PkgNum,pkg.size());
+		dbgprint("%s(%d),reset_camera_var_param wrong PkgNum  is %d, pkg.size() is %d!\n", DEBUGARGS,pt_CameraParam->PkgNum,Pkg.size());
 		return -1;
 	}
 	
-	ReadThread->set_video_draw(Pkg);
-	
-	switch (pt_CameraParam->AnalyzeType){
-		case  AnalyzeType1:
-			Ana1Thread->pause();
-			TimeThread->reset_time1_param(pt_CameraParam->AlarmTime);
-			Ana1Thread->AnaIndex = 1;
-			Ana1Thread->AnalyzeType = pt_CameraParam->AnalyzeType;
-			Ana1Thread->human->MaxNum = pt_CameraParam->MaxHumanNum;
-			Ana1Thread->region->ChangRate = pt_CameraParam->ChangRate;
-			Ana1Thread->set_video_draw(Pkg);
-			Ana1Thread->resume();
-			break;
-		case  AnalyzeType2:
-			Ana2Thread->pause();
-			TimeThread->reset_time2_param(pt_CameraParam->AlarmTime);
-			Ana2Thread->AnaIndex = 2;
-			Ana2Thread->AnalyzeType = pt_CameraParam->AnalyzeType;
-			Ana2Thread->human->MaxNum = pt_CameraParam->MaxHumanNum;
-			Ana2Thread->region->ChangRate = pt_CameraParam->ChangRate;
-			Ana2Thread->set_video_draw(Pkg);
-			Ana2Thread->resume();
-			break;
-		default :
-			dbgprint("%s(%d),reset_camera_var_param wrong AnalyzeType  is %d!\n", DEBUGARGS,pt_CameraParam->AnalyzeType);
-			break;
+	//ReadThread->set_video_draw(Pkg);
+	if(pt_CameraParam->AnalyzeType == AnalyzeType1)
+	{
+		Ana1Thread->pause();
+		TimeThread->reset_time1_param(pt_CameraParam->AlarmTime);
+		Ana1Thread->AnaIndex = 1;
+		Ana1Thread->AnalyzeType = pt_CameraParam->AnalyzeType;
+		Ana1Thread->human->MaxNum = pt_CameraParam->MaxHumanNum;
+		Ana1Thread->region->ChangRate = pt_CameraParam->ChangRate;
+		Ana1Thread->set_video_draw(Pkg);
+		Ana1Thread->resume();
+		return 0;
 	}
-	return 0;
+	if(pt_CameraParam->AnalyzeType == AnalyzeType2)
+	{
+		Ana2Thread->pause();
+		TimeThread->reset_time2_param(pt_CameraParam->AlarmTime);
+		Ana2Thread->AnaIndex = 2;
+		Ana2Thread->AnalyzeType = pt_CameraParam->AnalyzeType;
+		Ana2Thread->human->MaxNum = pt_CameraParam->MaxHumanNum;
+		Ana2Thread->region->ChangRate = pt_CameraParam->ChangRate;
+		Ana2Thread->set_video_draw(Pkg);
+		Ana2Thread->resume();
+		return 0;
+	}
+
+	dbgprint("%s(%d),reset_camera_var_param wrong AnalyzeType  is %d!\n", DEBUGARGS,pt_CameraParam->AnalyzeType);
+	return -1;
 }
 
 

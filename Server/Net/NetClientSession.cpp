@@ -52,7 +52,6 @@ int NetClientSession::client_register_ack()
 	T_PacketHead						 t_PackHeadRegAck;
 	T_ANAY_VDCS_REGISTER_ACK    		 t_RegAck;
 	char  RegAckBuff[28 + 20] ={0};
-	int 	iRet = -1;
 
 	t_PackHeadRegAck.magic			  =  T_PACKETHEAD_MAGIC;
 	t_PackHeadRegAck.cmd			  =  SM_VDCS_ANAY_REGISTER_ACK;
@@ -99,14 +98,14 @@ void NetClientSession::push_camera_data_ack2(ST_VDCS_VIDEO_PUSH_CAM & AddCamera,
 	memcpy(t_CamAddAck.ip ,AddCamera.ip,IP_LEN_16);
 	memcpy(t_CamAddAck.CameUrL,AddCamera.CameUrL,SINGLE_URL_LEN_128);
 	memcpy(t_CamAddAck.RtspUrL,url.c_str(),url.length());
-	memcpy(AddFailureBuff+sizeof(T_PacketHead),&t_CamAddAck,sizeof(T_ANAY_VDCS_PUSH_CAM_ACK));
+	memcpy(AddAckBuff+sizeof(T_PacketHead),&t_CamAddAck,sizeof(T_ANAY_VDCS_PUSH_CAM_ACK));
 	SendMessage(AddAckBuff,sizeof(AddAckBuff));
 }
 
 int NetClientSession::push_camera_data(char* buffer ,int size)
 {
 	int iRet = -1;
-	uint32 num = 0;
+	
 	ST_VDCS_VIDEO_PUSH_CAM t_add_camera;
 
 	memcpy(&t_add_camera,buffer,sizeof(ST_VDCS_VIDEO_PUSH_CAM));
@@ -114,7 +113,7 @@ int NetClientSession::push_camera_data(char* buffer ,int size)
 	{
 	    iRet = fOurServer->ManCam->try_to_open(t_add_camera.ip,t_add_camera.CameUrL);
 	    if(iRet < 0){
-		fOurServer->m_log.Add("open %s failed!", url.c_str());
+		fOurServer->m_log.Add("open %s failed!", t_add_camera.CameUrL);
 		push_camera_data_ack1(t_add_camera);
 		return -1;
 	    }
@@ -189,13 +188,13 @@ int NetClientSession::delete_camera_ack(T_VDCS_VIDEO_CAMERA_DELETE* pt_CamDel,in
 	memcpy(DelAckBuff,&t_PackHeadDelAck,sizeof(T_PacketHead));
 
 	if(ret ==  1){
-		t_CamDelAck.ack   = 1;
+		t_CamDelAck.Ack   = 1;
 	}else{
-		t_CamDelAck.ack   = 0;
+		t_CamDelAck.Ack   = 0;
 	}
 	
 	memcpy(t_CamDelAck.ip ,pt_CamDel->ip,IP_LEN_16);
-	memcpy(t_CamDelAck.CameUrL,pt_CamDel->CameUrL,SINGLE_URL_LEN_128);
+	memcpy(t_CamDelAck.CameUrl,pt_CamDel->CameUrL,SINGLE_URL_LEN_128);
 	
 	memcpy(DelAckBuff+sizeof(T_PacketHead),&t_CamDelAck,sizeof(T_VDCS_VIDEO_CAMERA_DELETE_ACK));
 	SendMessage(DelAckBuff,sizeof(DelAckBuff));
@@ -207,7 +206,7 @@ int NetClientSession::delete_camera(char * buffer , int size)
 {
 	int iRet = -1;
 	uint32 ID = 0;
-	SingleCamPtr  tmpCamPtr = NULL;
+	SingleCamPtr  tmpCamPtr;
 
 	T_VDCS_VIDEO_CAMERA_DELETE  t_CamDel;
 
@@ -264,9 +263,9 @@ int NetClientSession::device_status_ack(char * buffer,int size)
 	
 	ack = t_AnaDeviceAck.Ack;
 	if(ack == 1){
-			dbgprint("ipCamera %s deivce break report  sucess!\n",t_AnaDeviceAck.CameUrL);
+			dbgprint("ipCamera %s deivce break report  sucess!\n",t_AnaDeviceAck.CameUrl);
 	}else{
-		dbgprint("ipCamera %s deivce break reporterror!\n",,t_AnaDeviceAck.CameUrL);
+		dbgprint("ipCamera %s deivce break reporterror!\n",t_AnaDeviceAck.CameUrl);
 	}
 	return 0;
 }
@@ -282,7 +281,7 @@ int NetClientSession::warn_info_ack(char * buffer,int size)
 	if(ack == 1){
 			dbgprint("ipCamera %s warninfo  analyze  %x report sucess!\n",t_AnayWarnAck.CameUrL,t_AnayWarnAck.AnalyzeType);
 	}else{
-		dbgprint("ipCamera %s warninfo analyze  %x report error!\n",,t_AnayWarnAck.CameUrL,t_AnayWarnAck.AnalyzeType);
+		dbgprint("ipCamera %s warninfo analyze  %x report error!\n",t_AnayWarnAck.CameUrL,t_AnayWarnAck.AnalyzeType);
 	}
 	return 0;
 }
@@ -301,27 +300,27 @@ int NetClientSession::ReciveData_GetParam(char* buffer ,int size)
 
 	switch (cmd ){
 		case SM_ANAY_VDCS_REGISTER:
-			fOurServer->m_log.Add(" %d client_register_ack", fOurSessionId);
+			fOurServer->m_log.Add("%d client_register_ack", fOurSessionId);
 			client_register_ack();
 			break;
 		case SM_VDCS_ANAY_DEVICE_STATUS_ACK:
-			fOurServer->m_log.Add(" %d device status ack", fOurSessionId);
+			fOurServer->m_log.Add("%d device status ack", fOurSessionId);
 			device_status_ack(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
 			break;
 		case SM_VDCS_ANAY_WARN_INFO_ACK:
-			fOurServer->m_log.Add(" %d warn info ack", fOurSessionId);
+			fOurServer->m_log.Add("%d warn info ack", fOurSessionId);
 			warn_info_ack(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
 			break;
 		case SM_VDCS_ANAY_PUSH_CAMERA:
-			fOurServer->m_log.Add(" %d client push camera", fOurSessionId);
+			fOurServer->m_log.Add("%d client push camera", fOurSessionId);
 			push_camera_data(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
 			break;
 		case SM_VDCS_ANAY_PUSH_CAMERA_PARAM:
-			fOurServer->m_log.Add(" %d client push camera param", fOurSessionId);
+			fOurServer->m_log.Add("%d client push camera param", fOurSessionId);
 			push_camera_param(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
 			break;
 		case SM_VDCS_ANAY_DELETE_CAMERA:
-			fOurServer->m_log.Add(" %d client delete camera ", fOurSessionId);
+			fOurServer->m_log.Add("%d client delete camera ", fOurSessionId);
 			delete_camera(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
 			break;
 		default: break;
@@ -346,7 +345,7 @@ void NetClientSession::HandleRecvReponse(const boost::system::error_code& error,
 		else if(recvsizes < BUFFER_SIZE_MIN)
 		{
 			memcpy(fAcceptBuffer+BUFFER_SIZE_MIN*PKGNUM,fBuffer,recvsizes);
-			std::cout<<totalRecive<<std::endl;
+			std::cout<<"client send data length "<<totalRecive<<std::endl;
 			ReciveData_GetParam(fAcceptBuffer,totalRecive);
 			memset(fBuffer, 0 ,BUFFER_SIZE_MIN);
 			PKGNUM = 0;

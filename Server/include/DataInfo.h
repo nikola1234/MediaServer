@@ -6,6 +6,11 @@
 #include "CmdDefine.h"
 
 #include "CppSQLite3.h"
+#include "Data.h"
+
+#include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/thread.hpp>
 
 
 #define SQL_STRING_MAX 4096

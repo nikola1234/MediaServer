@@ -22,14 +22,13 @@ int ManageCamera::read_CameraID_from_DB(char * path)
 	char sqlbuf[1024];
 	char *ErrMsg=NULL;
 	char **pszResult = NULL;
-	char open_db_result = 0;
-
+	
 	int nRow = 0;
 	int nColumn = 0;
 
 	memset(sqlbuf,0,sizeof(sqlbuf));
 
-	open_db_result = sqlite3_open(path,&db);
+	sqlite3_open(path,&db);
 	sprintf(sqlbuf,"select CameraID from vnmp_CameraInfo;");
 	ret = sqlite3_get_table(db, sqlbuf, &pszResult, &nRow, &nColumn, &ErrMsg);
 	if (ret != SQLITE_OK)
@@ -95,6 +94,7 @@ void ManageCamera::fill_var_param(DBCAMERAFUNCPARAM* pt_Camfuncparam,T_VDCS_VIDE
 {
 	uint8 i=0, j= 0;
 	StrTimeDay timeday[WEEK_DAY_LEN_7];
+	ALARM_DAY timeday_one[WEEK_DAY_LEN_7]; /* no use*/
 
 	memcpy(pt_varParam->CameUrL , pt_Camfuncparam->CameraUrl,SINGLE_URL_LEN_128);
 	pt_varParam->MaxHumanNum  =  pt_Camfuncparam->MaxHumanNum;
@@ -104,7 +104,7 @@ void ManageCamera::fill_var_param(DBCAMERAFUNCPARAM* pt_Camfuncparam,T_VDCS_VIDE
 	{
 		pt_varParam->AnalyzeType  	=  pt_Camfuncparam->AnalyzeType1;
 		pt_varParam->PkgNum    =pt_Camfuncparam->PkgNum1;
-		datainfo->anlyzetime(pt_Camfuncparam->AlarmTime1,timeday,NULL);
+		CDataInfo.anlyzetime(pt_Camfuncparam->AlarmTime1,timeday,timeday_one);
 		for(i= 0; i<WEEK_DAY_LEN_7;i++)
 		{
 			for(j= 0; j<3;j++)
@@ -120,7 +120,7 @@ void ManageCamera::fill_var_param(DBCAMERAFUNCPARAM* pt_Camfuncparam,T_VDCS_VIDE
 	{
 		pt_varParam->AnalyzeType  	=  pt_Camfuncparam->AnalyzeType2;
 		pt_varParam->PkgNum    =pt_Camfuncparam->PkgNum2;
-		datainfo->anlyzetime(pt_Camfuncparam->AlarmTime2,timeday,NULL);
+		CDataInfo.anlyzetime(pt_Camfuncparam->AlarmTime2,timeday,timeday_one);
 		for(i= 0; i<WEEK_DAY_LEN_7;i++)
 		{
 			for(j= 0; j<3;j++)
@@ -143,12 +143,13 @@ int ManageCamera::init_camera_from_DB()
 	vector<int> camID;
 	DBCAMERACONFI Caminfo;
 	DBCAMERAFUNCPARAM Camfuncparam;
-	
+
 	ST_VDCS_VIDEO_PUSH_CAM  t_addCam;
 	T_VDCS_VIDEO_CAMERA_PARAM t_varParam;
 	vector <VIDEO_DRAW>   pkg;
 	
 	CDataInfo.getAllCameraConfigID(NULL,camID);
+
 	if(camID.size() > 0){
 		for(num = 0; num < camID.size();num++)
 		{
@@ -190,9 +191,12 @@ int ManageCamera::init_camera_from_DB()
 			{
 				m_log.Add("%s(%d),DB have wrong  camera AnalyzeNUM %d !" ,DEBUGARGS,Camfuncparam.AnalyzeNUM);
 			}
-			
+
+			printf("sssssss33333333333\n");
 			erase_id_from_CamIDList(ID);
-			m_CamList.add_cam_list(Caminfo.CamUrl, ID)
+			printf("444444444444444443\n");
+			m_CamList.add_cam_list(Caminfo.CamUrl, ID);
+			printf("44444666666666664444443\n");
 		}
 		return 0;
 	}
@@ -204,7 +208,10 @@ int ManageCamera::InitFromDB()
 {
         char DB_file[20] ="MS.sqlite";
 	read_CameraID_from_DB(DB_file);
+	CDataInfo.sqlite3_create_db(DBNAME);	 
+	CDataInfo.sqlite3_create_table(DBNAME);
 	init_camera_from_DB();
+	printf("rrrrrrrrrrrrrrrrrrrr\n");
   	return 0;
 }
 
@@ -248,7 +255,7 @@ uint32  ManageCamera::get_camera_id()
 
 SingleCamPtr ManageCamera::search_camera_by_id(uint32 ID)
 {
-	SingleCamPtr tmpcamptr=NULL;
+	SingleCamPtr tmpcamptr ;
 	ReadLock readlock_(m_SinCamListMutex_);
 	std::list<SingleCamPtr>::iterator it = m_SinCamList.begin();
 	for ( ; it != m_SinCamList.end() ; it++ )
@@ -265,7 +272,7 @@ SingleCamPtr ManageCamera::search_camera_by_id(uint32 ID)
 SingleCamPtr ManageCamera::search_camera_by_url(char *url )
 {
 	uint32 ID= 0;
-	SingleCamPtr tmpcamptr=NULL;
+	SingleCamPtr tmpcamptr;
 	m_CamList.search_cam_by_url(url, ID);
 	if(ID > 0)
 	{
@@ -303,13 +310,13 @@ int ManageCamera::resume_cameraID_in_list(uint32 ID)
 
 	WriteLock writelock_(m_CamIDListMutex_);
 	CamIDList.push_back(ID);
-	//delete_camera_in_DB();
+	//delete_camera_in_DB();---------------------------------------------
 	return 0;
 }
 
 int  ManageCamera::reset_camera_param(uint32 ID,ST_VDCS_VIDEO_PUSH_CAM & addCam,string &url)
 {
-	SingleCamPtr camptr =NULL;
+	SingleCamPtr camptr ;
 	camptr = search_camera_by_id(ID);
 	if(camptr == NULL)return -1;
 
@@ -326,7 +333,7 @@ int  ManageCamera::reset_camera_param(uint32 ID,ST_VDCS_VIDEO_PUSH_CAM & addCam,
 	readlock_.unlock();
 	return 0;
 }
-int ManageCamera::add_camID_list(char *&url ,uint32 ID)
+int ManageCamera::add_camID_list(char *url ,uint32 ID)
 {
 	int iRet =  m_CamList.add_cam_list(url,ID);
 	return iRet;
@@ -367,12 +374,11 @@ int ManageCamera::parser_type(DBCAMERAFUNCPARAM*  pt_FuncParam,uint16 type)
 
 int ManageCamera::set_camerafunc_DB(DBCAMERACONFI* pt_Caminfo)
 {
-	int iRet = -1;
 	DBCAMERAFUNCPARAM t_FuncParam;
 
 	t_FuncParam.CameraID   =   pt_Caminfo->CameraID;
 	memcpy(t_FuncParam.ip ,pt_Caminfo->ip,IP_LEN_16);
-	memcpy(t_FuncParam.CameraUrl,pt_Caminfo->CamUrl,SINGLE_URI_LEN_128);
+	memcpy(t_FuncParam.CameraUrl,pt_Caminfo->CamUrl,SINGLE_URL_LEN_128);
 
 	if(pt_Caminfo->AnalyzeNUM == 0){
 		CDataInfo.AddCameraAlarmInfo(pt_Caminfo->CameraID,&t_FuncParam);
@@ -397,7 +403,7 @@ int ManageCamera::set_camerafunc_DB(DBCAMERACONFI* pt_Caminfo)
 	return -1;
 }
 
-void  ManageCamera::Renew_camerafunc_DB(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & PKG,int ID)
+int ManageCamera::Renew_camerafunc_DB(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & PKG,int ID)
 {
 	uint8  i= 0 ;
 	uint8 j = 0;
@@ -432,7 +438,7 @@ void  ManageCamera::Renew_camerafunc_DB(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraPara
 				memcpy(timeday[i].Time[j].EndTime,pt_CameraParam->AlarmTime[i].alarmtime.Time[j].EndTime, 6);
 			}
 		}
-		CDataInfo.TimeToDB(t_FuncParam->AlarmTime1,timeday,NULL,0);
+		CDataInfo.TimeToDB(t_FuncParam.AlarmTime1,timeday,NULL,0);
 		CDataInfo.AreaToDB( t_FuncParam.WatchRegion1, PKG);
 		CDataInfo.setCameraAlarmInfo(ID,&t_FuncParam);
 		return 0;
@@ -449,7 +455,7 @@ void  ManageCamera::Renew_camerafunc_DB(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraPara
 				memcpy(timeday[i].Time[j].EndTime,pt_CameraParam->AlarmTime[i].alarmtime.Time[j].EndTime, 6);
 			}
 		}
-		CDataInfo.TimeToDB(t_FuncParam->AlarmTime2,timeday,NULL,0);
+		CDataInfo.TimeToDB(t_FuncParam.AlarmTime2,timeday,NULL,0);
 		CDataInfo.AreaToDB( t_FuncParam.WatchRegion2, PKG);
 		CDataInfo.setCameraAlarmInfo(ID,&t_FuncParam);
 		return 0;
@@ -464,13 +470,13 @@ int ManageCamera::Set_or_Renew_Camera_Param(T_VDCS_VIDEO_CAMERA_PARAM* pt_Camera
 	int ID = -1;
 
 	iRet = m_CamList.search_cam_by_url(pt_CameraParam->CameUrL,ID);
-	if(iRet = -1)
+	if(iRet == -1)
 	{
 		m_log.Add("%s(%d),get camer id failure!" ,DEBUGARGS);
 		return -1;
 	}
 
-	SingleCamPtr camptr =NULL;
+	SingleCamPtr camptr ;
 	camptr = search_camera_by_id(ID);
 	if(camptr == NULL)
 	{
@@ -505,7 +511,7 @@ void ManageCamera::Add_Camerainfo_DB(ST_VDCS_VIDEO_PUSH_CAM* pt_addCam,string ur
 	Caminfo.AnalyzeType  = pt_addCam->AnalyzeType;
 
 	memcpy(Caminfo.ip ,pt_addCam->ip,IP_LEN_16);
-	memcpy(Caminfo.CamUrl,pt_addCam->CameUrL,SINGLE_URI_LEN_128);
+	memcpy(Caminfo.CamUrl,pt_addCam->CameUrL,SINGLE_URL_LEN_128);
 	memcpy(Caminfo.RtspUrl,url.c_str(),url.length());
 
 	CDataInfo.AddCameraConfig((int )ID, &Caminfo);
@@ -523,10 +529,10 @@ void ManageCamera::Renew_camerainfo_DB(ST_VDCS_VIDEO_PUSH_CAM* pt_addCam,string 
 	Caminfo.AnalyzeType  = pt_addCam->AnalyzeType;
 
 	memcpy(Caminfo.ip ,pt_addCam->ip,IP_LEN_16);
-	memcpy(Caminfo.CamUrl,pt_addCam->CameUrL,SINGLE_URI_LEN_128);
+	memcpy(Caminfo.CamUrl,pt_addCam->CameUrL,SINGLE_URL_LEN_128);
 	memcpy(Caminfo.RtspUrl,url.c_str(),url.length());
 
-	CDataInfo.setCameraConfig((int )ID, &Caminfo);
+	CDataInfo.AddCameraConfig((int )ID, &Caminfo);
 	CDataInfo.DelCameraAlarmInfo((int )ID);
 	set_camerafunc_DB(&Caminfo);
 }
@@ -538,12 +544,14 @@ string ManageCamera::Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 	string url = "TT";
 
 	iRet = m_CamList.search_cam_by_url(addCam.CameUrL,ID);
-	if(iRet = -1){ /* have no camera */
+	if(iRet == -1){ /* have no camera */
+		m_log.Add("%s(%d),have no this camera %s!" ,DEBUGARGS,addCam.ip);
 		ID = get_camera_id();
 		if(ID == 0){
 			m_log.Add("%s(%d),get camer id failure!" ,DEBUGARGS);
 			return url;
 		}
+		m_log.Add("%s(%d),get camera id %d!" ,DEBUGARGS,ID);
 		SingleCamPtr camptr = SingleCamPtr(new SingleCamera(this,(uint32)ID));
 		WriteLock writelock_(m_SinCamListMutex_);
 		m_SinCamList.push_front(camptr);

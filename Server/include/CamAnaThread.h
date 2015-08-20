@@ -24,6 +24,8 @@ enum warnevent
     alarmStop = 0x02,
 };
 
+class SingleCamera;
+class NetServer;
 class CamAnaThread
 {
 public:
@@ -75,8 +77,8 @@ public:
 	void analyze_pause_release();
 	void analyze_sleep_release();
 	
-	void parse_human_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect>& tmprect,vector<Line>  &tmpline);
-	void parse_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect>& tmprect);
+	int parse_human_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect>& tmprect,vector<Line>  &tmpline);
+	int parse_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect>& tmprect);
 	void set_analyze_vector( vector <VIDEO_DRAW> & DrawPkg);
 
 
@@ -96,7 +98,7 @@ public:
 	NetServer *server;
 
 private:
-	uint8 CameraID;
+	uint32 CameraID;
 
 	pthread_mutex_t mut;
 	pthread_cond_t cond;

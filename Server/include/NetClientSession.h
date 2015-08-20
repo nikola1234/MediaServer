@@ -26,6 +26,7 @@ public:
     boost::asio::ip::tcp::socket& GetClientSocket(){ return client_socket_; }
     int Start();
     unsigned int GetOurSessionID(){ return fOurSessionId; }
+    int SendMessage(char *buff,int size);
 
 private:
 	void incomingAcceptHandler();
@@ -49,7 +50,7 @@ private:
 	int ReciveData_GetParam(char* buffer ,int size);
 	void HandleRecvReponse(const boost::system::error_code& error, int recvsizes);
 
-	int SendMessage(char *buff,int size);
+	
 	void HandleSendResponse(const boost::system::error_code& error, int sendsizes);
 
 private:

@@ -11,26 +11,49 @@ CFileOpr fileOpr;
 CRtspCamera rtspCamera;
 ManageCamera ManCamera;
 
+void string2char(string str, char*buf)
+{
+	memcpy(buf, str.c_str(),str.length());
+}
+
 int main(int argc ,char **argv)
 {
+	string a ;
+	int num= 0;
+	char buffer[64] ={0};
 
-  fileOpr.read_server_config(SerParam);
+	fileOpr.read_server_config(SerParam);
 
-  NetWorkServer.InitNetServer(SerParam.port);
-  NetWorkServer.Start();
-  NetWorkServer.Run();
+	NetWorkServer.InitNetServer(SerParam.port);
+	NetWorkServer.Start();
+	NetWorkServer.Run();
 
-  ManCamera.AddServer(&NetWorkServer);
-  ManCamera.InitFromDB();
+	ManCamera.AddServer(&NetWorkServer);
+	ManCamera.InitFromDB();
 
-  NetWorkServer.AddManaCamera(&ManCamera);
+	cout<<"222222222y"<<endl;
 
-  StartRTSPServer(&rtspCamera);
+	NetWorkServer.AddManaCamera(&ManCamera);
 
-  cout<<"everthing is already"<<endl;
-  while(1){
-	    	sleep(2);
-  }
+	cout<<"e4444444444dy"<<endl;
 
-  return 0;
+	StartRTSPServer(&rtspCamera);
+
+	cout<<"everthing is already"<<endl;
+	while(cin>> a){
+		memset(buffer, 0 ,64);
+	    	string2char(a,buffer);
+	    	num =  atoi(buffer);
+	    	switch(num){
+	    	case 1:
+	    		NetWorkServer.GetClient();
+	    		break;
+	    	case 2:
+	    		ManCamera.m_CamList.Get_All_Camera();
+	    		break;
+		default :break;
+	    	}
+	}
+
+	return 0;
 }

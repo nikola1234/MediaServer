@@ -11,22 +11,20 @@
 #include "Data.h"
 #include "CameraManage.h"
 
+uint16 check_analyzetype(uint16 type);
 
 class CamReadThread;
 class CamTimeThread;
 class CamAnaThread;
-
-
-uint16 check_analyzetype(uint16 &type);
+class ManageCamera;
 
 class SingleCamera
 :public boost::enable_shared_from_this<SingleCamera>
 {
-
 public:
 	SingleCamera(ManageCamera*cam,uint32 ID);
 	~SingleCamera();
-	
+
 	uint32 GetCameraID(){return CameraID;}
 	string  get_rtsp_url();
 
@@ -48,17 +46,17 @@ public:
 
 	uint16  AnalyzeType1;
 	uint16 AnalyzeType2;
-	
-	
+
+
 	CamReadThread*  ReadThread;
 	CamTimeThread*  TimeThread;
 	CamAnaThread*	Ana1Thread;
 	CamAnaThread*	Ana2Thread;
-	
+
 	ManageCamera * ManaCam;
-	
+
 private:
 	int generate_url();
-	int parse_type(uint16 & type);
+	int parse_type(uint16  type);
 };
 #endif

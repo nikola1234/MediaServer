@@ -40,6 +40,7 @@ public:
 	void Run();
 
 	unsigned int  GetClientListSize(){return m_ClientList.size() ;}
+	void GetClient();
 private:
 
 	// The io_service used to perform asynchronous operations.

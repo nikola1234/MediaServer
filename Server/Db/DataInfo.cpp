@@ -1,5 +1,5 @@
 
-#include "Datainfo.h"
+#include "DataInfo.h"
 
 CamDataInfo::CamDataInfo()
 {
@@ -76,12 +76,13 @@ void CamDataInfo::AreaToDB(char *areaStr, vector < VIDEO_DRAW >  &WatchRegion )
 
 void CamDataInfo::DBToArea(char *m_areaNode,vector < VIDEO_DRAW >  &WatchRegion)
 {
-//    char *p=str.c_str();
-    if ( strlen( m_areaNode) == 0 )
-    {
-        return;
-    }
+if ( strcmp( m_areaNode,"(null)") == 0 )
+ {
+     return;
+ }
 
+
+    
     char str[1024] = {0};
     char *p1 = NULL;
     char *p2 = NULL;
@@ -136,8 +137,8 @@ int CamDataInfo::ConvertToTime(char *time,char *t)
 {
     char *p1 = NULL;//23:59
     char p2[3];
-    char hour;
-    char minute;
+    char hour = 0;
+    char minute = 0;
 
     if((p1 = strstr(time,":"))!=NULL)
     {
@@ -186,7 +187,7 @@ int CamDataInfo::anlyzetime(char *str, StrTimeDay * strtimeday,ALARM_DAY* alarmt
     int num = 0;
     int index = 0;
 
-
+	
     for(int day = 0; day < WEEK_DAY_LEN_7; day ++)
     {
         num = day * 42;
@@ -415,17 +416,19 @@ int CamDataInfo::GetMaxCameraID(const char *db_name)
     {
         return -1;
     }
+    return 0;
 }
 
 int select_callback(void *data,int col_count,char **col_values,char **col_name)
 {
-    int i;
+//    int i;
 //    for(i=0;i<col_count;i++)
 //    {
-//        printf("%s=%s\n",col_name[i],col_values[i]==0?"NULL":col_values[i]);
-//    }
+ //       printf("%s=%s\n",col_name[i],col_values[i]==0?"NULL":col_values[i]);
+ //   }
     return 0;
 }
+
 int CamDataInfo::getCameraConfig( int cameraid, DBCAMERACONFI *camera )
 {
     char *ErrMsg=0;
@@ -508,26 +511,29 @@ int CamDataInfo::getAllCameraConfigID( DBCAMERACONFI *camera,vector<int> &res)
 
         sprintf_s(SqlBuf,"select * from CameraInfo;");
         ret = sqlite3_get_table(db, SqlBuf, &pszResult, &nRow, &nColumn, &ErrMsg);
+
         if (ret != SQLITE_OK)
         {
             sqlite3_free(ErrMsg);
             ErrMsg = NULL;
             sqlite3_free_table(pszResult);
             sqlite3_close(db);
+
             return -1;
         }
         else
         {
+
             if((nRow == 0)&&(nColumn == 0))
             {
                 sqlite3_close(db);
+
                 return 0;
             }
-            for (int i = 0; i <= nRow; ++i)
+            
+            for (int i = 1; i <= nRow; ++i)
             {
-                camera->CameraID = atoi(*(pszResult + nColumn * i + 0));
-                if(camera->CameraID != 0)
-                    res.push_back(camera->CameraID);
+		res.push_back(atoi(*(pszResult + nColumn * i + 0)));
             }
         }
         if (ErrMsg != NULL) sqlite3_free(ErrMsg);

@@ -20,10 +20,10 @@
 typedef struct COMMON_PACKET_HEAD
 {
 	uint32	magic;
-	uint16  	encrypt;
+	uint16  encrypt;
 	uint16	cmd;
-	uint32  	EncryptLen;
-	uint32  	UnEncryptLen;
+	uint32  EncryptLen;
+	uint32  UnEncryptLen;
 	uint32	CompressedLen;
 	uint32	UnCompressedLen;
 	uint16	chksum;
@@ -77,12 +77,12 @@ enum DeviceType {
 
 enum AnalyzeType
 {
-	HumanDetect 	=	0x0001,
-	SmokeDetect 	=	0x0002,
-	RegionDetect 	= 	0x0004,
-	FixedObjDetect	= 	0x0008,
-	FireDetect 		= 	0x0010,
-	ResidueDetect	 =	0x0020,
+	HumanDetect 		=	0x0001,
+	SmokeDetect 		=	0x0002,
+	RegionDetect 		= 0x0004,
+	FixedObjDetect	= 0x0008,
+	FireDetect 			= 0x0010,
+	ResidueDetect	 	=	0x0020,
 };
 /***************************************************send******************************************************/
 //SM_VDCS_ANAY_REGISTER_ACK
@@ -101,8 +101,8 @@ typedef struct _ANAY_VDCS_PUSH_CAM_ACK
 {
 	char		ip[IP_LEN_16];
 	char		CameUrL[SINGLE_URL_LEN_128];
-	char         RtspUrL[SINGLE_URL_LEN_128];
-	uint8        ack; 			/* 1 success  0 failure*/
+	char    RtspUrL[SINGLE_URL_LEN_128];
+	uint8   ack; 			/* 1 success  0 failure*/
 	_ANAY_VDCS_PUSH_CAM_ACK(){
 		memset(this, 0, sizeof(_ANAY_VDCS_PUSH_CAM_ACK));
 	}
@@ -221,7 +221,7 @@ typedef struct _VIDEO_DRAW
 	uint16 	StartY;				//StartY
 	uint16 	EndX;				//EndX    if draw is rectangle  means width
 	uint16 	EndY;				//EndY    if draw is rectangle  means height
-	uint16  	Type;				// 1 rectangle 2 line
+	uint16  Type;				// 1 rectangle 2 line
 
 	_VIDEO_DRAW(){
 		memset(this, 0, sizeof(_VIDEO_DRAW));

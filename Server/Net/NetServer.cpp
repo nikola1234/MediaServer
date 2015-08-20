@@ -141,3 +141,15 @@ void NetServer::Run()
   m_pNetServerThread =
   		(boost::shared_ptr<boost::thread>)new boost::thread(boost::bind(&boost::asio::io_service::run, &m_io_service_));
 }
+
+void NetServer::GetClient()	
+{
+	writeLock readlock_(m_clientListMutex_);
+	printf("client num is %d \n",GetClientListSize());
+	std::list<NetClientPtr>::iterator it = m_ClientList.begin();
+	for ( ; it != m_ClientList.end() ; it++ )
+	{
+		printf("client ID is %d\n",(*it)->GetOurSessionID());
+	}
+}
+
