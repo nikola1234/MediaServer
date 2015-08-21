@@ -200,6 +200,7 @@ int SingleCamera::reset_camera_var_param_from_db(T_VDCS_VIDEO_CAMERA_PARAM* pt_C
 int SingleCamera::reset_camera_var_param(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg)
 {
 	printf("reset_camera_var_param\n");
+	printf("pt_CameraParam->AnalyzeType is %x\n", pt_CameraParam->AnalyzeType );
 	if((pt_CameraParam->PkgNum != Pkg.size())||(Pkg.size() == 0))
 	{
 		dbgprint("%s(%d),reset_camera_var_param wrong PkgNum  is %d, pkg.size() is %d!\n", DEBUGARGS,pt_CameraParam->PkgNum,Pkg.size());

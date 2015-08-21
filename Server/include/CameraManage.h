@@ -41,7 +41,7 @@ public:
   string Create_or_Renew_Camera(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 
 public:
-	uint32  get_camera_id();
+	
 	void erase_id_from_CamIDList(uint32 ID);
 	void fill_push_cam(DBCAMERACONFI *pt_caminfo,ST_VDCS_VIDEO_PUSH_CAM*pt_addCam);
 	void fill_var_param(DBCAMERAFUNCPARAM* pt_Camfuncparam,T_VDCS_VIDEO_CAMERA_PARAM*pt_varParam,vector <VIDEO_DRAW>   &PKG,uint8 num);
@@ -66,6 +66,10 @@ public:
 	int resume_cameraID_in_list(uint32 ID);
 	int remove_camera_from_db_by_id(uint32 ID);
 	int reset_camera_param(uint32 ID,ST_VDCS_VIDEO_PUSH_CAM & addCam,string &url);
+
+
+	uint32  get_camera_id();
+	void  Get_Rest_Camlist();
 
 public:
 

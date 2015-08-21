@@ -12,7 +12,7 @@ CamAnaThread::CamAnaThread(SingleCamera* sincam,NetServer *ser)
 	AnalyzeType      = 0;
 	AnaIndex  	= 0;
 	alarm         = 0;
-	AnalyzeEn = 0;
+	AnalyzeEn = false;
 
 	frame = 0;
 	startflag         = 0;
@@ -172,7 +172,6 @@ int CamAnaThread::human_detect(Mat &frame)
 int  CamAnaThread::region_detect(Mat &frame)
 {
 	int iRet = -1;
-
 	if(!frame.empty())
 	{
 		region->RegionDetectRun(frame);
@@ -473,7 +472,7 @@ void CamAnaThread::run()
 			  set_analyze_vector(pkg);
 		}
 		pthread_mutex_unlock(&mut);
-
+		//printf("AnalyzeEn is %d\n",AnalyzeEn);
 		if(AnalyzeEn)
 		{
 		

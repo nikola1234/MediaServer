@@ -72,6 +72,7 @@ void CamTimeThread::parse_time(ALARM_DAY* AlarmTime,T_VDCS_VIDEO_ALARM_TIME *Tim
 void CamTimeThread::reset_time1_param(T_VDCS_VIDEO_ALARM_TIME *Time)
 {
 	uint8 i= 0;
+	//int j = 0;
 	pause();
 	usleep(100*1000);
 	for(i = 0; i < WEEK_DAY_LEN_7; i++ )
@@ -79,8 +80,20 @@ void CamTimeThread::reset_time1_param(T_VDCS_VIDEO_ALARM_TIME *Time)
 		memset(&AlarmTime1[i] , 0,sizeof(ALARM_DAY));
 	}
 	parse_time(AlarmTime1,Time);
+	/*
+	for(i = 0;i < 7; i++)
+	{
+		 for(j = 0; j < 3; j++)
+		 {
+		 	printf(" time %d  start time is %d : %d ",j,AlarmTime1[i].dayTime.time[j].Start.hour ,AlarmTime1[i].dayTime.time[j].Start.min);
+		 	printf(" time %d  End  time is %d : %d ",j,AlarmTime1[i].dayTime.time[j].End.hour ,AlarmTime1[i].dayTime.time[j].End.min);
+		 }
+		 printf("\n");
+	}	
+	*/
 	resume();
 }
+
 void CamTimeThread::reset_time2_param(T_VDCS_VIDEO_ALARM_TIME *Time)
 {
 	uint8 i= 0;
@@ -199,14 +212,13 @@ int CamTimeThread::time_analyze(T_AlarmTime timenow, ALARM_TIME_INT*time_int )
 
 void  CamTimeThread::change_analyze_status(int ret,bool &status)
 {
+	//printf("ret is %d\n",ret);
 	switch (ret){
 		case 0:
-			if(status ==false)
 			if(status == true)
 				status = false;
 			break;
 		case 1:
-			if(status == true)
 			if(status == false)
 				status = true;
 			break;

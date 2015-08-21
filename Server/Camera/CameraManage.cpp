@@ -170,7 +170,6 @@ int ManageCamera::init_camera_from_DB()
 			fill_push_cam(&Caminfo,&t_addCam);
 			camptr->set_camera_fix_param(t_addCam);	
 		        iRet = CDataInfo.getCameraAlarmInfo(camID[num],&Camfuncparam);
-
 			if(iRet < 0)
 			{
 				m_log.Add("%s(%d),DB get Camera no AlarmInfo  !" ,DEBUGARGS);
@@ -179,14 +178,20 @@ int ManageCamera::init_camera_from_DB()
 			
 			if(Camfuncparam.AnalyzeNUM == 1)
 			{
-				fill_var_param(&Camfuncparam,&t_varParam,pkg,1);
-				
+				pkg.clear();
+				memset(&t_varParam , 0 ,sizeof(T_VDCS_VIDEO_CAMERA_PARAM));
+				fill_var_param(&Camfuncparam,&t_varParam,pkg,1);				
 				camptr->reset_camera_var_param_from_db(&t_varParam,pkg,1);
 			}
 			else if(Camfuncparam.AnalyzeNUM == 2)
 			{
+				pkg.clear();
+				memset(&t_varParam , 0 ,sizeof(T_VDCS_VIDEO_CAMERA_PARAM));
 				fill_var_param(&Camfuncparam,&t_varParam,pkg,1);
 				camptr->reset_camera_var_param_from_db(&t_varParam,pkg,1);
+				
+				pkg.clear();
+				memset(&t_varParam , 0 ,sizeof(T_VDCS_VIDEO_CAMERA_PARAM));
 				fill_var_param(&Camfuncparam,&t_varParam,pkg,2);
 				camptr->reset_camera_var_param_from_db(&t_varParam,pkg,2);
 			}
@@ -252,6 +257,18 @@ uint32  ManageCamera::get_camera_id()
 	WriteLock write_lock(m_CamIDListMutex_);
 	CamIDList.pop_front();
 	return ID;
+}
+
+void  ManageCamera::Get_Rest_Camlist()
+{
+	printf("Get_Rest_Camlist:");
+	std::list<uint32>::iterator Itor;
+	ReadLock read_lock(m_CamIDListMutex_);
+	for ( Itor = CamIDList.begin(); Itor != CamIDList.end(); Itor++)
+	{
+		printf("%d ",*Itor);
+	}
+	printf("\n");
 }
 
 SingleCamPtr ManageCamera::search_camera_by_id(uint32 ID)
@@ -598,7 +615,8 @@ void ManageCamera::Renew_camerainfo_DB(ST_VDCS_VIDEO_PUSH_CAM* pt_addCam,string 
 	memcpy(Caminfo.CamUrl,pt_addCam->CameUrL,SINGLE_URL_LEN_128);
 	memcpy(Caminfo.RtspUrl,url.c_str(),url.length());
 
-	CDataInfo.AddCameraConfig((int )ID, &Caminfo);
+	CDataInfo.DelCameraConfig((int)ID);
+	CDataInfo.AddCameraConfig((int)ID, &Caminfo);
 	CDataInfo.DelCameraAlarmInfo((int )ID);
 	set_camerafunc_DB(&Caminfo);
 }

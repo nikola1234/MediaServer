@@ -36,8 +36,9 @@ int CamList::search_cam_by_url(char *url,uint32*ID)
 	std::list<T_CAM_LIST>::iterator it = camlist_.begin();
 	for ( ; it != camlist_.end() ; it++ )
 	{
-		if(0 ==  strcmp((*it).url,url))
+		if(0 ==  memcmp((*it).url,url,SINGLE_URL_LEN_128))
 		{
+			printf("find this camera in list\n");
 			*ID = (*it).CameraID;
 			return 0;
 		}
