@@ -25,11 +25,11 @@ CamAnaThread::CamAnaThread(SingleCamera* sincam,NetServer *ser)
 	pthread_cond_init(&cond, NULL);
 
 
-	region = new CRegion(sincam->CameraID);
+	region = new CRegion(CameraID);
 	videoHandler = NULL;
-	fire = new CFire(sincam->CameraID ,&videoHandler);
-	smoke = new CSmoke(sincam->CameraID);
-	human = new CHuman(sincam->CameraID);
+	fire = new CFire(CameraID ,&videoHandler);
+	smoke = new CSmoke(CameraID);
+	human = new CHuman(CameraID);
 
 	/*human*/
 	memset(&t_HumanNum,0,sizeof(T_HUMANNUM));
@@ -351,8 +351,7 @@ int CamAnaThread::parse_human_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect
 			width =(int )tmp.EndX;
 			height=(int )tmp.EndY;		
 			tmprect.push_back(Rect(x, y, width, height));
-		}
-		if(tmp.Type ==2)
+		}else if(tmp.Type ==2)
 		{ 
 			Line line;
 			line.Start.x =tmp.StartX;
@@ -360,9 +359,7 @@ int CamAnaThread::parse_human_draw_package(vector <VIDEO_DRAW> & Pkg,vector<Rect
 			line.End.x=tmp.EndX;
 			line.End.y=tmp.EndY;
 			tmpline.push_back(line);
-		}
-		else
-		{
+		}else{
 			dbgprint("%s(%d),%d camera parse_human_draw_package wrong type!\n",DEBUGARGS,CameraID);
 		}
 	}
@@ -447,6 +444,14 @@ void CamAnaThread::set_analyze_vector( vector <VIDEO_DRAW> & DrawPkg)
 	}
 }
 
+
+void CamAnaThread::SetCamera_StartThread(uint16 type,uint8 num)
+{
+	AnalyzeType  = type;
+	AnaIndex = num;
+	CreateAnaThread();
+}
+
 int CamAnaThread::check_thread_status()
 {
 	if((m_Status == true)&&(AnalyzeEn ==true))
@@ -490,10 +495,11 @@ int CamAnaThread::CreateAnaThread()
 	pthread_t AnaThread;
 	iRet = pthread_create(&AnaThread,NULL,RunAnaThread,this);
 	if(iRet != 0)
-  {
+  	{
 		 dbgprint("%s(%d),cam %d create %d AlarmThread failed!\n",DEBUGARGS,CameraID,AnaIndex);
 		 return -1;
 	}
+	 dbgprint("%s(%d),cam %d create %d AlarmThread sucess!\n",DEBUGARGS,CameraID,AnaIndex);
 	pthread_detach(AnaThread);
 	return 0;
 }

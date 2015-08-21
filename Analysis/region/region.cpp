@@ -1,6 +1,6 @@
 #include "region.h"
 
-CRegion::CRegion(uint8 index)
+CRegion::CRegion(uint32 index)
 :m_index(index)
 {
 	m_colsZoomRate	= 2;

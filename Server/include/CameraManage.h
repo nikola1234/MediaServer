@@ -48,6 +48,7 @@ public:
 
 
 	void Add_Camerainfo_DB(ST_VDCS_VIDEO_PUSH_CAM* pt_addCam,string url,uint32 ID);
+	void parse_time_for_db(T_AlarmTime *pt_time ,char *time_c);
 	void Renew_camerainfo_DB(ST_VDCS_VIDEO_PUSH_CAM* pt_addCam,string url,uint32 ID);
 
 	int parser_type(DBCAMERAFUNCPARAM*  pt_FuncParam,uint16 type);
@@ -63,6 +64,7 @@ public:
 	int add_camID_list(char *url ,uint32 ID);
 	int remove_camera_by_id(uint32 ID);
 	int resume_cameraID_in_list(uint32 ID);
+	int remove_camera_from_db_by_id(uint32 ID);
 	int reset_camera_param(uint32 ID,ST_VDCS_VIDEO_PUSH_CAM & addCam,string &url);
 
 public:

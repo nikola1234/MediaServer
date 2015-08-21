@@ -1,6 +1,6 @@
 #include "fire.h"
 
-CFire::CFire(uint8 index,VideoHandler** videoHandler)
+CFire::CFire(uint32  index,VideoHandler** videoHandler)
 {
 	m_index =index;
 	handler = new VideoHandler();

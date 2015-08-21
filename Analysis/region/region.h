@@ -7,10 +7,10 @@ class CRegion
 {
 
 public:
-	CRegion(uint8 index);
+	CRegion(uint32 index);
 	~CRegion();
 
-	uint8 m_index;
+	uint32 m_index;
 	uint8 alarm;
 
 	vector< Rect > Rects;

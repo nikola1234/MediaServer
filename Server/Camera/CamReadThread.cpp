@@ -56,7 +56,7 @@ void CamReadThread::releaseEncode()
 	avcodec_close(c);
 	av_free(c);
 	av_free_packet(&pkt);
-	av_frame_free(&m_pRGBFrame);
+	//av_frame_free(&m_pRGBFrame);
 	av_freep(&m_pYUVFrame->data[0]);
 	av_frame_free(&m_pYUVFrame);
 	av_free(fmtctx);
@@ -145,7 +145,7 @@ int CamReadThread::Encode(Mat &frame)
 
 	cvtColor( frame , rgb_frame, CV_BGR2RGB ) ;
 	avpicture_fill((AVPicture*)m_pRGBFrame,(uint8_t *)rgb_frame.data,AV_PIX_FMT_RGB24,m_cols,m_rows);
-	printf("------------\n");
+
 	sws_scale(scxt,m_pRGBFrame->data,m_pRGBFrame->linesize,0,m_rows,m_pYUVFrame->data,m_pYUVFrame->linesize);
 
 	av_init_packet(&pkt);
@@ -287,7 +287,7 @@ void CamReadThread::run()
 		}
 		pthread_mutex_unlock(&mut);
 
-		printf("8888888888888888888888\n");
+
 		if(!(m_vcap.read(ReadFrame)))
 		{
 			dbgprint("%s(%d),%d CAM no frame!\n",DEBUGARGS,CameraID);
@@ -296,20 +296,18 @@ void CamReadThread::run()
 			continue;
 		}
 		errReadNum = 0;
-		printf("77777777777777777777777\n");
+
 		if(!ReadFrame.empty())
 		{
-			printf("555frefefedrfge557\n");
 			ReadFrame.copyTo(anaframe);
-			printf("5rw3453tgtrggdfg\n");
+
 			ReadFrame.copyTo(EncodeFrame);
-			printf("5dewfgbhjnuyjnmyujmg\n");
+
 			draw_encode_frame(EncodeFrame);
-			printf("dddddddddddddddddddddddddddddd\n");
+
 			Encode(EncodeFrame);
-			printf("ddddefvgtbbbbbbbbbbbbbbb44444444444ddddddddd\n");
 		}
-		printf("555555555555557\n");
+
 		usleep(50);
 	}
   	releaseEncode();
@@ -326,6 +324,7 @@ int CamReadThread::CreateCamReadThread()
 		 dbgprint("%s(%d),create %d CamReadThread failed!\n",DEBUGARGS,CameraID);
 		 return -1;
 	}
+	 dbgprint("%s(%d),create %d CamReadThread success!\n",DEBUGARGS,CameraID);
 	pthread_detach(ReadThread);
 	return 0;
 }

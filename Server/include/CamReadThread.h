@@ -59,7 +59,7 @@ private:
 	AVPacket pkt;
 	Mat rgb_frame;
 
-	AVFrame *m_pRGBFrame ;  //RGB帧数据
+	//AVFrame *m_pRGBFrame ;  //RGB帧数据
 	AVFrame *m_pYUVFrame ;  //YUV帧数据
 	uint8   *pYUV_buffer;
 

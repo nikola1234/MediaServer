@@ -82,6 +82,9 @@ public:
 	void set_analyze_vector( vector <VIDEO_DRAW> & DrawPkg);
 
 
+
+	void SetCamera_StartThread(uint16 type,uint8 num);
+
 	int check_thread_status();
 	void run();
 	int  CreateAnaThread();

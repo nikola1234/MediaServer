@@ -1,7 +1,7 @@
 #include "smoke.h"
 #include "Wavelet.h"
 
-CSmoke::CSmoke(uint8 index)
+CSmoke::CSmoke(uint32 index)
 {
 	m_index = index;
 

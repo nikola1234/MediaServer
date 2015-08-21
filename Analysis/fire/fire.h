@@ -9,10 +9,10 @@ class  CFire
 {
 
 public:
-	CFire(uint8 index,VideoHandler** videoHandler);
+	CFire(uint32 index,VideoHandler** videoHandler);
 	~CFire();
 
-	uint8 	m_index;
+	uint32 m_index;
 	VideoHandler *handler ;
 
 public:

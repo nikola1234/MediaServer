@@ -659,6 +659,10 @@ int CamDataInfo::setCameraConfig( int cameraid, DBCAMERACONFI *camera )
 
 int CamDataInfo::setCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera )
 {
+    char *ErrMsg=0;
+    int  ret = 0;
+    sqlite3* db = NULL;
+
     char SqlBuf[SQL_STRING_MAX];
     memset(SqlBuf,0,sizeof(SqlBuf));
     try
@@ -666,17 +670,22 @@ int CamDataInfo::setCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera )
         boost::lock_guard<boost::mutex> lock_(m_db_mutex_);
 //        ContentValues cv = new ContentValues();
 //        cv.put("CameraID","camera->CameraID");
+		sqlite3_open("./DataBase/CameraDB.db",&db);
+
         camera->CameraID = cameraid;
-        sprintf_s(SqlBuf,"update CameraFuncParam set CameraIP = '%s', CameraUrl = '%s',AnalyzeNUM = %d,"
+        sprintf_s(SqlBuf,"update CameraFuncParam set IP = '%s', CameraUrl = '%s',AnalyzeNUM = %d,"
                          "AnalyzeType = %d,MaxHumanNUM =%d ,ChangeRate = %f,"
                          "AnalyzeType1 = %d, AnalyzeEn1 = %d,AlarmTime1 = '%s',PkgNum1 = %d,WatchRegion1 = '%s',"
-                         "AnalyzeType2 = %d, AnalyzeEn2 = %d,AlarmTime2 = '%s',PkgNum2 = %d,WatchRegion2 = '%s',where CameraID = %d",
+                         "AnalyzeType2 = %d, AnalyzeEn2 = %d,AlarmTime2 = '%s',PkgNum2 = %d,WatchRegion2 = '%s'   where CameraID = %d;",
             camera->ip, camera->CameraUrl,camera->AnalyzeNUM,camera->AnalyzeType,camera->MaxHumanNum,camera->ChangeRate,
             camera->AnalyzeType1,camera->AnalyzeEn1,camera->AlarmTime1,camera->PkgNum1,camera->WatchRegion1,
             camera->AnalyzeType2,camera->AnalyzeEn2,camera->AlarmTime2,camera->PkgNum2,camera->WatchRegion2,camera->CameraID);
 //        sprintf_s(SqlBuf,"REPLACE INTO CameraInfo (CameraID, IP, Port, frameRate, CameraFunc, AnalyzeNUM, AnalyzeType, CamStatus) VALUES (%d, %d, %d, %d, %d, %d, %d);",
 //            camera->CameraID, camera->ip, camera->Port,camera->frameRate,camera->CameraFunc,camera->AnalyzeNUM,camera->CamStatus,);
-        return m_sqlite3db.execDML( SqlBuf );
+    //    return m_sqlite3db.execDML( SqlBuf );
+       ret = sqlite3_exec(db,SqlBuf,0,0,&ErrMsg);
+                sqlite3_close(db);
+        return ret;
     }
     catch(cppsqlite3::CppSQLite3Exception& e)
     {

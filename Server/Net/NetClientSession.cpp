@@ -198,7 +198,7 @@ int NetClientSession::delete_camera_ack(T_VDCS_VIDEO_CAMERA_DELETE* pt_CamDel,in
 	
 	memcpy(DelAckBuff+sizeof(T_PacketHead),&t_CamDelAck,sizeof(T_VDCS_VIDEO_CAMERA_DELETE_ACK));
 	SendMessage(DelAckBuff,sizeof(DelAckBuff));
-
+	printf("delete_camera_ack ret is %d\n",ret);
 	return 0;
 }
 
@@ -223,6 +223,7 @@ int NetClientSession::delete_camera(char * buffer , int size)
 		tmpCamPtr->Ana2Thread->resume();
 		tmpCamPtr->ReadThread->quit();
 		tmpCamPtr->ReadThread->resume();
+	
 		usleep(200*1000);
 		ID = tmpCamPtr->CameraID;
 		if(ID >0)
@@ -233,9 +234,17 @@ int NetClientSession::delete_camera(char * buffer , int size)
 				delete_camera_ack(&t_CamDel,0);
 				return -1;
 			}
+		
 			iRet = fOurServer->ManCam->resume_cameraID_in_list(ID);
 			if(iRet < 0) {
 				fOurServer->m_log.Add(" %d resume_cameraID_in_list fail", fOurSessionId);
+				delete_camera_ack(&t_CamDel,0);
+				return -1;
+			}
+
+			iRet = fOurServer->ManCam->remove_camera_from_db_by_id(ID);
+			if(iRet !=0) {
+				fOurServer->m_log.Add(" %d remove_camera_from_db_by_id fail", fOurSessionId);
 				delete_camera_ack(&t_CamDel,0);
 				return -1;
 			}

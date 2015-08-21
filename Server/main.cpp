@@ -31,11 +31,7 @@ int main(int argc ,char **argv)
 	ManCamera.AddServer(&NetWorkServer);
 	ManCamera.InitFromDB();
 
-	cout<<"222222222y"<<endl;
-
 	NetWorkServer.AddManaCamera(&ManCamera);
-
-	cout<<"e4444444444dy"<<endl;
 
 	StartRTSPServer(&rtspCamera);
 

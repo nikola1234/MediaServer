@@ -30,16 +30,15 @@ int CamList::add_cam_list(char * url,uint32 ID)
 	return 0;
 }
 
-int CamList::search_cam_by_url(char *url,int ID)
+int CamList::search_cam_by_url(char *url,uint32*ID)
 {
 	CamreadLock readlock_(m_CamListMutex_);
-
 	std::list<T_CAM_LIST>::iterator it = camlist_.begin();
 	for ( ; it != camlist_.end() ; it++ )
 	{
-		if(0 ==  memcmp((*it).url,url,SINGLE_URL_LEN_128))
+		if(0 ==  strcmp((*it).url,url))
 		{
-			ID = (int)(*it).CameraID;
+			*ID = (*it).CameraID;
 			return 0;
 		}
 	}

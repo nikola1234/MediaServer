@@ -52,7 +52,7 @@ public:
 	~CHuman();
 
 
-	uint8 	m_index;
+	uint32 	m_index;
 	int     m_rowsZoomRate;
 	int	 m_colsZoomRate;
 

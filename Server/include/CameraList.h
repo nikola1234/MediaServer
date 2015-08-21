@@ -20,7 +20,7 @@ public:
 
 	void Get_All_Camera();
 	int add_cam_list(char * url,uint32 ID);
-	int search_cam_by_url(char *url,int ID);
+	int search_cam_by_url(char *url,uint32* ID);
 	int delete_cam_by_id(uint32 ID);
 private:
 	std::list<T_CAM_LIST> camlist_;  /* url and ID */

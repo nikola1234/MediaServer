@@ -8,7 +8,7 @@ class CSmoke
 public:
 	CSmoke(uint8 index);
 
-	uint8 m_index;
+	uint32 m_index;
 	uint8  alarm;
 	bool alarmIs;
 

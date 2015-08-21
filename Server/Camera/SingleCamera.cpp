@@ -11,6 +11,9 @@ SingleCamera::SingleCamera(ManageCamera*cam,uint32 ID)
 	TimeThread = new CamTimeThread(this);
 	Ana1Thread = new CamAnaThread(this,ManaCam->Server);
 	Ana2Thread = new CamAnaThread(this,ManaCam->Server);
+
+	AnalyzeType1 = 0;
+	AnalyzeType2 = 0;
 }
 
 SingleCamera::~SingleCamera()
@@ -131,7 +134,8 @@ int SingleCamera:: set_camera_fix_param(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 	string url =CamUrl;
 	ReadThread->SetCamera_StartThread(url);
 	TimeThread->SetCamera_StartThread(AnalyzeNUM);
-
+	Ana1Thread->SetCamera_StartThread(AnalyzeType1,1);
+	Ana2Thread->SetCamera_StartThread(AnalyzeType2,2);
 	return 0;
 
 }
@@ -174,15 +178,34 @@ void SingleCamera::reset_camera_fix_param(ST_VDCS_VIDEO_PUSH_CAM & addCam)
 
 }
 
+int SingleCamera::reset_camera_var_param_from_db(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg,int num)
+{
+	printf("reset_camera_var_param_from_db\n");
+	if(num== 1)
+	{	
+		AnalyzeType1 =  pt_CameraParam->AnalyzeType;
+		reset_camera_var_param(pt_CameraParam,Pkg);
+		return 0;
+	}
+	
+	if(num ==2)
+	{
+		AnalyzeType2 =  pt_CameraParam->AnalyzeType;
+		reset_camera_var_param(pt_CameraParam,Pkg);
+		return 0;
+	}
+	return -1;
+}
 
 int SingleCamera::reset_camera_var_param(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg)
 {
+	printf("reset_camera_var_param\n");
 	if((pt_CameraParam->PkgNum != Pkg.size())||(Pkg.size() == 0))
 	{
 		dbgprint("%s(%d),reset_camera_var_param wrong PkgNum  is %d, pkg.size() is %d!\n", DEBUGARGS,pt_CameraParam->PkgNum,Pkg.size());
 		return -1;
 	}
-	
+
 	//ReadThread->set_video_draw(Pkg);
 	if(pt_CameraParam->AnalyzeType == AnalyzeType1)
 	{

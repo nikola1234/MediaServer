@@ -291,10 +291,11 @@ int CamTimeThread::CreateTimeThread()
 	pthread_t TimeThread;
 	iRet = pthread_create(&TimeThread,NULL,RunTimeThread,this);
 	if(iRet != 0)
-  {
+ 	 {
 		 dbgprint("%s(%d),cam %d create TimeThread failed!\n",DEBUGARGS,CameraID);
 		 return -1;
 	}
+	dbgprint("%s(%d),cam %d create TimeThread success!\n",DEBUGARGS,CameraID);
 	pthread_detach(TimeThread);
 	return 0;
 }

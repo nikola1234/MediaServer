@@ -6,7 +6,7 @@ double caldis(int x1,int x2,int y1,int y2)
 	return sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
 }
 
-CHuman::CHuman(uint8 index)
+CHuman::CHuman(uint32 index)
 {
 	m_index =index;
 	frameindex = 0;

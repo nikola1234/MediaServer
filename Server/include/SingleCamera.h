@@ -30,7 +30,8 @@ public:
 
 	int set_camera_fix_param(ST_VDCS_VIDEO_PUSH_CAM & addCam);
 	void reset_camera_fix_param(ST_VDCS_VIDEO_PUSH_CAM & addCam);
-
+	
+	int reset_camera_var_param_from_db(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg,int num);
 	int reset_camera_var_param(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg);
 public:
 	uint32 CameraID;
