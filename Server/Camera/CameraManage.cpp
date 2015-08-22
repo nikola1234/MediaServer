@@ -513,7 +513,6 @@ int ManageCamera::Renew_camerafunc_DB(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,
 				parse_time_for_db(&(timeday[i].dayTime.time[j].End),pt_CameraParam->AlarmTime[i].alarmtime.Time[j].EndTime);
 			}
 		}
-		printf("hahahahah \n");
 		CDataInfo.TimeToDB(t_FuncParam.AlarmTime2,timeday_one,timeday,0);
 		CDataInfo.AreaToDB( t_FuncParam.WatchRegion2, PKG);
 		CDataInfo.setCameraAlarmInfo(ID,&t_FuncParam);
@@ -571,8 +570,7 @@ int ManageCamera::Set_or_Renew_Camera_Param(T_VDCS_VIDEO_CAMERA_PARAM* pt_Camera
 	WriteLock writelock_(m_SinCamListMutex_);
 	camptr->reset_camera_var_param(pt_CameraParam,Pkg);
 	writelock_.unlock();
-
-	printf("ID is  %d \n",ID );
+	
 	Renew_camerafunc_DB(pt_CameraParam,Pkg,(int)ID);
 
 	return 0;
