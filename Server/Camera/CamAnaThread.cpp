@@ -475,7 +475,6 @@ void CamAnaThread::run()
 		//printf("AnalyzeEn is %d\n",AnalyzeEn);
 		if(AnalyzeEn)
 		{
-		
 			cam->ReadThread->anaframe.copyTo(origFrame);
 			alarm_run(origFrame,AnalyzeType);
 		}else{

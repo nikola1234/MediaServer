@@ -254,7 +254,7 @@ int CamTimeThread::time_detect(ALARM_DAY * Time)
 void CamTimeThread::time_detect_by_num(uint8 num)
 {
 	int iRet = -1;
-	switch(AnalyzeNUM){
+	switch(num){
 		case 1:
 			iRet =time_detect(AlarmTime1);
 			change_analyze_status(iRet,cam->Ana1Thread->AnalyzeEn);
@@ -278,17 +278,19 @@ void CamTimeThread::run()
 		  pthread_cond_wait(&cond, &mut);
 		}
 		pthread_mutex_unlock(&mut);
-
+		
 		switch(AnalyzeNUM){
-		case 1:
-			time_detect_by_num(1);
-			break;
-		case 2:
-			time_detect_by_num(1);
-			time_detect_by_num(2);
-			break;
-		default :
-			break;
+			
+			case 1:
+				time_detect_by_num(1);
+				break;
+			case 2:
+				//printf("time number\n");
+				time_detect_by_num(1);
+				time_detect_by_num(2);
+				break;
+			default :
+				break;
 		}
 	  	usleep(50*1000);
 	}

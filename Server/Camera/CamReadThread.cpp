@@ -193,16 +193,21 @@ void CamReadThread::draw(CamAnaThread * Anathread,Mat &frame)
 				if((Anathread->human->m_Flag & 0x02)  == 0x02){
 					for( i=0;i < Anathread->human->DirectionLines.size();i++)
 					{
-						line(frame,Anathread->human->DirectionLines[i].Start,Anathread->human->DirectionLines[i].End,Scalar( 64, 128, 0 ), 2, 8, 0);
+						line(frame,Anathread->human->DirectionLines[i].Start,Anathread->human->DirectionLines[i].End,Scalar( 0, 147, 147 ), 2, 8, 0);
 					}
 				}
 
 				if((Anathread->human->m_Flag & 0x01)  == 1){
 					for(j=0;j<Anathread->human->MonitorZoneRects.size();j++)
 					{
-						rectangle(frame, Anathread->human->MonitorZoneRects[j], Scalar( 64, 128, 0 ), 2, 8, 0);
+						rectangle(frame, Anathread->human->MonitorZoneRects[j], Scalar( 0, 147, 147 ), 2, 8, 0);
 					}
 				}
+
+				char dstr[100];  
+				sprintf(dstr, "D1:I=%d,O=%d  D2:I=%d,O=%d,ALL= %d",Anathread->t_HumanNum.doorIN[0],Anathread->t_HumanNum.doorOUT[0],Anathread->t_HumanNum.doorIN[1],Anathread->t_HumanNum.doorOUT[1],Anathread->t_HumanNum.humanALL);
+				putText(frame,dstr,cvPoint(200,25),CV_FONT_HERSHEY_COMPLEX, 0.5, cvScalar(0, 147, 147));
+				
 				break;
 			case SmokeDetect :
 				for(j=0;j < Anathread->smoke->Rects.size();j++)
