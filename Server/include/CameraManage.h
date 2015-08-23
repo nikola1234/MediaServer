@@ -70,6 +70,7 @@ public:
 
 	uint32  get_camera_id();
 	void  Get_Rest_Camlist();
+	void  Get_Rest_SingleCamlist();
 
 public:
 

@@ -271,6 +271,18 @@ void  ManageCamera::Get_Rest_Camlist()
 	printf("\n");
 }
 
+void  ManageCamera::Get_Rest_SingleCamlist()
+{
+	printf("Get_Rest_SingleCamlist:");
+	std::list<SingleCamPtr>::iterator it = m_SinCamList.begin();
+	ReadLock readlock_(m_SinCamListMutex_);
+	for ( ; it != m_SinCamList.end() ; it++ )
+	{
+		printf("%d ",(*it)->GetCameraID());
+	}
+	printf("\n");
+}
+
 SingleCamPtr ManageCamera::search_camera_by_id(uint32 ID)
 {
 	SingleCamPtr tmpcamptr ;

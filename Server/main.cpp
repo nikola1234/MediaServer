@@ -50,6 +50,9 @@ int main(int argc ,char **argv)
 	    	case 3:
 	    		ManCamera.Get_Rest_Camlist();
 	    		break;
+	    	case 4:
+	    		ManCamera.Get_Rest_SingleCamlist();
+	    		break;
 		default :break;
 	    	}
 	}
