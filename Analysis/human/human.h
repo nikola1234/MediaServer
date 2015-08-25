@@ -48,7 +48,7 @@ typedef struct _statistics_
 class CHuman
 {
 public:
-	CHuman(uint8 index);
+	CHuman(uint32 index);
 	~CHuman();
 
 

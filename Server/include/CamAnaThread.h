@@ -15,7 +15,7 @@
 #include "NetServer.h"
 
 #define START_FRAME_INDEX     8
-#define INTERVAL_FRAME_INDEX  100
+#define INTERVAL_FRAME_INDEX  200
 #define STOP_FRAME_INDEX      40
 
 enum warnevent

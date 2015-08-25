@@ -15,18 +15,29 @@ OBJDUMP		= $(CROSS_COMPILE)objdump
 export AS LD CC CXX  CPP AR NM
 export STRIP OBJCOPY OBJDUMP
 
+SUBDIR := $(shell pwd)
+export SUBDIR
+
 CXXFLAGS := -Wall  -O2 -g
 CXXFLAGS += -I $(shell pwd)/include  -I $(shell pwd)/../Analysis
-CXXFLAGS += $(shell pkg-config --cflags OpenCVPC) -lavformat -lavcodec -lavfilter -lavutil -lswresample -lswscale -lz -D__STDC_CONSTANT_MACROS
+CXXFLAGS += $(shell pkg-config --cflags OpenCVPC) -lz -D__STDC_CONSTANT_MACROS
 
-LDLIBS   := $(shell pkg-config --libs  OpenCVPC)-lboost_system -lboost_date_time -lboost_filesystem -lboost_thread -lboost_atomic -lpthread -lm
+LDLIBS   := -lpthread -lm
+
+opencvLIBS:=$(SUBDIR)/../libs/opencv/libopencv_contrib.so   $(SUBDIR)/../libs/opencv/libopencv_core.so  $(SUBDIR)/../libs/opencv/libopencv_features2d.so \
+				$(SUBDIR)/../libs/opencv/libopencv_flann.so  $(SUBDIR)/../libs/opencv/libopencv_gpu.so  $(SUBDIR)/../libs/opencv/libopencv_highgui.so \
+				$(SUBDIR)/../libs/opencv/libopencv_imgproc.so  $(SUBDIR)/../libs/opencv/libopencv_legacy.so  $(SUBDIR)/../libs/opencv/libopencv_ml.so \
+				$(SUBDIR)/../libs/opencv/libopencv_nonfree.so  $(SUBDIR)/../libs/opencv/libopencv_objdetect.so  $(SUBDIR)/../libs/opencv/libopencv_ocl.so \
+				$(SUBDIR)/../libs/opencv/libopencv_photo.so  $(SUBDIR)/../libs/opencv/libopencv_video.so
+
+ffmpegLibs := $(SUBDIR)/../libs/ffmpeg/libavformat.so.56.25.101 	$(SUBDIR)/../libs/ffmpeg/libavutil.so.54.20.100 	 $(SUBDIR)/../libs/ffmpeg/libavfilter.so.5.11.102 	\
+			$(SUBDIR)/../libs/ffmpeg/libavcodec.so.56.26.100 	 $(SUBDIR)/../libs/ffmpeg/libswresample.so.1.1.100   $(SUBDIR)/../libs/ffmpeg/libswscale.so.3.1.101	
+
+BoostLIBS :=$(SUBDIR)/../libs/boost/libboost_system.a  $(SUBDIR)/../libs/boost/libboost_filesystem.a  $(SUBDIR)/../libs/boost/libboost_thread.a  $(SUBDIR)/../libs/boost/libboost_date_time.a  $(SUBDIR)/../libs/boost/libboost_atomic.a
 
 dynamicLIBS     :=  ../RTSPServer/lib/libRTSPServerSO.so  ../RTSPClient/lib/libRTSPClientSO.so ../Analysis/lib/libAnalysisSO.so  ./lib/libjson.so ./lib/libsqlite3.so
 
 export CXXFLAGS LDLIBS
-
-SUBDIR := $(shell pwd)
-export SUBDIR
 
 TARGET := demo
 
@@ -39,7 +50,7 @@ obj-y += Db/
 
 all :
 	make  -C ./ -f $(SUBDIR)/Makefile.build
-	$(CXX)  -o $(TARGET) built-in.o  $(dynamicLIBS) $(LDLIBS) $(CXXFLAGS)
+	$(CXX)  -o $(TARGET) built-in.o  $(dynamicLIBS) $(LDLIBS) $(BoostLIBS)  $(opencvLIBS) $(CXXFLAGS)
 
 clean:
 	rm -f $(shell find -name "*.o")

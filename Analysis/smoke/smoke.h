@@ -6,7 +6,7 @@
 class CSmoke
 {
 public:
-	CSmoke(uint8 index);
+	CSmoke(uint32 index);
 
 	uint32 m_index;
 	uint8  alarm;

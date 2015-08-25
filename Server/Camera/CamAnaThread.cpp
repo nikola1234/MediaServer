@@ -166,7 +166,7 @@ int CamAnaThread::human_detect(Mat &frame)
 	{
 		//TODO: notify client huamn alarm stop
 		dbgprint("%s(%d),cam %d  human alarm stop !\n",DEBUGARGS,CameraID);
-		send_alarm_to_client(HumanDetect,0);
+		//send_alarm_to_client(HumanDetect,0);
 	}
 	return 0;
 }
@@ -196,7 +196,7 @@ int  CamAnaThread::region_detect(Mat &frame)
 	{
 		//TODO: notify client region alarm stop
 		dbgprint("%s(%d),cam %d  region alarm stop !\n",DEBUGARGS,CameraID);
-		send_alarm_to_client(RegionDetect,0);
+		//send_alarm_to_client(RegionDetect,0);
 	}
 	return 0;
 }
@@ -228,7 +228,7 @@ int  CamAnaThread::fire_detect(Mat &frame)
 	{
 		//TODO: notify client fire alarm stop
 		dbgprint("%s(%d),cam %d  fire alarm stop !\n",DEBUGARGS,CameraID);
-		send_alarm_to_client(FireDetect,0);
+		//send_alarm_to_client(FireDetect,0);
 	}
 	return 0;
 }
@@ -259,7 +259,7 @@ int  CamAnaThread::smoke_detect(Mat &frame)
 	{
 		//TODO: notify client smoke alarm stop
 		dbgprint("%s(%d),cam %d  smoke alarm stop !\n",DEBUGARGS,CameraID);
-		send_alarm_to_client(SmokeDetect,0);
+		//send_alarm_to_client(SmokeDetect,0);
 	}
 	return 0;
 }

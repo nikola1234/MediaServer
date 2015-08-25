@@ -47,11 +47,9 @@ using namespace std;
 #define DB_PATH               "./DataBase/"
 #define DBNAME                "CameraDB.db"
 #define DB_CREATE_ERROR       -1
-
 typedef unsigned long  uint32;
 typedef unsigned char  uint8;
 typedef unsigned  int   uint16;
-
 typedef struct _CAMERA_DB_PARAM
 {
   uint32   CameraID;
