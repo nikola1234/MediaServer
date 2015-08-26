@@ -39,7 +39,7 @@ void CMyLog::Add(const char* fmt, ...)
 		if ( fmt == NULL )
 			return ;
 
-    boost::posix_time::ptime t(boost::posix_time::second_clock::local_time());
+    		boost::posix_time::ptime t(boost::posix_time::second_clock::local_time());
 		std::string tmplogpath = m_strLogPath + boost::gregorian::to_iso_extended_string((t.date())) + ".log";
 
 		try

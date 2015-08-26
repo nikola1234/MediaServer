@@ -89,7 +89,22 @@ NetServer::NetClientPtr NetServer::CreateNetClientSession()
 }
 
 
-int  NetServer::SendBufferToAllNetClient(char *buffer ,int size)
+int  NetServer::SendBufferToMCUClient(uint32 ID,uint8 flag)
+{
+	writeLock writelock_(m_clientListMutex_);
+	std::list<NetClientPtr>::iterator it = m_ClientList.begin();
+	it++;
+	for ( ; it != m_ClientList.end() ; it++ )
+	{	
+		if((*it)->m_DeivceType == 1)
+		{
+			(*it)->mcu_operate_alarm(ID,flag);
+		}
+	}
+	return 0;
+}
+
+int  NetServer::SendBufferToNetClient(char *buffer ,int size)
 {
 	if(m_ClientList.size() <= 1)
 	{
@@ -101,8 +116,11 @@ int  NetServer::SendBufferToAllNetClient(char *buffer ,int size)
 	std::list<NetClientPtr>::iterator it = m_ClientList.begin();
 	it++;
 	for ( ; it != m_ClientList.end() ; it++ )
-	{
-		(*it)->SendMessage(buffer,size);
+	{	
+		if((*it)->m_DeivceType == 0)
+		{
+			(*it)->SendMessage(buffer,size);
+		}
 	}
 	return 0;
 }

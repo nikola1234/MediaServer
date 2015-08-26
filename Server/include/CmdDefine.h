@@ -13,9 +13,10 @@
 #define  TIME_NUM_3        3
 #define  WEEK_DAY_LEN_7   7
 
-#define  CAM_MAX_LEN   20
-#define  SINGLE_URL_LEN_128  128
-#define  PACKET_HEAD_LEN  28
+#define  CAM_MAX_LEN           20
+#define  SINGLE_URL_LEN_128    128
+#define  PACKET_HEAD_LEN       28
+#define  MCU_MAC_LEN_20        20
 
 typedef struct COMMON_PACKET_HEAD
 {
@@ -33,6 +34,13 @@ typedef struct COMMON_PACKET_HEAD
 		memset(this, 0, sizeof(COMMON_PACKET_HEAD));
 	}
 } T_PacketHead,*PT_PacketHead;
+
+enum ClientType
+{
+	client_config = 0x00,
+	Client_Mcu,
+	client_APP
+};
 
 
 /*********************city Server interaction*******************************/
@@ -169,6 +177,7 @@ typedef struct _VDCS_VIDEO_CAMERA_DELETE_ACK
 
 
 /***************************************************receive******************************************************/
+
 //SM_VDCS_ANAY_PUSH_CAMERA
 typedef struct  _VDCS_VIDEO_PUSH_CAM
 {
@@ -283,6 +292,81 @@ typedef struct _VDCS_VIDEO_CAMERA_DELETE
 	}
 
 }T_VDCS_VIDEO_CAMERA_DELETE;
+
+////////////////////////////////MCU////////////////////////////////////////////////
+
+enum //分析服务器和MCU通信命令
+{
+	SM_MCU_VDCS_ENCRY_REQ = 0x1000,
+	SM_VDCS_MCU_ENCRYPT_ACK,
+	SM_MCU_VDCS_ENCRYPT_ACK,
+	SM_VDCS_MCU_PUBLIC_KEY,
+	SM_MCU_VDCS_ENCRYPT_KEY,
+	SM_VDCS_MCU_ENCRYPT_KEY_ACK,
+	SM_MCU_VDCS_REGISTER,
+	SM_VDCS_MCU_REGISTER_ACK,
+	SM_VDCS_MCU_OPERATE_TERM,
+	SM_MCU_VDCS_OPERATE_TERM_ACK,
+	SM_MCU_VDCS_ROUTING_INSPECTION,
+	SM_VDCS_MCU_ROUTING_INSPECTION_ACK,
+	
+    SM_MCU_HEARTBEAT = 0x8001
+};
+
+//SM_MCU_VDCS_REGISTER
+typedef struct _MCU_VDCS_REGISTER
+{
+	uint8 MCUAddr[MCU_MAC_LEN_20];
+	uint8 ClientType;
+	
+	_MCU_VDCS_REGISTER(){
+		memset(this, 0, sizeof(_MCU_VDCS_REGISTER));
+	}
+	
+}T_MCU_VDCS_REGISTER;
+
+//SM_VDCS_MCU_REGISTER_ACK
+typedef struct  _VDCS_MCU_REGISTER_ACK
+{
+	uint8	MCUAddr[MCU_MAC_LEN_20];
+	uint8 	ClientType;
+	uint16	Ack;    //ACK状态 0：成功 1：失败
+	
+	_VDCS_MCU_REGISTER_ACK(){
+		memset(this, 0, sizeof(_VDCS_MCU_REGISTER_ACK));
+	}
+} T_VDCS_MCU_REGISTER_ACK;
+
+
+//SM_VDCS_MCU_OPERATE_TERM
+typedef struct  _VDCS_MCU_OPERATE_TERM
+{
+	uint8   	UserName[USRNAME_LEN_20];
+	uint8		MCUAddr [MCU_MAC_LEN_20];
+	uint8		port;              // 0~3   4个报警器
+	uint8		TermType;          // 2/3 报警器 还是电控锁
+	uint8		OpFlag;            // 操作指令码       0 / 1  kai /guan
+	uint16		Res;     
+	
+	_VDCS_MCU_OPERATE_TERM(){
+		memset(this, 0, sizeof(_VDCS_MCU_OPERATE_TERM));
+	}	
+} T_VDCS_MCU_OPERATE_TERM;
+
+//SM_MCU_VDCS_OPERATE_TERM_ACK
+typedef struct _MCU_VDCS_OPERATE_TERM_ACK
+{
+	uint8		UserName[USRNAME_LEN_20];
+	uint8		MCUAddr[MCU_MAC_LEN_20];
+	uint8		port;
+	uint8		TermType;
+	uint16		Ack;	           //ACK状态 0：成功 1：失败
+	
+	_MCU_VDCS_OPERATE_TERM_ACK(){
+		memset(this, 0, sizeof(_MCU_VDCS_OPERATE_TERM_ACK));
+	}	
+	
+} T_MCU_VDCS_OPERATE_TERM_ACK;
 
 #pragma pack(pop)
 

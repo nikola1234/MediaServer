@@ -13,6 +13,7 @@ stop_(true)
 	memset(fBuffer, 0 ,BUFFER_SIZE_MIN);
 	PKGNUM = 0;
 	totalRecive = 0;
+	m_DeivceType = 0;
 }
 
 NetClientSession::~NetClientSession()
@@ -47,6 +48,67 @@ void NetClientSession::incomingAcceptHandler()
 
 }
 
+void NetClientSession::mcu_register(char* buffer ,int size)
+{
+	T_MCU_VDCS_REGISTER  t_register;
+	memcpy(&t_register,buffer,sizeof(T_MCU_VDCS_REGISTER));
+	m_DeivceType = t_register.ClientType;
+}
+
+void NetClientSession::mcu_register_ack()
+{	
+	T_PacketHead			 t_PackHeadRegAck;
+	T_VDCS_MCU_REGISTER_ACK  t_register_ack;
+
+	char buff[28+23] = {0};
+	
+	t_PackHeadRegAck.magic			 =  T_PACKETHEAD_MAGIC;
+	t_PackHeadRegAck.cmd			 =  SM_VDCS_MCU_REGISTER_ACK;
+	t_PackHeadRegAck.UnEncryptLen	 =  sizeof(T_VDCS_MCU_REGISTER_ACK);
+
+	memcpy(buff, &t_PackHeadRegAck,sizeof(T_PacketHead));
+	
+	t_register_ack.Ack = 0;
+	memcpy(buff+sizeof(T_PacketHead),&t_register_ack,sizeof(T_VDCS_MCU_REGISTER_ACK));
+	SendMessage(buff,sizeof(buff));
+}
+
+void NetClientSession::mcu_operate_alarm(uint32 ID ,uint8 flag)
+{
+	T_PacketHead			 t_PackHeadOpr;
+	T_VDCS_MCU_OPERATE_TERM  t_opreate;
+	char buff[28+45] = {0};
+	
+	t_PackHeadOpr.magic			 =  T_PACKETHEAD_MAGIC;
+	t_PackHeadOpr.cmd			 =  SM_VDCS_MCU_OPERATE_TERM;
+	t_PackHeadOpr.UnEncryptLen	 =  sizeof(T_VDCS_MCU_OPERATE_TERM);
+	
+	memcpy(buff, &t_PackHeadOpr,sizeof(T_PacketHead));
+
+	t_opreate.TermType = 	DeviceTypeWarn;
+	t_opreate.port     =	(uint8)(ID - 600300001);
+	t_opreate.OpFlag   =	 flag;
+
+	memcpy(buff+sizeof(T_PacketHead),&buff,sizeof(T_VDCS_MCU_OPERATE_TERM));
+
+	SendMessage(buff,sizeof(buff));
+	
+}
+
+void NetClientSession::mcu_operate_alarm_ack(char* buffer ,int size)
+{
+	T_MCU_VDCS_OPERATE_TERM_ACK t_operate_ack;
+	memcpy(&t_operate_ack, buffer,sizeof(T_MCU_VDCS_OPERATE_TERM_ACK));
+	if(t_operate_ack.Ack == 0)
+	{
+		printf("mcu operate success!\n");
+	}
+	else
+	{
+		printf("mcu operate fail!\n");
+	}
+}
+
 int NetClientSession::client_register_ack()
 {
 	T_PacketHead						 t_PackHeadRegAck;
@@ -67,13 +129,14 @@ int NetClientSession::client_register_ack()
 
 void NetClientSession::push_camera_data_ack1(ST_VDCS_VIDEO_PUSH_CAM & AddCamera)
 {
-	T_PacketHead  t_PackHeadAddAck;
-	T_ANAY_VDCS_PUSH_CAM_ACK  t_CamAddAck;
+	T_PacketHead  				t_PackHeadAddAck;
+	T_ANAY_VDCS_PUSH_CAM_ACK  	t_CamAddAck;
+
 	char AddAckBuff[28 + 1 +16+128+128] ={0};
 
-	t_PackHeadAddAck.magic	    =  T_PACKETHEAD_MAGIC;
-	t_PackHeadAddAck.cmd			  =  SM_VDCS_ANAY_PUSH_CAMERA_ACK;
-	t_PackHeadAddAck.UnEncryptLen	 =  sizeof(T_ANAY_VDCS_PUSH_CAM_ACK);
+	t_PackHeadAddAck.magic	    	=  T_PACKETHEAD_MAGIC;
+	t_PackHeadAddAck.cmd			=  SM_VDCS_ANAY_PUSH_CAMERA_ACK;
+	t_PackHeadAddAck.UnEncryptLen	=  sizeof(T_ANAY_VDCS_PUSH_CAM_ACK);
 	memcpy(AddAckBuff,&t_PackHeadAddAck,sizeof(T_PacketHead));
 
 	t_CamAddAck.ack   = 0;
@@ -90,7 +153,7 @@ void NetClientSession::push_camera_data_ack2(ST_VDCS_VIDEO_PUSH_CAM & AddCamera,
 	char AddAckBuff[28 + 1 +16+128+128] ={0};
 
 	t_PackHeadAddAck.magic	    =  T_PACKETHEAD_MAGIC;
-	t_PackHeadAddAck.cmd			  =  SM_VDCS_ANAY_PUSH_CAMERA_ACK;
+	t_PackHeadAddAck.cmd			  = SM_VDCS_ANAY_PUSH_CAMERA_ACK;
 	t_PackHeadAddAck.UnEncryptLen	 =  sizeof(T_ANAY_VDCS_PUSH_CAM_ACK);
 	memcpy(AddAckBuff,&t_PackHeadAddAck,sizeof(T_PacketHead));
 
@@ -308,6 +371,14 @@ int NetClientSession::ReciveData_GetParam(char* buffer ,int size)
 	cmd = t_packet_head.cmd;
 
 	switch (cmd ){
+
+		case SM_MCU_VDCS_REGISTER:
+			mcu_register(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
+			mcu_register_ack();
+			break;
+		case SM_MCU_VDCS_OPERATE_TERM_ACK:
+			mcu_operate_ack(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
+			break;
 		case SM_ANAY_VDCS_REGISTER:
 			fOurServer->m_log.Add("%d client_register_ack", fOurSessionId);
 			client_register_ack();

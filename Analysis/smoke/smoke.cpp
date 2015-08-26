@@ -13,7 +13,6 @@ CSmoke::CSmoke(uint32 index)
 	alarm  = 0;
 }
 
-
 void CSmoke::sleep_release()
 {
 	alarm  = 0;
@@ -55,6 +54,7 @@ void CSmoke::initThreshold(int cols, int rows, float initValue)
 		}
 	}
 }
+
 void CSmoke::updateBackground(Mat& frame1, Mat& frame2, Mat& frame3)
 {
 	float alpha = 0.95;

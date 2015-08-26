@@ -13,6 +13,7 @@
 #define  BUFFER_SIZE  (10*1024)
 #define  BUFFER_SIZE_MIN  (512)
 
+
 class NetServer;
 class NetClientSession
 : public boost::enable_shared_from_this<NetClientSession>
@@ -26,10 +27,16 @@ public:
     boost::asio::ip::tcp::socket& GetClientSocket(){ return client_socket_; }
     int Start();
     unsigned int GetOurSessionID(){ return fOurSessionId; }
+	uint8 GetOurClientType(){ return m_DeivceType; }
     int SendMessage(char *buff,int size);
 
 private:
 	void incomingAcceptHandler();
+
+	void mcu_register(char* buffer ,int size);
+	void mcu_register_ack();
+	void mcu_operate_alarm(uint32 ID,uint8 flag);
+	void mcu_operate_alarm_ack(char* buffer ,int size);
 
 	int client_register_ack();
 	
@@ -52,6 +59,10 @@ private:
 
 	
 	void HandleSendResponse(const boost::system::error_code& error, int sendsizes);
+
+public:
+	
+	uint8 m_DeivceType;
 
 private:
 	NetServer* fOurServer;

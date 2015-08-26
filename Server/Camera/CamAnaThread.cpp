@@ -109,6 +109,13 @@ int CamAnaThread::alarmStrategy()
  	 return 0;
 }
 
+int CamAnaThread::send_alarm_to_mcu(uint16 type,uint8 status)
+{
+	int iRet = -1;
+	iRet = server->SendBufferToMCUClient(CameraID,status);
+	return iRet;
+}
+
 int CamAnaThread::send_alarm_to_client(uint16 type,uint8 status)
 {
 	int iRet = -1;
@@ -134,7 +141,7 @@ int CamAnaThread::send_alarm_to_client(uint16 type,uint8 status)
 	}
 	memcpy(warnBuff+sizeof(T_PacketHead),&t_warninfo,sizeof(T_SM_ANAY_VDCS_WARN_INFO));
 	
-	iRet = server->SendBufferToAllNetClient(warnBuff,sizeof(warnBuff));
+	iRet = server->SendBufferToNetClient(warnBuff,sizeof(warnBuff));
 	return iRet;
 }
 
@@ -159,7 +166,8 @@ int CamAnaThread::human_detect(Mat &frame)
 	{
 		//TODO: notify client huamn alarm start 
 		dbgprint("%s(%d),cam %d  human alarm start !\n",DEBUGARGS,CameraID);
-		send_alarm_to_client(HumanDetect,1);
+		//send_alarm_to_client(HumanDetect,1);
+		send_alarm_to_mcu(HumanDetect,1);
 	}
 
 	if(iRet == alarmStop)
@@ -167,6 +175,7 @@ int CamAnaThread::human_detect(Mat &frame)
 		//TODO: notify client huamn alarm stop
 		dbgprint("%s(%d),cam %d  human alarm stop !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(HumanDetect,0);
+		send_alarm_to_mcu(HumanDetect,0);
 	}
 	return 0;
 }
@@ -189,7 +198,8 @@ int  CamAnaThread::region_detect(Mat &frame)
 	{
 		//TODO: notify client region alarm start 
 		dbgprint("%s(%d),cam %d  region alarm start !\n",DEBUGARGS,CameraID);
-		send_alarm_to_client(RegionDetect,1);
+		//send_alarm_to_client(RegionDetect,1);
+		send_alarm_to_mcu(RegionDetect,1);
 	}
 
 	if(iRet == alarmStop)
@@ -197,6 +207,7 @@ int  CamAnaThread::region_detect(Mat &frame)
 		//TODO: notify client region alarm stop
 		dbgprint("%s(%d),cam %d  region alarm stop !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(RegionDetect,0);
+		send_alarm_to_mcu(RegionDetect,0);
 	}
 	return 0;
 }
@@ -221,7 +232,8 @@ int  CamAnaThread::fire_detect(Mat &frame)
 	{
 		//TODO: notify client fire alarm start
 		dbgprint("%s(%d),cam %d  fire alarm start !\n",DEBUGARGS,CameraID);
-		send_alarm_to_client(FireDetect,1);
+		//send_alarm_to_client(FireDetect,1);
+		send_alarm_to_mcu(FireDetect,1);
 	}
 
 	if(iRet == alarmStop)
@@ -229,6 +241,7 @@ int  CamAnaThread::fire_detect(Mat &frame)
 		//TODO: notify client fire alarm stop
 		dbgprint("%s(%d),cam %d  fire alarm stop !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(FireDetect,0);
+		send_alarm_to_mcu(FireDetect,0);
 	}
 	return 0;
 }
@@ -252,7 +265,8 @@ int  CamAnaThread::smoke_detect(Mat &frame)
 	{
 		//TODO: notify client smoke alarm start and push rtsp
 		dbgprint("%s(%d),cam %d  smoke alarm start !\n",DEBUGARGS,CameraID);
-		send_alarm_to_client(SmokeDetect,1);
+		//send_alarm_to_client(SmokeDetect,1);
+		send_alarm_to_mcu(SmokeDetect,1);
 	}
 
 	if(iRet == alarmStop)
@@ -260,6 +274,7 @@ int  CamAnaThread::smoke_detect(Mat &frame)
 		//TODO: notify client smoke alarm stop
 		dbgprint("%s(%d),cam %d  smoke alarm stop !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(SmokeDetect,0);
+		send_alarm_to_mcu(SmokeDetect,0);
 	}
 	return 0;
 }

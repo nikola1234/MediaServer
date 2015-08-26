@@ -33,7 +33,7 @@ public:
 	int Start();
 	int StartAccpet();
 	NetClientPtr CreateNetClientSession();
-	int  SendBufferToAllNetClient(char *buffer ,int size);
+	int  SendBufferToNetClient(char *buffer ,int size);
 	void RemoveNetClientBySessionID(unsigned int sessionid);
 
 	void HandleAccept(NetClientPtr clientptr,const boost::system::error_code& error);

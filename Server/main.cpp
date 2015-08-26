@@ -36,6 +36,7 @@ int main(int argc ,char **argv)
 	StartRTSPServer(&rtspCamera);
 
 	cout<<"everthing is already"<<endl;
+	
 	while(cin>> a){
 		memset(buffer, 0 ,64);
 	    	string2char(a,buffer);

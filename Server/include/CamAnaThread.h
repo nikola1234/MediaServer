@@ -64,7 +64,7 @@ public:
 	void set_video_draw( vector <VIDEO_DRAW> &DrawPkg);
 	int alarmStrategy();
 
-
+	int send_alarm_to_mcu(uint16 type,uint8 status);
 	int send_alarm_to_client(uint16 type,uint8 status);
 
 	int human_detect(Mat &frame);
