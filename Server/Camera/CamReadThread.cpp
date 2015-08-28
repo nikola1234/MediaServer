@@ -265,7 +265,7 @@ void CamReadThread::report_camera_break()
 
 	memcpy(CamStatusBuff+sizeof(T_PacketHead),&t_CamStatus,sizeof(T_SM_ANAY_VDCS_DEVICE_STATUS));
 
-	server->SendBufferToAllNetClient(CamStatusBuff,sizeof(CamStatusBuff));
+	server->SendBufferToNetClient(CamStatusBuff,sizeof(CamStatusBuff));
 }
 
 void  CamReadThread::check_camera_status()

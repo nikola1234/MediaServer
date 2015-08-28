@@ -33,6 +33,7 @@ public:
 	int Start();
 	int StartAccpet();
 	NetClientPtr CreateNetClientSession();
+	int  SendBufferToMCUClient(uint32 ID,uint8 flag);
 	int  SendBufferToNetClient(char *buffer ,int size);
 	void RemoveNetClientBySessionID(unsigned int sessionid);
 

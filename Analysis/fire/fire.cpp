@@ -47,7 +47,7 @@ int CFire::set_rectangle(vector <Rect> rect)
 
 int CFire::FireDetectRun(Mat& displayFrame,void* videoHandler)
 {
-  int  iRet = -1;
+	int  iRet = -1;
 	alarm = 0;
 	FlameRect.clear();
 	for(unsigned int i = 0;i< Rects.size();i++){
@@ -58,14 +58,14 @@ int CFire::FireDetectRun(Mat& displayFrame,void* videoHandler)
 			FlameRect.clear();
 			vector<Rect>  & tmpRect =handler->getDetector().getDecider().alarmRect;
 			for(uint16 k=0 ; k <tmpRect.size();k++)
-      			{
+	  			{
 				Rect  tmp;
 				tmp = tmpRect[k];
 				FlameRect.push_back(tmp);
 			}
 
 			for(uint16 j = 0; j< FlameRect.size(); j++)
-     			 {
+	 			 {
 				FlameRect[j].x   =FlameRect[j].x +rt .x;
 				FlameRect[j].y   =FlameRect[j].y +rt .y;
 			}

@@ -131,6 +131,7 @@ if ( strcmp( m_areaNode,"(null)") == 0 )
 
     this->ParseAlarmArea( p2, &area );
     WatchRegion.push_back(area);
+	free(buf);
 
 }
 int CamDataInfo::ConvertToTime(char *time,char *t)
@@ -411,6 +412,8 @@ int CamDataInfo::GetMaxCameraID(const char *db_name)
             sqlite3_close(db);
             return 0;
         }
+		sqlite3_free(ErrMsg);  //nikola
+        sqlite3_close(db); //nikola
     }
     catch (cppsqlite3::CppSQLite3Exception& e)
     {
@@ -482,7 +485,7 @@ int CamDataInfo::getCameraConfig( int cameraid, DBCAMERACONFI *camera )
         }
         if (ErrMsg != NULL) sqlite3_free(ErrMsg);
         ErrMsg = NULL;
-        sqlite3_free_table(pszResult);
+        //sqlite3_free_table(pszResult);
         sqlite3_close(db);
         return 0;
 	}
@@ -538,7 +541,7 @@ int CamDataInfo::getAllCameraConfigID( DBCAMERACONFI *camera,vector<int> &res)
         }
         if (ErrMsg != NULL) sqlite3_free(ErrMsg);
         ErrMsg = NULL;
-        sqlite3_free_table(pszResult);
+        //sqlite3_free_table(pszResult);
         sqlite3_close(db);
         return 0;
     }
@@ -615,9 +618,12 @@ int CamDataInfo::getCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera )
                 memcpy(&camera->WatchRegion2, (pszResult + nColumn * i  + 16), sizeof(camera->WatchRegion2));
             }
         }
-        if (ErrMsg != NULL) sqlite3_free(ErrMsg);
-        ErrMsg = NULL;
-        sqlite3_free_table(pszResult);
+        if (ErrMsg != NULL) 
+		{	
+			sqlite3_free(ErrMsg);
+        	ErrMsg = NULL;
+        }
+        //sqlite3_free_table(pszResult);
         sqlite3_close(db);
         return 0;
     }
@@ -649,6 +655,8 @@ int CamDataInfo::setCameraConfig( int cameraid, DBCAMERACONFI *camera )
 //            camera->CameraID, camera->ip, camera->Port,camera->frameRate,camera->CameraFunc,camera->AnalyzeNUM,camera->CamStatus,);
 //        return m_sqlite3db.execDML( SqlBuf );
          ret = sqlite3_exec(db,SqlBuf,0,0,&ErrMsg);
+		 sqlite3_close(db);// nikola
+
          return ret;
     }
     catch(cppsqlite3::CppSQLite3Exception& e)
@@ -726,6 +734,7 @@ int CamDataInfo::AddCameraConfig( int cameraid, DBCAMERACONFI *camera )
     }
     catch(cppsqlite3::CppSQLite3Exception& e)
     {
+    	printf("ssssssssssssssssssssss\n");
         return -1;
     }
 }
@@ -769,6 +778,7 @@ int CamDataInfo::AddCameraAlarmInfo( int cameraid, DBCAMERAFUNCPARAM *camera )
     }
     catch(cppsqlite3::CppSQLite3Exception& e)
     {
+    	printf("db---AddCameraAlarmInfo\n");
         return -1;
     }
 }

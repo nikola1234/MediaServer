@@ -295,6 +295,10 @@ typedef struct _VDCS_VIDEO_CAMERA_DELETE
 
 ////////////////////////////////MCU////////////////////////////////////////////////
 
+#define  MCU_MAC_LEN_20         	20
+#define  USRNAME_LEN_20             20
+
+
 enum //分析服务器和MCU通信命令
 {
 	SM_MCU_VDCS_ENCRY_REQ = 0x1000,
@@ -343,7 +347,7 @@ typedef struct  _VDCS_MCU_OPERATE_TERM
 {
 	uint8   	UserName[USRNAME_LEN_20];
 	uint8		MCUAddr [MCU_MAC_LEN_20];
-	uint8		port;              // 0~3   4个报警器
+	uint8		port;              // 1~4   4个报警器
 	uint8		TermType;          // 2/3 报警器 还是电控锁
 	uint8		OpFlag;            // 操作指令码       0 / 1  kai /guan
 	uint16		Res;     

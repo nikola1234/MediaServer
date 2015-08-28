@@ -1,0 +1,3 @@
+    chown root.root /path/to/application 
+    # π”√SetUID 
+    chmod u+s /path/to/application 

@@ -56,7 +56,7 @@ int VideoHandler::handle(Mat &displayFrame , Rect ROI,void* videoHandler)
 		printf("fire alarm wrong ROI !\n");
 		return STATUS_NO_FLAME_DETECTED;
 	}
-
+	mFrame.release();
 }
 
 bool VideoHandler::saveFrame()

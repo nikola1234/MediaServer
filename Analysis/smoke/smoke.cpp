@@ -652,5 +652,5 @@ int CSmoke::SmokeDetectRun(Mat & displayframe)
 			rectangle(displayframe, smokeRegion[i], Scalar(0, 0, 255), 2, 8, 0);
 		}
 	}
-
+	tmp.release();
 }

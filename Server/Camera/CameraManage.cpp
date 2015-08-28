@@ -339,7 +339,7 @@ int ManageCamera::resume_cameraID_in_list(uint32 ID)
 	}
 
 	WriteLock writelock_(m_CamIDListMutex_);
-	CamIDList.push_back(ID);
+	CamIDList.push_front(ID);
 	return 0;
 }
 
@@ -475,8 +475,13 @@ int ManageCamera::Renew_camerafunc_DB(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,
 	StrTimeDay timeday_one[WEEK_DAY_LEN_7];/* no use*/
 	
 	DBCAMERAFUNCPARAM t_FuncParam;
+
+	printf("t_FuncParam.WatchRegion1 is %x\n" ,t_FuncParam.WatchRegion1);
+	printf("t_FuncParam.WatchRegion2 is %x\n" ,t_FuncParam.WatchRegion2);
 	
 	iRet = CDataInfo.getCameraAlarmInfo(ID,&t_FuncParam);
+	
+	printf("getCameraAlarmInfo--------------\n");
 	if(iRet < 0)
 	{
 		m_log.Add("%s(%d),Renew_camerafunc_DB failure!" ,DEBUGARGS);
@@ -507,7 +512,8 @@ int ManageCamera::Renew_camerafunc_DB(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,
 		CDataInfo.TimeToDB(t_FuncParam.AlarmTime1,timeday_one,timeday,0);
 
 		CDataInfo.AreaToDB( t_FuncParam.WatchRegion1, PKG);
-	
+		
+		//CDataInfo.AreaToDB( t_FuncParam.WatchRegion2, PKG); // test
 		iRet= CDataInfo.setCameraAlarmInfo(ID,&t_FuncParam);
 
 		return 0;
@@ -536,11 +542,11 @@ int ManageCamera::Renew_camerafunc_DB(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,
 
 int ManageCamera::Set_or_Renew_Camera_Param(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg)
 {
-	//int i = 0; 
-	//int j = 0;
+	int i = 0; 
+	int j = 0;
 	int iRet = -1;
 	uint32 ID= 0;
-	/*
+
 	printf("pt_CameraParam->camera is %s\n",pt_CameraParam->CameUrL);
 	printf("pt_CameraParam->AnalyzeType is %x\n",pt_CameraParam->AnalyzeType);
 	printf("pt_CameraParam->MaxHumanNum is %d\n",pt_CameraParam->MaxHumanNum);
@@ -562,7 +568,7 @@ int ManageCamera::Set_or_Renew_Camera_Param(T_VDCS_VIDEO_CAMERA_PARAM* pt_Camera
 		VIDEO_DRAW tmp = Pkg[i];
 		printf("StartX is %d ,StartY is %d ,EndX is %d ,EndY is %d ,Type is %d \n",tmp.StartX ,tmp.StartY,tmp.EndX,tmp.EndY,tmp.Type);
 	}
-	*/
+	
 
 	iRet = m_CamList.search_cam_by_url(pt_CameraParam->CameUrL,&ID);
 	if(iRet == -1)

@@ -30,13 +30,15 @@ public:
 	uint8 GetOurClientType(){ return m_DeivceType; }
     int SendMessage(char *buff,int size);
 
+	void mcu_operate_alarm(uint32 ID,uint8 flag);
+	void mcu_operate_alarm_ack(char* buffer ,int size);
+
 private:
 	void incomingAcceptHandler();
 
 	void mcu_register(char* buffer ,int size);
 	void mcu_register_ack();
-	void mcu_operate_alarm(uint32 ID,uint8 flag);
-	void mcu_operate_alarm_ack(char* buffer ,int size);
+
 
 	int client_register_ack();
 	

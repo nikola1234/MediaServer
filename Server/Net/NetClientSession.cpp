@@ -85,11 +85,11 @@ void NetClientSession::mcu_operate_alarm(uint32 ID ,uint8 flag)
 	
 	memcpy(buff, &t_PackHeadOpr,sizeof(T_PacketHead));
 
-	t_opreate.TermType = 	DeviceTypeWarn;
-	t_opreate.port     =	(uint8)(ID - 600300001);
+	t_opreate.TermType = 	(uint8)DeviceTypeLock;
+	t_opreate.port     =	(uint8)(ID - 600300000);
 	t_opreate.OpFlag   =	 flag;
-
-	memcpy(buff+sizeof(T_PacketHead),&buff,sizeof(T_VDCS_MCU_OPERATE_TERM));
+	
+	memcpy(buff+sizeof(T_PacketHead),&t_opreate,sizeof(T_VDCS_MCU_OPERATE_TERM));
 
 	SendMessage(buff,sizeof(buff));
 	
@@ -176,9 +176,9 @@ int NetClientSession::push_camera_data(char* buffer ,int size)
 	{
 	    iRet = fOurServer->ManCam->try_to_open(t_add_camera.ip,t_add_camera.CameUrL);
 	    if(iRet < 0){
-		fOurServer->m_log.Add("open %s failed!", t_add_camera.CameUrL);
-		push_camera_data_ack1(t_add_camera);
-		return -1;
+			fOurServer->m_log.Add("open %s failed!", t_add_camera.CameUrL);
+			push_camera_data_ack1(t_add_camera);
+			return -1;
 	    }
 	}
 	string url;
@@ -369,15 +369,14 @@ int NetClientSession::ReciveData_GetParam(char* buffer ,int size)
 	}
 	memcpy(&t_packet_head,buffer,PACKET_HEAD_LEN);
 	cmd = t_packet_head.cmd;
-
+	
 	switch (cmd ){
-
 		case SM_MCU_VDCS_REGISTER:
 			mcu_register(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
 			mcu_register_ack();
 			break;
 		case SM_MCU_VDCS_OPERATE_TERM_ACK:
-			mcu_operate_ack(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
+			mcu_operate_alarm_ack(buffer+PACKET_HEAD_LEN,size-PACKET_HEAD_LEN);
 			break;
 		case SM_ANAY_VDCS_REGISTER:
 			fOurServer->m_log.Add("%d client_register_ack", fOurSessionId);
@@ -405,7 +404,7 @@ int NetClientSession::ReciveData_GetParam(char* buffer ,int size)
 			break;
 		default: break;
 	}
-	dbgprint("client cmd = %x\n", cmd);
+	//dbgprint("client cmd = %x\n", cmd);
 	return 0;
 }
 

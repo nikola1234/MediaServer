@@ -54,6 +54,19 @@ int main(int argc ,char **argv)
 	    	case 4:
 	    		ManCamera.Get_Rest_SingleCamlist();
 	    		break;
+			case 11:
+				ManCamera.Server->SendBufferToMCUClient(600300001,1);
+				break;
+			case 12:
+				ManCamera.Server->SendBufferToMCUClient(600300002,1);
+				break;
+			case 13:
+				ManCamera.Server->SendBufferToMCUClient(600300003,1);
+				break;
+			case 14:
+				ManCamera.Server->SendBufferToMCUClient(600300004,1);
+				break;
+
 		default :break;
 	    	}
 	}
