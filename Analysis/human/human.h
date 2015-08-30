@@ -80,7 +80,7 @@ public:
 	vector< blobnode >          humanlistpro;
 	blobnode blobdata;
 
-	Mat track;
+	//Mat track;
 	statistics   humanstatis;
 	void  doorwaydetect(int lineNum);
 	void  blobdeal(Mat &displayframe);

@@ -14,6 +14,8 @@ CamAnaThread::CamAnaThread(SingleCamera* sincam,NetServer *ser)
 	alarm         = 0;
 	AnalyzeEn = false;
 
+	smoke_frame = 0;
+
 	frame = 0;
 	startflag         = 0;
 	stopflag          = 0;
@@ -177,6 +179,7 @@ int CamAnaThread::human_detect(Mat &frame)
 		//send_alarm_to_client(HumanDetect,0);
 		send_alarm_to_mcu(HumanDetect,0);
 	}
+
 	return 0;
 }
 
@@ -259,14 +262,26 @@ int  CamAnaThread::smoke_detect(Mat &frame)
 		usleep(40*1000);
 	}
 	
-	iRet =  alarmStrategy();
+	//iRet =  alarmStrategy();
+
+
+	if(alarm == 1)
+	{
+		smoke_frame++;
+	}
+
+	if(smoke_frame > 200)
+	{
+		printf("smoke alarm--\n");
+		smoke_frame = 0;
+	}
 
 	if(iRet == alarmOn)
 	{
 		//TODO: notify client smoke alarm start and push rtsp
 		dbgprint("%s(%d),cam %d  smoke alarm start !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(SmokeDetect,1);
-		send_alarm_to_mcu(SmokeDetect,1);
+		//send_alarm_to_mcu(SmokeDetect,1);
 	}
 
 	if(iRet == alarmStop)
@@ -274,7 +289,7 @@ int  CamAnaThread::smoke_detect(Mat &frame)
 		//TODO: notify client smoke alarm stop
 		dbgprint("%s(%d),cam %d  smoke alarm stop !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(SmokeDetect,0);
-		send_alarm_to_mcu(SmokeDetect,0);
+		//send_alarm_to_mcu(SmokeDetect,0);
 	}
 	return 0;
 }
@@ -497,9 +512,20 @@ void CamAnaThread::run()
 		pthread_mutex_unlock(&mut);
 		//printf("AnalyzeEn is %d\n",AnalyzeEn);
 		if(AnalyzeEn)
-		{
-			cam->ReadThread->anaframe.copyTo(origFrame);
-			alarm_run(origFrame,AnalyzeType);
+		{	
+			if(!cam->ReadThread->anaframe.empty())
+			{
+				cam->ReadThread->anaframe.copyTo(origFrame);
+				if(!origFrame.empty())
+				{
+					alarm_run(origFrame,AnalyzeType);
+					origFrame.release();
+				}else{
+					usleep(40*1000);
+				}
+			}else{
+				usleep(40*1000);
+			}
 		}else{
 			analyze_sleep_release();
 			usleep(40*1000);

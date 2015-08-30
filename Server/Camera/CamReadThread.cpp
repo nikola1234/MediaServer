@@ -179,7 +179,7 @@ int CamReadThread::Encode(Mat &frame)
 	else {
 		iRet = 0;
 	}
-
+	frame.release();
 	return 0;
 }
 
@@ -301,7 +301,7 @@ void CamReadThread::run()
 			continue;
 		}
 		errReadNum = 0;
-
+		anaframe.release();
 		if(!ReadFrame.empty())
 		{
 			ReadFrame.copyTo(anaframe);
@@ -311,9 +311,9 @@ void CamReadThread::run()
 			draw_encode_frame(EncodeFrame);
 
 			Encode(EncodeFrame);
-		}
-
+		}	
 		usleep(50);
+		ReadFrame.release();
 	}
   	releaseEncode();
 	dbgprint("%s(%d),%d CamThread exit!\n",DEBUGARGS,CameraID);

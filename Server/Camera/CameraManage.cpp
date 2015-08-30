@@ -162,20 +162,21 @@ int ManageCamera::init_camera_from_DB()
 				m_log.Add("%s(%d),DB have  camera  %s cant open!" ,DEBUGARGS ,Caminfo.ip);
 				continue;
 			}
-			
-			SingleCamPtr camptr = SingleCamPtr (new SingleCamera(this,ID));
+			SingleCamPtr camptr =  SingleCamPtr(new SingleCamera(this,ID));
 			WriteLock writelock_(m_SinCamListMutex_);
 			m_SinCamList.push_front(camptr);
 			writelock_.unlock();
 			fill_push_cam(&Caminfo,&t_addCam);
-			camptr->set_camera_fix_param(t_addCam);	
-		        iRet = CDataInfo.getCameraAlarmInfo(camID[num],&Camfuncparam);
+
+			camptr->set_camera_fix_param(t_addCam);
+
+		    iRet = CDataInfo.getCameraAlarmInfo(camID[num],&Camfuncparam);		
 			if(iRet < 0)
 			{
 				m_log.Add("%s(%d),DB get Camera no AlarmInfo  !" ,DEBUGARGS);
 				continue;
 			}
-			
+
 			if(Camfuncparam.AnalyzeNUM == 1)
 			{
 				pkg.clear();
@@ -199,11 +200,9 @@ int ManageCamera::init_camera_from_DB()
 			{
 				m_log.Add("%s(%d),DB have wrong  camera AnalyzeNUM %d !" ,DEBUGARGS,Camfuncparam.AnalyzeNUM);
 			}
-			
 			erase_id_from_CamIDList(ID);
 			m_CamList.add_cam_list(Caminfo.CamUrl, ID);	
 		 }
-
 		return 0;
 	}
 	m_log.Add("%s(%d),DB have no camera!" ,DEBUGARGS);

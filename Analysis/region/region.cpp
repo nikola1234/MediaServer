@@ -132,5 +132,7 @@ int CRegion::RegionDetectRun(Mat &dispalyFrame)
 
 	motiondetective(dispalyFrame,mask);
 
+	TmpFrame.release();
+
 	return 0;
 }

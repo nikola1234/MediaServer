@@ -131,7 +131,6 @@ if ( strcmp( m_areaNode,"(null)") == 0 )
 
     this->ParseAlarmArea( p2, &area );
     WatchRegion.push_back(area);
-	free(buf);
 
 }
 int CamDataInfo::ConvertToTime(char *time,char *t)

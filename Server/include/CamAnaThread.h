@@ -43,6 +43,9 @@ public:
 	uint16 AnalyzeType;
 	uint8  alarm;
 
+
+	uint8 smoke_frame;
+
 	uint32 frame;
 	uint32 alarmStartframe;
 	uint32 alarmStopframe;

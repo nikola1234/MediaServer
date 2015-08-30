@@ -212,7 +212,7 @@ void  CHuman::blobdeal(Mat &displayframe)
 	int flag  = 0;
 
 	//Frame.human.track  = Mat(Frame.variable.frame.rows, Frame.variable.frame.cols, CV_8UC3);
-	track  =displayframe.clone() ;
+	//track  =displayframe.clone() ;  nikola
 	humanlistpro = humanlist;
 
 	if(humanlist.empty())
@@ -583,14 +583,14 @@ int CHuman::HumanDetectRun(Mat &displayframe)
   //gettimeofday(&start,NULL);
 
 	Mat tmpframe;
-	Mat blobdealFrame;
+	//Mat blobdealFrame;
 	vector< vector<Point> >  contours;
 	Rect contoursRect;
 
 	alarm =0;
 
 	displayframe.copyTo(tmpframe);
-	displayframe.copyTo(blobdealFrame);
+	//displayframe.copyTo(blobdealFrame);
 
 	vector<blobnode>().swap(humanlistpro);
 
@@ -619,6 +619,7 @@ int CHuman::HumanDetectRun(Mat &displayframe)
 
 	findContours(mask, contours, CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE);
 
+	mask.release(); //nikola
 	m_BlobRects.clear();
 	for(int i=0;i<contours.size();i++)
 	{
@@ -679,6 +680,8 @@ int CHuman::HumanDetectRun(Mat &displayframe)
   //sprintf(dstr,  "in=%d,out=%d",humanstatis.doorin,humanstatis.doorout);
   //putText(displayframe,dstr,cvPoint(25,25),CV_FONT_HERSHEY_COMPLEX, 1, cvScalar(0,0,255));
 	//printf("doorin=%d,doorout=%d\n",humanstatis.doorin,humanstatis.doorout);
+
+	tmpframe.release(); //nikola
 
 	morph.release();
 	vector<Point>().swap(object); //vector<Point>
