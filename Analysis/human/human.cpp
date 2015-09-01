@@ -32,6 +32,8 @@ CHuman:: ~CHuman()
 {
 	DirectionLines.clear();
 	MonitorZoneRects.clear();
+	foregrondframe.release();
+	mask.release();
 }
 
 void CHuman::sleep_release()
@@ -690,6 +692,7 @@ int CHuman::HumanDetectRun(Mat &displayframe)
 	//gettimeofday(&end,NULL);
 	//time_use=(end.tv_sec-start.tv_sec)*1000+(end.tv_usec-start.tv_usec)/1000;//΢��
 	//printf("time_use is %d\n",time_use);
+	foregrondframe.release();
 
 	return 0;
 }

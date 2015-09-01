@@ -17,7 +17,8 @@ FlameDetector::FlameDetector()
 
 bool FlameDetector::detect(const Mat& frame,void* videoHandler)
 {
-    mFrame = frame;
+    //mFrame = frame; nikola
+	frame.copyTo(mFrame);
     Mat mymask;
     clock_t start, finish;
     if(++mFrameCount > SKIP_FRAME_COUNT) {
@@ -37,6 +38,7 @@ bool FlameDetector::detect(const Mat& frame,void* videoHandler)
        // cout << "detection rate: " << 1.0 * mFlameCount / (mFrameCount - SKIP_FRAME_COUNT) << endl;
         return result;
     }
-    
+	mFrame.release();  //nikola
+    mymask.release();
     return false;
 }

@@ -32,6 +32,8 @@ public:
 	void resume();
 	void pause();
 
+	pthread_mutex_t m_frameMut;
+	
 private:
 
 	bool  m_CameraFlag;

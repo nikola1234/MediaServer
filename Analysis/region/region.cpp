@@ -13,6 +13,13 @@ CRegion::~CRegion()
 {
 	frameindex = 0;
 	Rects.clear();
+        vector< Rect >().swap(Rects);
+        if(!mask.empty())
+            mask.release();
+        if(!foregrondframe.empty())
+            foregrondframe.release();
+        if(!TmpFrame.empty())
+            TmpFrame.release();
 }
 
 void CRegion::sleep_release()
@@ -49,7 +56,6 @@ int CRegion::set_rectangle(vector <Rect> rect)
 void CRegion::motiondetective(Mat &dispalyFrame,Mat &morph)
 {
 	bool motionAlarmDone = false;
-	Mat motionAlarmCap;
 
 	for(unsigned int i = 0;i < Rects.size();i++)
 	{

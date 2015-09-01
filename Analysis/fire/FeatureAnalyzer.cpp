@@ -33,6 +33,12 @@ void Feature::calcColorFeature()
         gray[i] = stat[i][1];
         saturation[i] = stat[i][2];
     }
+
+	hsv.release(); //nikola
+	temp.release();
+	mixed.release();
+	temp1.release();
+	temp2.release();
 }
 
 void Feature::calcGeometryFeature(const Region& region)
@@ -158,6 +164,9 @@ void Feature::calcTexture(int levels, int dx, int dy)
     texture[1] = energy;
     texture[2] = contrast;
     texture[3] = homogenity;
+
+	temp.release(); //nikola
+	glcm.release();
 }
 
 void Feature::calcFrequency()
@@ -410,4 +419,6 @@ void FeatureAnalyzer::analyze(const Mat& frame, Mat& mymask, map<int, Target>& t
     moveWindow("frame", 10, 400);
     imshow("frame", temp);
 	#endif
+
+	temp.release();
 }

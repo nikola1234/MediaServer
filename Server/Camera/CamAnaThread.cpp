@@ -262,9 +262,9 @@ int  CamAnaThread::smoke_detect(Mat &frame)
 		usleep(40*1000);
 	}
 	
-	//iRet =  alarmStrategy();
+	iRet =  alarmStrategy();
 
-
+/*
 	if(alarm == 1)
 	{
 		smoke_frame++;
@@ -275,7 +275,7 @@ int  CamAnaThread::smoke_detect(Mat &frame)
 		printf("smoke alarm--\n");
 		smoke_frame = 0;
 	}
-
+*/
 	if(iRet == alarmOn)
 	{
 		//TODO: notify client smoke alarm start and push rtsp
@@ -514,8 +514,10 @@ void CamAnaThread::run()
 		if(AnalyzeEn)
 		{	
 			if(!cam->ReadThread->anaframe.empty())
-			{
+			{	
+				pthread_mutex_lock (&(cam->ReadThread->m_frameMut));
 				cam->ReadThread->anaframe.copyTo(origFrame);
+				pthread_mutex_unlock(&(cam->ReadThread->m_frameMut));
 				if(!origFrame.empty())
 				{
 					alarm_run(origFrame,AnalyzeType);

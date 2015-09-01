@@ -202,6 +202,11 @@ void getEnergyMap(Mat& frame, Mat& ret) //能量值计算  从灰度直方图计算
 			ret.at<float>(x, y) = total;
 		}
 	}
+        Src.release();
+        Dst.release();
+        tmp1.release();
+        tmp2.release();
+        tmp3.release();
 }
 
 void getFilteredFrame(Mat& frame, Mat& filtered) //得到每个像素点的框架，就像图像虚化了一样

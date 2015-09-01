@@ -15,11 +15,14 @@ CamReadThread::CamReadThread(SingleCamera *sincam,NetServer *Server)
 	pthread_mutex_init (&mut,NULL);
 	pthread_cond_init(&cond, NULL);
 
+	pthread_mutex_init (&m_frameMut,NULL);
+
 }
 
 CamReadThread::~CamReadThread()
 {
 	pthread_mutex_destroy(&mut);
+	pthread_mutex_destroy(&m_frameMut);
 	pthread_cond_destroy(&cond);
 }
 
@@ -301,11 +304,13 @@ void CamReadThread::run()
 			continue;
 		}
 		errReadNum = 0;
-		anaframe.release();
 		if(!ReadFrame.empty())
 		{
+			pthread_mutex_lock(&m_frameMut);
+			anaframe.release();
 			ReadFrame.copyTo(anaframe);
-
+			pthread_mutex_unlock(&m_frameMut);
+			
 			ReadFrame.copyTo(EncodeFrame);
 
 			draw_encode_frame(EncodeFrame);

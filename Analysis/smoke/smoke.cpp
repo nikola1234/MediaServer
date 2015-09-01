@@ -12,7 +12,28 @@ CSmoke::CSmoke(uint32 index)
 
 	alarm  = 0;
 }
-
+CSmoke::~CSmoke()
+{
+    vector<vector<Point> >().swap(blobs) ;
+    vector<vector<Point> >().swap(lastblobs) ;
+    vector<Rect>().swap(SmokeRegion);
+    element.release();
+    frame1.release();
+    frame2.release();
+    frame3.release();
+    background.release();
+    foreground.release();
+    curRefinedFg.release();
+    curMorph_Foreground.release();
+    prevMorph_Foreground.release();
+    prevFrame.release();
+    if(!(EMap[0].empty()))  EMap[0].release();
+    if(!(EMap[1].empty()))  EMap[1].release();
+    if(!(EMap[2].empty()))  EMap[2].release();
+    if(!thres.empty())  thres.release();
+    if(!bgEMap.empty())  bgEMap.release();
+    vector<Rect>().swap(Rects) ;
+}
 void CSmoke::sleep_release()
 {
 	alarm  = 0;
@@ -131,8 +152,13 @@ void CSmoke::SmokeDetectorlabelBlobs(const cv::Mat &binary)
 
 			blobs.push_back(blob);
             label_count++;
+			blob.clear();
+   			vector<Point>().swap(blob);
         }
     }
+   label_image.release();
+   //blob.clear();
+   //vector<Point>().swap(blob);
 }
 
 void CSmoke::getEdgeModel(Mat& frame) {
@@ -536,6 +562,7 @@ void CSmoke::smokeDetect(Mat& frame1, Mat& frame2, Mat& frame3)
 		motionMask.release();
 		contourBlur.release();
 		blob.release();
+                //rect.release();
 	}
 	lastblobs.clear();
 	for(int i = 0;i < blobs.size();i++)
@@ -653,4 +680,5 @@ int CSmoke::SmokeDetectRun(Mat & displayframe)
 		}
 	}
 	tmp.release();
+        vector<Rect>().swap(smokeRegion);
 }

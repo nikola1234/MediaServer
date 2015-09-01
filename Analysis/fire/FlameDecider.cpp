@@ -116,6 +116,7 @@ void FlameDecider::userInput(const map<int, Target>& targets)
             goto end;
         }
     }
+	temp.realse(); //nikola
     
 end:
     ofs.close();
@@ -142,6 +143,9 @@ void FlameDecider::svmStudy()
     
     mSVM.train(data, label, Mat(), Mat(), params);
 	mSVM.save(SVM_DATA_FILE.c_str());
+
+	data.release(); //nikola
+	label.release();
 }
 
 void FlameDecider::train(const map<int, Target>& targets)
@@ -191,6 +195,8 @@ bool FlameDecider::judge(map<int, Target>& targets)
 	    moveWindow("result", 350, 400);
 	    imshow("result", temp);
      #endif
+	 
+	temp.release(); //nikola
     return flameDetected;
 }
 #endif

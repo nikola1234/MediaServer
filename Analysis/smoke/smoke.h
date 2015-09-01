@@ -7,6 +7,7 @@ class CSmoke
 {
 public:
 	CSmoke(uint32 index);
+	~CSmoke();
 
 	uint32 m_index;
 	uint8  alarm;
@@ -17,17 +18,17 @@ public:
 	vector<vector<Point> > blobs;
 	vector<vector<Point> > lastblobs;
 	vector<Rect> SmokeRegion;
-	Mat element;
-	int blockSize;
-	Mat frame1;
-	Mat frame2;
-	Mat frame3;
-	Mat background;
-	Mat foreground;
-	Mat curRefinedFg;
-	Mat curMorph_Foreground;
-	Mat prevMorph_Foreground;
-	Mat prevFrame;
+        Mat element;
+        int blockSize;
+        Mat frame1;
+        Mat frame2;
+        Mat frame3;
+        Mat background;
+        Mat foreground;
+        Mat curRefinedFg;
+        Mat curMorph_Foreground;
+        Mat prevMorph_Foreground;
+        Mat prevFrame;
 
 	Mat EMap[3];
 

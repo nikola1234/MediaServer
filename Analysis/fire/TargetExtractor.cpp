@@ -91,6 +91,10 @@ void TargetExtractor::movementDetect2(int threshold, double learningRate)
     
     bitwise_not(mMask, temp);
     accumulateWeighted(gray, mBackground, learningRate, temp);
+
+	gray.release();  //nikola
+	temp.release();
+	background.release();
 }
 
 void TargetExtractor::colorDetect2(int threshold)
@@ -111,6 +115,7 @@ void TargetExtractor::colorDetect2(int threshold)
             }
         }
     }
+	temp.release();//nikola
 }
 
 void TargetExtractor::regionGrow2(int areaThreshold, int diffThreshold)
@@ -179,6 +184,9 @@ void TargetExtractor::regionGrow2(int areaThreshold, int diffThreshold)
             bitwise_or(mMask, temp, mMask);
         }
     }
+
+	gray.release(); //nikola
+	temp.release(); 
 }
 #endif
 
@@ -205,6 +213,7 @@ void TargetExtractor::colorDetect(int redThreshold, double saturationThreshold)
             }
         }
     }
+	temp.release(); //nikola
 }
 
 void TargetExtractor::denoise(int ksize, int threshold)
@@ -225,6 +234,8 @@ void TargetExtractor::denoise(int ksize, int threshold)
             }
         }
     }
+	
+	density.release(); //nikola
 }
 
 void TargetExtractor::fill(int ksize, int threshold)
@@ -256,6 +267,7 @@ void TargetExtractor::fill(int ksize, int threshold)
             }
         }
     }
+	density.release();
 }
 
 void TargetExtractor::regionGrow(int threshold)
@@ -336,7 +348,12 @@ void TargetExtractor::regionGrow(int threshold)
                 mMask = temp;
             }
         }
+        mask.release();
     }
+
+	gray.release();
+	temp.release();
+	
 }
 
 void TargetExtractor::smallAreaFilter(int threshold, int keep)
@@ -423,6 +440,7 @@ void TargetExtractor::accumulate(int threshold)
                 }
             }
         }
+		pop.release();
     }
     
     if (mMaskQueue.size() == MAX_MASK_QUEUE_SIZE) {
@@ -434,8 +452,10 @@ void TargetExtractor::accumulate(int threshold)
                 }
             }
         }
-        imshow("accumulated", result);
+		result.release();
+        //imshow("accumulated", result);
     }
+	temp.release();
 }
 
 void TargetExtractor::blobTrack(map<int, Target>& targets)

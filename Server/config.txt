@@ -1,0 +1,25 @@
+
+分析服务器环境配置步骤
+
+一、改变demo属性
+chmod 777 demo
+sudo chown root demo
+sudo chmod u+s demo
+
+chmod 777 check
+
+二、设置库环境变量  (按a 到文件结尾回车换行，复制粘贴)
+sudo vi /etc/ld.so.conf
+添加
+/home/hrd/MediaServer/libs/ffmpeg
+/home/hrd/MediaServer/libs/opencv
+/home/hrd/MediaServer/libs/rtp
+/home/hrd/MediaServer/libs/x264
+
+sudo ldconfig
+
+三、添加可执行文件的环境变量
+sudo vi /etc/bash.bashrc
+export PATH=/home/hrd/MediaServer/Server:$PATH
+
+四、添加自启动项
