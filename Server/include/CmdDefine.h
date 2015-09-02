@@ -17,6 +17,7 @@
 #define  SINGLE_URL_LEN_128    128
 #define  PACKET_HEAD_LEN       28
 #define  MCU_MAC_LEN_20        20
+#define  PIC_BUFFER_LEN  	   640*360*3
 
 typedef struct COMMON_PACKET_HEAD
 {
@@ -371,6 +372,98 @@ typedef struct _MCU_VDCS_OPERATE_TERM_ACK
 	}	
 	
 } T_MCU_VDCS_OPERATE_TERM_ACK;
+
+/********************************报警服务器*******************************************/
+
+enum ANAY_ALARM_CMD {  
+
+	SM_ANAY_ALARM_REGISTER = 0x2000,
+
+	SM_ANAY_ALARM_DEVICE_STATUS ,
+
+	SM_ANAY_ALARM_WARN_INFO,
+
+	SM_ANAY_ALARM_HEATBEAT = 0X8005
+};
+
+
+//SM_ANAY_ALARM_REGISTER
+typedef struct _VDCS_ANAY_ALARM_REGISTER
+{
+	
+	uint32 AnaServerID;   	/* 每一个ID 表示分析服务器的编号和地址 */
+	char   AnaServerIp[16];
+	uint8  CameraNum;     	/* 每一个分析服务器所分析的摄像头个数 */
+	
+	_VDCS_ANAY_ALARM_REGISTER(){
+		memset(this, 0, sizeof(_VDCS_ANAY_ALARM_REGISTER));
+	}		
+}T_ANAY_ALARM_REG;
+
+typedef struct _ANA_CAM_PARAM
+{
+	char		CamIp[IP_LEN_16];
+	char		CamUrL[SINGLE_URL_LEN_128];
+	uint8		AnalyzeNUM;	
+	uint16    	AnalyzeType;   /* 分析类型相或*/ 
+
+	_ANA_CAM_PARAM(){
+		memset(this, 0, sizeof(_ANA_CAM_PARAM));
+	}	
+}T_ANA_CAM_PARAM;
+
+//SM_ANAY_ALARM_WARN_INFO
+typedef struct  _VDCS_ANAY_ALARM_WARN_INFO
+{
+	uint32 		AnaServerID;   	       /* 每一个ID 表示分析服务器的编号和地址 */
+	char   		AnaServerIp[16];
+	char		CamIp[IP_LEN_16];
+	char		CamUrL[SINGLE_URL_LEN_128];
+	uint16		AnalyzeType;   /*单一分析类型*/
+	uint8       PicbuffEN;
+	
+	_VDCS_ANAY_ALARM_WARN_INFO(){
+		memset(this, 0, sizeof(_VDCS_ANAY_ALARM_WARN_INFO));
+	}		
+}T_ANAY_ALARM_WARN_INFO;
+
+
+//SM_ANAY_ALARM_DEVICE_STATUS
+typedef struct _VDCS_ANAY_ALARM_DEVICE_STATUS
+{
+	uint32 AnaServerID;   	       /* 每一个ID 表示分析服务器的编号和地址 */
+	char   AnaServerIp[16];
+	char   CamIp[IP_LEN_16];			/* 摄像头的ip */
+	char   CamUrL[SINGLE_URL_LEN_128];  /* 摄像头的url */
+	
+	_VDCS_ANAY_ALARM_DEVICE_STATUS(){
+		memset(this, 0, sizeof(_VDCS_ANAY_ALARM_DEVICE_STATUS));
+	}		
+}T_ANAY_ALARM_DEV;
+
+
+//SM_ANAY_ALARM_HEATBEAT
+typedef struct _VDCS_ANAY_ALARM_HEATBEAT
+{
+	uint32 AnaServerID;   	       /* 每一个ID 表示分析服务器的编号和地址 */
+	char   AnaServerIp[16];
+	uint8  CamNum;
+	
+	_VDCS_ANAY_ALARM_HEATBEAT(){
+		memset(this, 0, sizeof(_VDCS_ANAY_ALARM_HEATBEAT));
+	}		
+}T_ANAY_ALARM_HEATBEAT;
+
+typedef struct _VDCS_ANAY_ALARM_CAM_PIC
+{
+	char   CamIp[IP_LEN_16];			/* 摄像头的ip */
+	char   CamUrL[SINGLE_URL_LEN_128];  /* 摄像头的url */
+	char   buffer[PIC_BUFFER_LEN];
+	
+	_VDCS_ANAY_ALARM_CAM_PIC(){
+		memset(this, 0, sizeof(_VDCS_ANAY_ALARM_CAM_PIC));
+	}	
+}T_ANAY_ALARM_CAM_PIC;
 
 #pragma pack(pop)
 

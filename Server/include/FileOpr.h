@@ -7,6 +7,8 @@
 #include <cassert>
 #include "json/json.h"
 
+/* todo 增加报警服务器的ip 和 port*/
+
 typedef struct  _SERVER_PARAM
 {
 	uint32 ServerID;

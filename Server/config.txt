@@ -18,8 +18,13 @@ sudo vi /etc/ld.so.conf
 
 sudo ldconfig
 
+/*可以不做第三步*/
 三、添加可执行文件的环境变量
 sudo vi /etc/bash.bashrc
 export PATH=/home/hrd/MediaServer/Server:$PATH
 
 四、添加自启动项
+sudo vi /etc/rc.local
+nohup /home/hrd/MediaServer/Server/check &
+exit 0
+

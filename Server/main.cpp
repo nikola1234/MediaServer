@@ -36,9 +36,15 @@ int main(int argc ,char **argv)
 	StartRTSPServer(&rtspCamera);
 
 	cout<<"everthing is already"<<endl;
-	
-	while(cin>> a){
-		memset(buffer, 0 ,64);
+/*	
+	while(1)  //²¿Êð×÷ÓÃ
+	{
+		sleep(5);
+	}
+*/
+
+	while(cin>> a){ // ²âÊÔ
+			memset(buffer, 0 ,64);
 	    	string2char(a,buffer);
 	    	num =  atoi(buffer);
 	    	switch(num){
@@ -67,7 +73,7 @@ int main(int argc ,char **argv)
 				ManCamera.Server->SendBufferToMCUClient(600300004,1);
 				break;
 
-		default :break;
+			default :break;
 	    	}
 	}
 
