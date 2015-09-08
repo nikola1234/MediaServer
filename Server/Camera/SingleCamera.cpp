@@ -38,9 +38,9 @@ int SingleCamera::generate_url()
 {
 	char rtsp[128] ={0};
 	uint32 port =556;
-	if(strlen(SerParam.Serverip) == 0) return -1;
+	if(strlen(SerParam.ServerIp) == 0) return -1;
 	memset(RtspUrl, 0 ,SINGLE_URL_LEN_128);
-	sprintf(rtsp,"%s%s:%d/%d","rtsp://",SerParam.Serverip,port,CameraID);
+	sprintf(rtsp,"%s%s:%d/%d","rtsp://",SerParam.ServerIp,port,CameraID);
 	memcpy(RtspUrl,rtsp,SINGLE_URL_LEN_128);
 	printf("RtspUrl is %s\n",RtspUrl);
 	return 0;

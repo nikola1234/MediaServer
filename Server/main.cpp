@@ -4,12 +4,14 @@
 #include "FileOpr.h"
 #include "RtspCamera.h"
 #include "CameraManage.h"
+#include "NetClient.h"
 
 T_ServerParam SerParam;
 NetServer NetWorkServer;
 CFileOpr fileOpr;
 CRtspCamera rtspCamera;
 ManageCamera ManCamera;
+NetClient  NetWorkClient;
 
 void string2char(string str, char*buf)
 {
@@ -23,25 +25,29 @@ int main(int argc ,char **argv)
 	char buffer[64] ={0};
 
 	fileOpr.read_server_config(SerParam);
+	
+	NetWorkClient.start(SerParam.AlarmIp,SerParam.AlarmPort);
+	NetWorkClient.Run();
 
-	NetWorkServer.InitNetServer(SerParam.port);
+	NetWorkServer.InitNetServer(SerParam.ServerPort);
 	NetWorkServer.Start();
 	NetWorkServer.Run();
 
-	ManCamera.AddServer(&NetWorkServer);
+	ManCamera.AddServer(&NetWorkServer); // as server
+	ManCamera.AddClient(&NetWorkClient); // as client
 	ManCamera.InitFromDB();
 
 	NetWorkServer.AddManaCamera(&ManCamera);
+	NetWorkClient.AddManaCamera(&ManCamera);
 
 	StartRTSPServer(&rtspCamera);
 
 	cout<<"everthing is already"<<endl;
-/*	
-	while(1)  //部署作用
-	{
-		sleep(5);
-	}
-*/
+	
+//	while(1)  //部署作用
+//	{
+//		sleep(5);
+//	}
 
 	while(cin>> a){ // 测试
 			memset(buffer, 0 ,64);
@@ -72,10 +78,15 @@ int main(int argc ,char **argv)
 			case 14:
 				ManCamera.Server->SendBufferToMCUClient(600300004,1);
 				break;
-
+			case 21:
+				NetWorkClient.SendToServer("hello!",7);
+				printf("----\n");
+				break;
 			default :break;
 	    	}
 	}
 
 	return 0;
 }
+
+

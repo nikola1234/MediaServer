@@ -23,14 +23,19 @@ int CFileOpr::write_server_config(uint32 ServerID,uint32 port, string ServerIp)
 	 ofs.open(SerFile.c_str());
 	 assert(ofs.is_open());
 
-	 item["ServerID"] = Json::Value(ServerID);
+	 item["ID"] = Json::Value(ServerID);
 	 item["ip"] = ServerIp;
 	 item["port"] = Json::Value(port);
 	 arrayObj.append(item);
 
-	 root["name"] = "server";
-	 root["info"] = arrayObj;
+	 root["AnaSvr"] = arrayObj;
 
+	 item["ID"] = Json::Value(ServerID);
+	 item["ip"] = ServerIp;
+	 item["port"] = Json::Value(port);
+	 arrayObj.append(item);
+	 root["AlarmSvr"] = arrayObj;
+	 
 	 root.toStyledString();
 	 std::string out = root.toStyledString();
 
@@ -42,6 +47,8 @@ int CFileOpr::write_server_config(uint32 ServerID,uint32 port, string ServerIp)
 int CFileOpr::read_server_config(T_ServerParam &t_SerParam)
 {
 	ifstream ifs;
+	int i = 0;
+	int size = 0;
 	uint32 ID = 0;
 	uint32 port =0;
 	string ip;
@@ -57,18 +64,27 @@ int CFileOpr::read_server_config(T_ServerParam &t_SerParam)
 		 return -1;
 	}
 
-	string name = root["name"].asString();
-	int size = root["info"].size();  //size  ==1
-
-	for(int i = 0; i < size; ++i)
+	size = root["AnaSvr"].size();  
+	for(i = 0; i < size; ++i)
 	{
-		ID = root["info"][i]["ServerID"].asInt();
-		port = root["info"][i]["port"].asInt();
-		ip = root["info"][i]["ip"].asString();
+		ID = root["AnaSvr"][i]["ID"].asInt();
+		port = root["AnaSvr"][i]["port"].asInt();
+		ip = root["AnaSvr"][i]["ip"].asString();
+		
+		t_SerParam.ServerID   = ID;
+		t_SerParam.ServerPort =  port;
+		memcpy(t_SerParam.ServerIp ,ip.c_str(),ip.length());
 	}
-	t_SerParam.ServerID = ID;
-	t_SerParam.port   =  port;
-	memcpy(t_SerParam.Serverip ,ip.c_str(),ip.length());
 
+	size = root["AlarmSvr"].size(); 
+	for(i = 0; i < size; ++i)
+	{
+		ID = root["AlarmSvr"][i]["ID"].asInt();
+		port = root["AlarmSvr"][i]["port"].asInt();
+		ip = root["AlarmSvr"][i]["ip"].asString();
+		t_SerParam.AlarmID 	 = ID;
+		t_SerParam.AlarmPort = port;
+		memcpy(t_SerParam.AlarmIp ,ip.c_str(),ip.length());
+	}
 	return 0;
 }

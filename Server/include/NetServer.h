@@ -23,9 +23,11 @@ public:
   typedef boost::unique_lock<boost::shared_mutex> writeLock;
   
 public:
+	
   	NetServer();
   	~NetServer();
-	  void AddManaCamera(ManageCamera *cam){ ManCam = cam;}
+	 void AddManaCamera(ManageCamera *cam){ ManCam = cam;}
+	 
 public:
 
 	boost::asio::io_service& Get_io_service(){ return m_io_service_; }

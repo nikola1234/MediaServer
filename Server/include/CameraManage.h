@@ -9,6 +9,7 @@
 
 #include "Common.h"
 #include "NetServer.h"
+#include "NetClient.h"
 #include "SingleCamera.h"
 #include "CmdDefine.h"
 #include "Data.h"
@@ -17,6 +18,7 @@
 #include "CameraList.h"
 
 class NetServer;
+class NetClient;
 class SingleCamera;
 
 typedef boost::shared_ptr <SingleCamera> SingleCamPtr;
@@ -33,6 +35,8 @@ public:
   ~ManageCamera();
 
   void AddServer(NetServer *ourServer){Server = ourServer;}
+  void AddClient(NetClient *ourClient){Client = ourClient;}
+  
   int InitFromDB();
 
   int try_to_open(char * ip ,char* stream);
@@ -71,10 +75,14 @@ public:
 	uint32  get_camera_id();
 	void  Get_Rest_Camlist();
 	void  Get_Rest_SingleCamlist();
+	uint8 Get_Rest_SingleCamlist_num();
 
+	int Get_Pic_SingleCamlist_num(T_ANAY_ALARM_CAM_PIC* pt_CamPic, uint8 num);
+	
 public:
 
 	NetServer *Server;
+	NetClient *Client;
 	CamList m_CamList;
 
 private:

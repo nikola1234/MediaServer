@@ -17,7 +17,7 @@
 #define  SINGLE_URL_LEN_128    128
 #define  PACKET_HEAD_LEN       28
 #define  MCU_MAC_LEN_20        20
-#define  PIC_BUFFER_LEN  	   640*360*3
+#define  PIC_BUFFER_LEN  	   691254
 
 typedef struct COMMON_PACKET_HEAD
 {

@@ -12,8 +12,13 @@
 typedef struct  _SERVER_PARAM
 {
 	uint32 ServerID;
-	char   Serverip[16];
-	uint32 port;
+	char   ServerIp[16];
+	uint32 ServerPort;
+
+	uint32 AlarmID;
+	char   AlarmIp[16];
+	uint32 AlarmPort;
+	
 	_SERVER_PARAM(){
 		memset(this, 0, sizeof(_SERVER_PARAM));
 	}

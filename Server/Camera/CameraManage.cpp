@@ -244,6 +244,7 @@ int ManageCamera::try_to_open(char * ip ,char* stream)
 		m_log.Add("%s(%d),try to open failed!" ,DEBUGARGS);
 		return -1;
 	}
+
 	return 0;
 }
 
@@ -280,6 +281,70 @@ void  ManageCamera::Get_Rest_SingleCamlist()
 		printf("%d ",(*it)->GetCameraID());
 	}
 	printf("\n");
+}
+
+uint8 ManageCamera::Get_Rest_SingleCamlist_num()
+{
+	uint8 num = 0;
+	ReadLock readlock_(m_SinCamListMutex_);
+	num = (uint8)m_SinCamList.size();
+	readlock_.unlock();
+	return num;
+}
+
+int  ManageCamera::Get_Pic_SingleCamlist_num(T_ANAY_ALARM_CAM_PIC* pt_CamPic, uint8 num)
+{
+	FILE *fp;
+	const char* path="./regular.bmp";
+
+	uint8 tryNum =10;
+	Mat frame(360,640, CV_8UC3);
+
+	ReadLock readlock_(m_SinCamListMutex_);
+
+	std::list<SingleCamPtr>::iterator it = m_SinCamList.begin();
+	advance(it,num);
+	
+	memcpy(pt_CamPic->CamIp,(*it)->CameraIP,IP_LEN_16);	
+	memcpy(pt_CamPic->CamUrL,(*it)->CamUrl,SINGLE_URL_LEN_128);	
+	readlock_.unlock();
+
+	while(tryNum--)
+	{
+		(*it)->ReadThread->anaframe.copyTo(frame);
+		if(!frame.empty())
+		{
+			break;
+		}	
+	}
+
+	if(frame.empty())
+	{
+		m_log.Add("%s(%d),frame is empty !" ,DEBUGARGS);
+		return -1;
+	}
+	
+	resize(frame, frame, Size(640, 360));
+	imwrite(path,frame);
+	
+	unsigned char *str = (unsigned char *)malloc(PIC_BUFFER_LEN);
+	
+  	fp = fopen(path,  "r"); 
+	if(fp == NULL) 
+	{ 
+		m_log.Add("%s(%d),Error opening tmp.bmp file!" ,DEBUGARGS);
+		return -1;
+	} 
+
+    fread(str, 345627, 2, fp); 
+	fclose(fp);
+	remove(path);
+	
+	memcpy(pt_CamPic->buffer,str,PIC_BUFFER_LEN); 
+	
+	free (str);
+	
+	return 0;
 }
 
 SingleCamPtr ManageCamera::search_camera_by_id(uint32 ID)
