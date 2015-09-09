@@ -8,11 +8,12 @@
 #include "NetServer.h"
 
 class CamAnaThread;
-
+class NetServer;
+class NetClient;
 class CamReadThread
 {
 public:
-	CamReadThread(SingleCamera *sincam,NetServer *Server);
+	CamReadThread(SingleCamera *sincam,NetServer *Server,NetClient*clt);
 	~CamReadThread();
 
 	Mat  anaframe;
@@ -80,6 +81,7 @@ private:
 
 	SingleCamera *cam;
 	NetServer* server;
+	NetClient* client;
 };
 
 

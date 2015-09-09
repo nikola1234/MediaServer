@@ -13,6 +13,7 @@
 #include "SingleCamera.h"
 
 #include "NetServer.h"
+#include "NetClient.h"
 
 #define START_FRAME_INDEX     8
 #define INTERVAL_FRAME_INDEX  400
@@ -26,12 +27,12 @@ enum warnevent
 
 class SingleCamera;
 class NetServer;
+class NetClient;
 class CamAnaThread
 {
 public:
-	CamAnaThread(SingleCamera* sincam,NetServer *ser);
+	CamAnaThread(SingleCamera* sincam,NetServer *ser,NetClient*clt);
 	~CamAnaThread();
-
 
 	bool  m_AnaFlag;
 	bool  m_Status;
@@ -69,6 +70,7 @@ public:
 
 	int send_alarm_to_mcu(uint16 type,uint8 status);
 	int send_alarm_to_client(uint16 type,uint8 status);
+	int send_alarm_to_server(uint16 type,uint8 status);
 
 	int human_detect(Mat &frame);
 	int region_detect(Mat &frame);
@@ -102,7 +104,8 @@ public:
 
 	SingleCamera *cam;
 	NetServer *server;
-
+	NetClient *client;
+	
 private:
 	uint32 CameraID;
 

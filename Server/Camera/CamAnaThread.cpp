@@ -1,11 +1,15 @@
 #include "CamAnaThread.h"
+#include "FileOpr.h"
 
-CamAnaThread::CamAnaThread(SingleCamera* sincam,NetServer *ser)
+extern T_ServerParam SerParam;
+
+CamAnaThread::CamAnaThread(SingleCamera* sincam,NetServer *ser,NetClient*clt)
 {
 	cam = sincam;
 	CameraID = cam->CameraID;
 
 	server = ser;
+	client = clt;
 	
 	m_AnaFlag   = true;
 	m_Status      = false;
@@ -147,6 +151,38 @@ int CamAnaThread::send_alarm_to_client(uint16 type,uint8 status)
 	return iRet;
 }
 
+int CamAnaThread::send_alarm_to_server(uint16 type,uint8 status)
+{
+	T_PacketHead			 t_warnHead;
+	
+	t_warnHead.magic		 =	T_PACKETHEAD_MAGIC;
+	t_warnHead.cmd			 =  SM_ANAY_ALARM_WARN_INFO;
+	t_warnHead.UnEncryptLen  =	sizeof(T_ANAY_ALARM_WARN_INFO);
+
+	int msgSize = PACKET_HEAD_LEN +sizeof(T_ANAY_ALARM_WARN_INFO);
+	char * buff = (char*)malloc( msgSize );
+
+	memcpy(buff,&t_warnHead,sizeof(T_PacketHead));
+
+	T_ANAY_ALARM_WARN_INFO  t_warnInfo;
+	
+	t_warnInfo.AnaServerID   = SerParam.ServerID;
+	memcpy(t_warnInfo.AnaServerIp,SerParam.ServerIp,IP_LEN_16);
+	
+	memcpy(t_warnInfo.CamIp,cam->CameraIP,IP_LEN_16);
+	memcpy(t_warnInfo.CamUrL,cam->CamUrl,SINGLE_URL_LEN_128);
+
+	t_warnInfo.AnalyzeType = type;
+	t_warnInfo.PicbuffEN   = 0;
+
+	memcpy(buff+PACKET_HEAD_LEN,&t_warnInfo,sizeof(T_ANAY_ALARM_WARN_INFO));
+
+	client->SendToServer(buff,msgSize);
+	free(buff);
+	return 0;
+}
+
+
 int CamAnaThread::human_detect(Mat &frame)
 {
 	int iRet = -1;
@@ -170,6 +206,7 @@ int CamAnaThread::human_detect(Mat &frame)
 		dbgprint("%s(%d),cam %d  human alarm start !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(HumanDetect,1);
 		send_alarm_to_mcu(HumanDetect,1);
+		//send_alarm_to_server(HumanDetect,1);
 	}
 
 	if(iRet == alarmStop)
@@ -177,7 +214,8 @@ int CamAnaThread::human_detect(Mat &frame)
 		//TODO: notify client huamn alarm stop
 		dbgprint("%s(%d),cam %d  human alarm stop !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(HumanDetect,0);
-		send_alarm_to_mcu(HumanDetect,0);
+		//send_alarm_to_mcu(HumanDetect,0);
+		//send_alarm_to_server(HumanDetect,0);
 	}
 
 	return 0;
@@ -203,6 +241,7 @@ int  CamAnaThread::region_detect(Mat &frame)
 		dbgprint("%s(%d),cam %d  region alarm start !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(RegionDetect,1);
 		send_alarm_to_mcu(RegionDetect,1);
+		//send_alarm_to_server(RegionDetect,1);
 	}
 
 	if(iRet == alarmStop)
@@ -211,6 +250,7 @@ int  CamAnaThread::region_detect(Mat &frame)
 		dbgprint("%s(%d),cam %d  region alarm stop !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(RegionDetect,0);
 		send_alarm_to_mcu(RegionDetect,0);
+		//send_alarm_to_server(RegionDetect,0);
 	}
 	return 0;
 }
@@ -237,6 +277,7 @@ int  CamAnaThread::fire_detect(Mat &frame)
 		dbgprint("%s(%d),cam %d  fire alarm start !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(FireDetect,1);
 		send_alarm_to_mcu(FireDetect,1);
+		//send_alarm_to_server(FireDetect,1);
 	}
 
 	if(iRet == alarmStop)
@@ -245,6 +286,7 @@ int  CamAnaThread::fire_detect(Mat &frame)
 		dbgprint("%s(%d),cam %d  fire alarm stop !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(FireDetect,0);
 		send_alarm_to_mcu(FireDetect,0);
+		//send_alarm_to_server(FireDetect,0);
 	}
 	return 0;
 }
@@ -281,7 +323,8 @@ int  CamAnaThread::smoke_detect(Mat &frame)
 		//TODO: notify client smoke alarm start and push rtsp
 		dbgprint("%s(%d),cam %d  smoke alarm start !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(SmokeDetect,1);
-		//send_alarm_to_mcu(SmokeDetect,1);
+		send_alarm_to_mcu(SmokeDetect,1);
+		//send_alarm_to_server(SmokeDetect,1);
 	}
 
 	if(iRet == alarmStop)
@@ -290,10 +333,10 @@ int  CamAnaThread::smoke_detect(Mat &frame)
 		dbgprint("%s(%d),cam %d  smoke alarm stop !\n",DEBUGARGS,CameraID);
 		//send_alarm_to_client(SmokeDetect,0);
 		//send_alarm_to_mcu(SmokeDetect,0);
+		//send_alarm_to_server(SmokeDetect,0);
 	}
 	return 0;
 }
-
 
 int CamAnaThread::alarm_run(Mat &frame ,uint8 iType)
 {

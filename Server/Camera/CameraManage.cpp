@@ -298,6 +298,7 @@ int  ManageCamera::Get_Pic_SingleCamlist_num(T_ANAY_ALARM_CAM_PIC* pt_CamPic, ui
 	const char* path="./regular.bmp";
 
 	uint8 tryNum =10;
+	uint32 readNum = 0;
 	Mat frame(360,640, CV_8UC3);
 
 	ReadLock readlock_(m_SinCamListMutex_);
@@ -336,12 +337,24 @@ int  ManageCamera::Get_Pic_SingleCamlist_num(T_ANAY_ALARM_CAM_PIC* pt_CamPic, ui
 		return -1;
 	} 
 
-    fread(str, 345627, 2, fp); 
+    readNum =fread(str, 345627, 2, fp); 
 	fclose(fp);
 	remove(path);
 	
 	memcpy(pt_CamPic->buffer,str,PIC_BUFFER_LEN); 
-	
+/*
+	FILE *fp_;
+	const char* path_="./regular11.bmp";
+	fp_ = fopen(path_,  "w"); 
+	if(fp_== NULL) 
+	{ 
+		m_log.Add("%s(%d),Error opening tmp.bmp file!" ,DEBUGARGS);
+		return -1;
+	} 
+
+	fwrite(str, 345627, 2, fp_); 
+	fclose(fp_);
+*/	
 	free (str);
 	
 	return 0;
@@ -539,13 +552,9 @@ int ManageCamera::Renew_camerafunc_DB(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,
 	StrTimeDay timeday_one[WEEK_DAY_LEN_7];/* no use*/
 	
 	DBCAMERAFUNCPARAM t_FuncParam;
-
-	printf("t_FuncParam.WatchRegion1 is %x\n" ,t_FuncParam.WatchRegion1);
-	printf("t_FuncParam.WatchRegion2 is %x\n" ,t_FuncParam.WatchRegion2);
 	
 	iRet = CDataInfo.getCameraAlarmInfo(ID,&t_FuncParam);
 	
-	printf("getCameraAlarmInfo--------------\n");
 	if(iRet < 0)
 	{
 		m_log.Add("%s(%d),Renew_camerafunc_DB failure!" ,DEBUGARGS);
@@ -606,11 +615,11 @@ int ManageCamera::Renew_camerafunc_DB(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,
 
 int ManageCamera::Set_or_Renew_Camera_Param(T_VDCS_VIDEO_CAMERA_PARAM* pt_CameraParam,vector <VIDEO_DRAW> & Pkg)
 {
-	int i = 0; 
-	int j = 0;
+	//int i = 0; 
+	//int j = 0;
 	int iRet = -1;
 	uint32 ID= 0;
-
+/*
 	printf("pt_CameraParam->camera is %s\n",pt_CameraParam->CameUrL);
 	printf("pt_CameraParam->AnalyzeType is %x\n",pt_CameraParam->AnalyzeType);
 	printf("pt_CameraParam->MaxHumanNum is %d\n",pt_CameraParam->MaxHumanNum);
@@ -633,7 +642,7 @@ int ManageCamera::Set_or_Renew_Camera_Param(T_VDCS_VIDEO_CAMERA_PARAM* pt_Camera
 		printf("StartX is %d ,StartY is %d ,EndX is %d ,EndY is %d ,Type is %d \n",tmp.StartX ,tmp.StartY,tmp.EndX,tmp.EndY,tmp.Type);
 	}
 	
-
+*/
 	iRet = m_CamList.search_cam_by_url(pt_CameraParam->CameUrL,&ID);
 	if(iRet == -1)
 	{

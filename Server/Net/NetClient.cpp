@@ -2,16 +2,21 @@
 #include "boost/filesystem.hpp"
 #include "FileOpr.h"
 
+/*
+	bug: 连接服务器超时后重连异常，思路:改成异步连接
+*/
 extern T_ServerParam SerParam;
 
 NetClient::NetClient(void)
-	:tcp_socket_(io_service_),timer1_(io_service_, boost::posix_time::seconds(20))
+	:tcp_socket_(io_service_),timer1_(io_service_, boost::posix_time::minutes(10))
 {
 	m_isConnected = false;
 	m_checkConnect = true;
 
 	memset(m_hostname, 0, IP_LEN_16);
 	memset(m_port, 0 ,PORT_LEN_10);
+	
+	timer1_.async_wait(boost::bind(&NetClient::RegularEvent, this)); 
 }
 
 NetClient::~NetClient(void)
@@ -91,6 +96,7 @@ int NetClient::ConnectingtoSvr(void)
 		m_isConnected = false;	
 		CloseSocket();
 		ConnectingtoSvr();
+		printf("ConnectingtoSvr again!\n");
         return -1;
 	}
 	ChangeConnect(true);
@@ -123,7 +129,7 @@ int NetClient::Send(char *buf, int len)
 		while(nCur < nSumLen)
 		{
 			nRet = tcp_socket_.send( boost::asio::buffer( (char *)buf + nCur, nSumLen - nCur ) );
-			printf("nRet is %d\n",nRet);
+			printf("have send is %d\n",nRet);
 			if(nRet <= 0)return -1;
 			nCur += nRet;
 		}
@@ -217,26 +223,29 @@ void NetClient::SendPicToServer(void)
 	}
 
 	SendToServer(buff,msgSize);
+	//SendToServer("hello!",7);
 	free(buff);
 }
 
 void NetClient::RegularEvent(void)
 {
-   SendPicToServer();
-   timer1_.expires_at(timer1_.expires_at() + boost::posix_time::seconds(20));  //minutes
-   timer1_.async_wait(boost::bind(&NetClient::RegularEvent, this)); 
-   m_log.Add("RegularEvent");
+	if(m_checkConnect)
+	{
+	   SendPicToServer();
+	   timer1_.expires_at(timer1_.expires_at() + boost::posix_time::minutes(10));  //minutes
+	   timer1_.async_wait(boost::bind(&NetClient::RegularEvent, this)); 
+	   m_log.Add("RegularEvent");
+	}
 }
 
 void NetClient::Run(void)
 {
+
   m_clientThread_  =
   		(boost::shared_ptr<boost::thread>)new boost::thread(boost::bind(&boost::asio::io_service::run, &io_service_)); 
 
   m_connectThread_ = 
   		(boost::shared_ptr<boost::thread>)new boost::thread(boost::bind(&NetClient::CheckConnect,this)); 
-
-  timer1_.async_wait(boost::bind(&NetClient::RegularEvent, this)); 
 }
 
 

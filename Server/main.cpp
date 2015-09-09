@@ -25,13 +25,13 @@ int main(int argc ,char **argv)
 	char buffer[64] ={0};
 
 	fileOpr.read_server_config(SerParam);
-	
-	NetWorkClient.start(SerParam.AlarmIp,SerParam.AlarmPort);
-	NetWorkClient.Run();
 
 	NetWorkServer.InitNetServer(SerParam.ServerPort);
 	NetWorkServer.Start();
 	NetWorkServer.Run();
+	
+	NetWorkClient.start(SerParam.AlarmIp,SerParam.AlarmPort);
+	NetWorkClient.Run();
 
 	ManCamera.AddServer(&NetWorkServer); // as server
 	ManCamera.AddClient(&NetWorkClient); // as client

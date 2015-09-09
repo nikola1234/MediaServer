@@ -2,12 +2,14 @@
 #include "RtspCamera.h"
 extern CRtspCamera rtspCamera;
 
-CamReadThread::CamReadThread(SingleCamera *sincam,NetServer *Server)
+CamReadThread::CamReadThread(SingleCamera *sincam,NetServer *Server,NetClient*clt)
 {
 	cam = sincam;
 	CameraID = cam->CameraID;
 
 	server = Server;
+	client = clt;
+	
 	m_CameraFlag = true;
 	errReadNum = 0;
 
